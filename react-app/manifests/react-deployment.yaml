@@ -1,19 +1,19 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: fabai-deployment
+  name: react-deployment
 spec:
   replicas: 2
   selector:
     matchLabels:
-      app: fabai
+      app: react-app
   template:
     metadata:
       labels:
-        app: fabai
+        app: react-app
     spec:
       containers:
-      - name: fabai
-        image: fabai        # This refers to your local Docker image
+      - name: react-app
+        image: react-app:latest        # This refers to your local Docker image
         ports:
         - containerPort: 5000

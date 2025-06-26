@@ -16,4 +16,4 @@ spec:
       - name: backend
         image: backend:latest        # This refers to your local Docker image
         ports:
-        - containerPort: 5001
+        - containerPort: 5000

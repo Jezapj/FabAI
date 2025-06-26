@@ -16,4 +16,4 @@ spec:
       - name: react-app
         image: react-app:latest        # This refers to your local Docker image
         ports:
-        - containerPort: 5000
+        - containerPort: 3000

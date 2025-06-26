@@ -6,10 +6,8 @@ spec:
   selector:
     app: backend
   ports:
-    #- protocol: TCP
-     # port: 80
-     # targetPort: 5000
-     - port: 80
-       targetPort: 80
-       nodePort: 30081
-  type: NodePort #LoadBalancer
+    - protocol: TCP
+      port: 80
+      targetPort: 5000
+     
+  type: LoadBalancer

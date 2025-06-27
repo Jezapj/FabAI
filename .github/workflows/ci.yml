@@ -2,9 +2,9 @@ name: Windows CI for NPM and python
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, Database ]
   pull_request:
-    branches: [ main ]
+    branches: [ main, Database ]
 
 jobs:
   build:

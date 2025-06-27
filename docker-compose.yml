@@ -4,6 +4,22 @@ services:
       context: ./backend
     ports:
       - "5000:5000"
+    depends_on:
+      - db
+    environment:
+      - GOOGLE_CLIENT_ID=your-google-client-id
+      - GOOGLE_CLIENT_SECRET=your-google-client-secret
+  db:
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_DB: mydb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
 
   frontend:
     build:

@@ -5,6 +5,8 @@ import os
 from flask import Flask, redirect, url_for, session, g
 from flask_sqlalchemy import SQLAlchemy
 from authlib.integrations.flask_client import OAuth
+
+
 app = Flask(__name__)
 
 CORS(app)
@@ -13,12 +15,13 @@ def hello():
     return jsonify({"message": "Hello from Flask!"})
 
 
+db_pw = os.getenv('DB_PW')
 
 
 app.secret_key = 'supersecret'  # use a secure one in production
 
 # DB Config
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:Depadris5@db:5432/mydb'
+app.config['SQLALCHEMY_DATABASE_URI'] = f'postgresql://postgres:{db_pw}@db:5432/mydb'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 

@@ -7,8 +7,11 @@ services:
     depends_on:
       - db
     environment:
-      - GOOGLE_CLIENT_ID=temp
-      - GOOGLE_CLIENT_SECRET=temp
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      - DB_PW=${DB_PW}
+    env_file:
+      - .env
   db:
     image: postgres
     restart: always

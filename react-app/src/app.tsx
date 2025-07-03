@@ -1,5 +1,7 @@
 import React from "react";
 import { useEffect, useState } from 'react';
+import {Main, Navbar} from './Main'
+
 
 
 function App() {
@@ -14,10 +16,14 @@ function App() {
   }, []);
 
   return (
+    <>
+    <Navbar/>
+    <Main/>
     <div>
-      <h1>Frontend</h1>
+      <h1>Backtend</h1>
       <p>{message}</p>
     </div>
+    </>
   );
 }
 

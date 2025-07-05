@@ -1,6 +1,6 @@
 import React from "react";
-import { useEffect, useState } from 'react';
-import {Main, Navbar} from './Main'
+import { useEffect, useState, useContext } from 'react';
+import {Card, Main, Navbar} from './Main'
 
 
 
@@ -13,16 +13,24 @@ function App() {
       .then(res => res.json())
       .then(data => setMessage(data.message))
       .catch(() => setMessage("API call failed"));
-  }, []);
+  }, [message]);
 
+  const handleClick = () => {
+    window.location.assign("http://localhost:5000/login")
+    fetch('http://localhost:5000/logged_in')
+      .then(res2 => res2.json())
+      .then(data2 => setMessage(data2.message + data2.userName))
+      .catch(() => setMessage("Login failed"));
+  }
   return (
     <>
     <Navbar/>
     <Main/>
-    <div>
-      <h1>Backtend</h1>
-      <p>{message}</p>
+    <Card title="Backend" content={message} type="Sub"/>
+    <div className="button">
+        <button onClick={handleClick}> Login</button>
     </div>
+    
     </>
   );
 }

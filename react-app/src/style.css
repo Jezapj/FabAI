@@ -1,0 +1,71 @@
+body {
+  background: black;
+  background-image: url("/react-app/src/assets/Promo.png");
+  background-attachment: fixed;
+  background-repeat: no-repeat; 
+  padding: 0;
+  margin: 0;
+  height: 100%;
+  max-width: 100%;
+  justify-content: center;
+  align-items: center;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
+    Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+}
+.main{
+  display: inline-block;
+}
+.nav {
+  padding: 0.75% 0%;
+  background-color: hsl(0, 0%, 100%);
+  border-radius: 1%;
+  margin: 0;
+  width: 100%;
+  max-width: 100%;
+  text-align: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.cardMain {
+  color: white;
+  background-color: rgba(0,0,0, 0.85);
+  border-radius: 1%;
+  padding: 2.5% 0% 2.5% 0%;
+  margin: 0% 0% 0.5% 0%;
+  width: 100%;
+  text-align: center;
+  display: inline-block;
+  border: none;
+  font-size: 1.5rem;
+}
+.cardSub {
+  color: white;
+  background-color: rgba(0,0,0, 0.85);
+  border-radius: 1%;
+  padding: 2% 0% 2% 0%;
+  margin: 0% 0% 0% 0%;
+  width: 100%;
+  text-align: center;
+  display: inline-block;
+  border: none;
+  font-size: 1rem;
+}
+.App {
+  color: #72a24d;
+}
+.button{
+  justify-content: center;
+  display: flex;
+  background-color: rgba(255,255,255, 0.85);
+  cursor: pointer;
+  border: none;
+  width: 130px;
+}
+.button:hover{
+  background-color: rgba(220,220,220, 0.85);
+}
+
+#root{
+  padding: 0;
+}

@@ -1,9 +1,11 @@
 {
   "name": "react-app",
   "version": "1.0.0",
+  "type": "module",
   "scripts": {
-    "start": "webpack serve --open --mode development",
-    "build": "webpack --mode production"
+    "start": "vite",
+    "build": "webpack --mode production",
+    "dev": "vite"
   },
   "dependencies": {
     "react": "^18.2.0",
@@ -14,12 +16,14 @@
     "@babel/preset-env": "^7.22.10",
     "@babel/preset-react": "^7.22.5",
     "@babel/preset-typescript": "^7.22.5",
+    "@vitejs/plugin-react": "^4.6.0",
     "babel-loader": "^9.1.3",
     "css-loader": "^6.11.0",
     "html-webpack-plugin": "^5.5.3",
     "style-loader": "^4.0.0",
     "ts-loader": "^9.5.1",
     "typescript": "^5.2.2",
+    "vite": "^7.0.2",
     "webpack": "^5.88.2",
     "webpack-cli": "^5.1.4",
     "webpack-dev-server": "^5.2.2"

@@ -26,24 +26,37 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
+  
+}
+.nav > img{
+  margin: 0 -28px;
+  cursor: pointer;
 }
 .cardMain {
   color: white;
   background-color: rgba(0,0,0, 0.85);
+  background-attachment: fixed;
   border-radius: 1%;
-  padding: 2.5% 0% 2.5% 0%;
-  margin: 0% 0% 0.5% 0%;
+  padding: 15px 0% 15px 0%;
+  margin: 0;
   width: 100%;
+  background-size: 90%;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: cover;
   text-align: center;
   display: inline-block;
   border: none;
   font-size: 1.5rem;
 }
 .cardSub {
-  color: white;
-  background-color: rgba(0,0,0, 0.85);
+  color: black;
+  background-color: rgba(255,255,255, 1);
+  background-attachment: fixed;
+  background-size: auto;
+  background-size: cover;
   border-radius: 1%;
-  padding: 2% 0% 2% 0%;
+  padding: 10px 0% 10px 0%;
   margin: 0% 0% 0% 0%;
   width: 100%;
   text-align: center;
@@ -51,21 +64,55 @@ body {
   border: none;
   font-size: 1rem;
 }
+.cardFeature {
+  color: white;
+  background-color: rgba(0,0,0, 0.85);
+  background-attachment: relative;
+  border-radius: 1%;
+  background-size: 90%;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: 50%;
+  padding: 15px 0% 15px 0%;
+  margin: 0;
+  height: 75vh;
+  width: 100%;
+  text-align: center;
+  display: inline-block;
+  border: none;
+  align-content: center;
+  font-size: 1.5rem;
+  
+}
+.cardFeature > h1,h2,h3 {
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.9);
+    text-decoration: dotted;
+}
 .App {
   color: #72a24d;
 }
-.button{
-  justify-content: center;
-  display: flex;
+button{
   background-color: rgba(255,255,255, 0.85);
   cursor: pointer;
   border: none;
-  width: 130px;
+  border-radius: 5px;
+  margin: 10px 30px;
+  height: 30px;
+  width: 45%;
 }
-.button:hover{
+
+.button{
+  align-content: center;
+  display: flex;
+  justify-content: center;
+  
+  
+}
+button:hover{
   background-color: rgba(220,220,220, 0.85);
 }
 
 #root{
   padding: 0;
+  margin: 0;
 }

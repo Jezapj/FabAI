@@ -26,10 +26,12 @@ function App() {
     <>
     <Navbar/>
     <Main/>
-    <Card title="Backend" content={message} type="Sub"/>
+    <Card title="Backend" content={message} type="Main"  img="src/assets/interlude.png"/>
     <div className="button">
-        <button onClick={handleClick}> Login</button>
+        <button onClick={handleClick}> <h3>Login</h3></button>
+        <button onClick={handleClick}> Sign Up</button>
     </div>
+    
     
     </>
   );

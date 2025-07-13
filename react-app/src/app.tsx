@@ -1,6 +1,6 @@
 import React from "react";
 import { useEffect, useState, useContext } from 'react';
-import {Card, Main, Navbar} from './Main'
+import {Card, Main, Navbar, Login} from './Main'
 
 
 
@@ -22,16 +22,15 @@ function App() {
       .then(data2 => setMessage(data2.message + data2.userName))
       .catch(() => setMessage("Login failed"));
   }
+  const feet = {"height": "40px", "backgroundColor": "rgba(0,0,0, 0.85)"};
   return (
     <>
     <Navbar/>
     <Main/>
-    <Card title="Backend" content={message} type="Main"  img="src/assets/interlude.png"/>
-    <div className="button">
-        <button onClick={handleClick}> <h3>Login</h3></button>
-        <button onClick={handleClick}> Sign Up</button>
-    </div>
+    <Card title="Backend" content={message} type="Main"  img=""/>
+    <div className="b1"><Login/></div>
     
+    <div style={feet}></div>
     
     </>
   );

@@ -1,6 +1,7 @@
 body {
   background: black;
-  background-image: url("/react-app/src/assets/Promo.png");
+  /**background-image: url("/react-app/src/assets/Promo.png");*/
+  background-image: linear-gradient(purple, black, blue);
   background-attachment: fixed;
   background-repeat: no-repeat; 
   padding: 0;
@@ -75,16 +76,27 @@ body {
   background-position: 50%;
   padding: 15px 0% 15px 0%;
   margin: 0;
-  height: 75vh;
+  height: 60vh;
   width: 100%;
+  max-width: 100%;
   text-align: center;
   display: inline-block;
   border: none;
   align-content: center;
-  font-size: 1.5rem;
+  font-size: 2rem;
   
 }
-.cardFeature > h1,h2,h3 {
+.cardFeature > h1 {
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.9);
+    text-decoration: dotted;
+}
+
+.cardFeature > h2 {
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.9);
+    text-decoration: dotted;
+}
+
+.cardFeature > h3 {
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.9);
     text-decoration: dotted;
 }
@@ -106,6 +118,39 @@ button{
   display: flex;
   justify-content: center;
   
+  
+}
+
+
+.b1  button {
+  background-color: rgba(255,255,255, 0.85);
+  cursor: pointer;
+  border: none;
+  border-radius: 5px;
+  margin: 10px 30px;
+  height: 30px;
+  padding: 10px 30px;
+
+  
+}
+.cardMain  button {
+  background-color: rgba(255,255,255, 1);
+  cursor: pointer;
+  border: none;
+  border-radius: 5px;
+  margin: 10px 30px;
+  height: 50px;
+  padding: 10px 30px;
+  transition: 0.5s;
+
+  
+}
+.cardMain  button:hover {
+  background-color: rgba(50,50,220, 0.85);
+  width: 40vw;
+  transition: 0.5s;
+  
+
   
 }
 button:hover{

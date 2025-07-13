@@ -8,6 +8,8 @@
     "dev": "vite"
   },
   "dependencies": {
+    "@react-oauth/google": "^0.12.2",
+    "jwt-decode": "^4.0.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },
@@ -16,6 +18,7 @@
     "@babel/preset-env": "^7.22.10",
     "@babel/preset-react": "^7.22.5",
     "@babel/preset-typescript": "^7.22.5",
+    "@types/react": "^19.1.8",
     "@vitejs/plugin-react": "^4.6.0",
     "babel-loader": "^9.1.3",
     "css-loader": "^6.11.0",

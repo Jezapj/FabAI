@@ -1,5 +1,5 @@
 body {
-  background: black;
+  background: rgb(174, 165, 165);
   /**background-image: url("/react-app/src/assets/Promo.png");*/
   background-image: linear-gradient(purple, black, blue);
   background-attachment: fixed;
@@ -12,6 +12,10 @@ body {
   align-items: center;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
     Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+}
+img {
+  max-width: 100%;
+  max-height: 100%;
 }
 .main{
   display: inline-block;
@@ -58,13 +62,53 @@ body {
   background-size: cover;
   border-radius: 1%;
   padding: 10px 0% 10px 0%;
-  margin: 0% 0% 0% 0%;
+  margin: 0% 0% 2% 0%;
   width: 100%;
   text-align: center;
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   border: none;
   font-size: 1rem;
+  transition: 0.9s;
+  height: 20vh;
+  transition-delay: 1s;
+  max-width: 100%;
+
 }
+
+.cardSub:hover {
+  height: 30vh;
+  transition: 0.5s;
+  display: inline-flex;
+  align-items: center;
+  padding-left: 20%;
+  max-width: 80%;
+  flex-direction: row;
+  
+
+}
+.subText{
+  
+}
+.subText:hover{
+  
+}
+
+.subImg{
+  height: 100%;
+  width: 100%;
+  
+  
+ 
+}
+.subImg img {
+ padding-right: 5%;
+}
+.subImg:hover{
+  
+}
+
 .cardFeature {
   color: white;
   background-color: rgba(0,0,0, 0.85);
@@ -103,6 +147,10 @@ body {
 .App {
   color: #72a24d;
 }
+h4 {
+  margin: 0;
+  padding: 8px 0 0 0;
+}
 button{
   background-color: rgba(255,255,255, 0.85);
   cursor: pointer;
@@ -121,7 +169,17 @@ button{
   
 }
 
+.b1 {
+  background-color: rgba(0,0,0, 0.85);
+  display: flex;
+  justify-content: center;
+}
 
+.b2 {
+  
+  display: inline-block;
+  justify-content: center;
+}
 .b1  button {
   background-color: rgba(255,255,255, 0.85);
   cursor: pointer;
@@ -133,25 +191,28 @@ button{
 
   
 }
-.cardMain  button {
+.b1  button {
   background-color: rgba(255,255,255, 1);
   cursor: pointer;
   border: none;
   border-radius: 5px;
   margin: 10px 30px;
   height: 50px;
+  width: 40vw;
   padding: 10px 30px;
   transition: 0.5s;
 
   
 }
-.cardMain  button:hover {
-  background-color: rgba(50,50,220, 0.85);
-  width: 40vw;
+.b1  button:hover {
+  background-color: rgba(24, 0, 43, 0.85);
+  width: 45vw;
   transition: 0.5s;
+  color: white;
   
-
-  
+}
+.bg {
+  background-color: rgba(0,0,0, 0.85);
 }
 button:hover{
   background-color: rgba(220,220,220, 0.85);
@@ -161,3 +222,4 @@ button:hover{
   padding: 0;
   margin: 0;
 }
+

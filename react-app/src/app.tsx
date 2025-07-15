@@ -6,6 +6,8 @@ import {Card, Main, Navbar, Login} from './Main'
 
 function App() {
   const [message, setMessage] = useState('Loading...');
+  const [b1, setB1] = useState(<div className="b1"><Login/></div>);
+  
 
   useEffect(() => {
     // 🚨 Important: this name must match the Docker Compose/K8s service name
@@ -14,6 +16,12 @@ function App() {
       .then(data => setMessage(data.message))
       .catch(() => setMessage("API call failed"));
   }, [message]);
+
+  useEffect(() => {
+    const b2 = <div className="b1" style={{"display":"block"}}><Login/></div>
+    setB1(b1)
+
+  }, [b1])
 
   const handleClick = () => {
     window.location.assign("http://localhost:5000/login")
@@ -27,8 +35,8 @@ function App() {
     <>
     <Navbar/>
     <Main/>
-    <Card title="Backend" content={message} type="Main"  img=""/>
-    <div className="b1"><Login/></div>
+    {/*<Card title="Backend" content={message} type="Main"  img=""/>*/}
+    {b1}
     
     <div style={feet}></div>
     

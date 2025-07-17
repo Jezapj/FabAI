@@ -9,6 +9,16 @@ const [classid, setClassid] = React.useState<any>("");
 useEffect(() => {
 setClassid("b2")
 }, [user])
+
+const [image, setImage] = React.useState<any>(null);
+
+  // Handle the file upload
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setImage(file);
+    }
+  };
   return (
     <div className={classid}>
     
@@ -18,8 +28,15 @@ setClassid("b2")
           
           <Card title={"Welcome " + `${user.name}`} content="Start creating your catalogue here" type="Main" bg={false}/>
           <div style={{"display": "flex"}}>
-          <button className="b1"  onClick={() => {
+          <button className="b1"  onClick={() => { document.getElementById('fileInput')?.click()
           }}><h4>Add Image</h4></button>
+           <input
+        id="fileInput"
+        type="file"
+        accept="image/*"
+        onChange={handleFileChange} 
+        style={{ display: 'none' }} // Hide the file input
+      />
           <button className="b1"  onClick={() => {
             googleLogout();
             setUser(null);  

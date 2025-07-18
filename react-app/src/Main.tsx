@@ -1,92 +1,87 @@
 import React, { useCallback, useEffect } from "react";
 import { GoogleLogin, googleLogout } from '@react-oauth/google';
-import {jwtDecode} from 'jwt-decode';
+import { jwtDecode } from 'jwt-decode';
 
-export function Login(){
-const [user, setUser] = React.useState<any>(null);
-const [classid, setClassid] = React.useState<any>("");
-//const feet = {"height": "40px", "backgroundColor": "rgba(0,0,0, 0.85)"};
-useEffect(() => {
-setClassid("b2")
-}, [user])
+export function Login() {
+  const [user, setUser] = React.useState<any>(null);
+  const [classid, setClassid] = React.useState<any>("");
 
-const [image, setImage] = React.useState<any>(null);
-const [imageUrl, setImageUrl] = React.useState('');
+  useEffect(() => {
+    setClassid("b2")
+  }, [user])
+
+  const [image, setImage] = React.useState<any>(null);
+  const [imageUrl, setImageUrl] = React.useState('');
   const [showModal, setShowModal] = React.useState(false);
   const dialogRef = React.useRef<HTMLDialogElement | null>(null);
 
   // Handle the file upload
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-  const file = e.target.files?.[0];
-  if (file) {
-    setImage(file);
+    const file = e.target.files?.[0];
+    if (file) {
+      setImage(file);
 
-    const formData = new FormData();
-    formData.append("image", file);
-    //formData.append("user_id", userId); // Optional if user info is required
-    // Add user info to the FormData if needed
+      const formData = new FormData();
+      formData.append("image", file);
+      formData.append("user_info", JSON.stringify(user)); // Send user info
 
-    // Append user info as a JSON string or individual key-value pairs
-    formData.append("user_info", JSON.stringify(user)); // Send as a JSON string
-
-
-    fetch("http://localhost:5000/api/upload", {
-      method: "POST",
-      body: formData,
-    })
-      .then(res => res.json())
-      .then(data => {
-        console.log("Upload success:", data);
-         
-         // Assuming the response contains the image filename or path
-          const img_id = data.image_id;  // Example, adjust based on your backend response
+      fetch("http://localhost:5000/api/upload", {
+        method: "POST",
+        body: formData,
+      })
+        .then(res => res.json())
+        .then(data => {
+          console.log("Upload success:", data);
+          const img_id = data.image_id;
 
           // Construct the URL to view the image
           setImageUrl(`http://localhost:5000/api/image/${img_id}`);
-           if (dialogRef.current) {
-            dialogRef.current.showModal();  // Opens the dialog using the .showModal() method
+          if (dialogRef.current) {
+            dialogRef.current.showModal(); // Opens the dialog using .showModal()
           }
-          
-      })
-      .catch(err => {
-        console.error("Upload failed:", err);
-      });
-  }
-};
+        })
+        .catch(err => {
+          console.error("Upload failed:", err);
+        });
+    }
+  };
 
   return (
     <div className={classid}>
-    
-
       {user ? (
         <>
-          {<dialog ref={dialogRef} onClick={() => dialogRef.current?.close()}>
-        <div className="modal-content"  onClick={e => e.stopPropagation()}>
-        
-          <img className="imageStyle" src={imageUrl} alt="Uploaded"  />
-          <button className="modal-button" onClick={() => dialogRef.current?.close()} >Close</button>
-          
-        </div>
-      </dialog>
-      }
-          <Card title={"Welcome " + `${user.name}`} content="Start creating your catalogue here" type="Main" bg={false}/>
-          <div style={{"display": "flex"}}>
-          <button className="b1"  onClick={() => { document.getElementById('fileInput')?.click()
-          }}><h4>Add Image</h4></button>
-           <input
-        id="fileInput"
-        type="file"
-        accept="image/*"
-        onChange={handleFileChange} 
-        style={{ display: 'none' }} // Hide the file input
-      />
-          <button className="b1"  onClick={() => {
-            googleLogout();
-            setUser(null);  
-            setClassid("");
-          }}><h4>Logout</h4></button>
+          {/* Enhanced Dialog */}
+          <dialog ref={dialogRef} onClick={() => dialogRef.current?.close()}>
+            <div className="modal-content" onClick={e => e.stopPropagation()}>
+              <div className="modal-header">
+                <h2>Uploaded Image</h2>
+                <button className="modal-close-button" onClick={() => dialogRef.current?.close()}>&times;</button>
+              </div>
+              <div className="modal-body">
+                <img className="imageStyle" src={imageUrl} alt="Uploaded" />
+              </div>
+              <div className="modal-footer">
+                <button className="modal-button" onClick={() => dialogRef.current?.close()}>Close</button>
+              </div>
+            </div>
+          </dialog>
+
+          <Card title={"Welcome " + `${user.name}`} content="Start creating your catalogue here" type="Main" bg={false} />
+          <div style={{ display: "flex" }}>
+            <button className="b1" onClick={() => { document.getElementById('fileInput')?.click() }}><h4>Add Image</h4></button>
+            <input
+              id="fileInput"
+              type="file"
+              accept="image/*"
+              onChange={handleFileChange}
+              style={{ display: 'none' }} // Hide the file input
+            />
+            <button className="b1" onClick={() => {
+              googleLogout();
+              setUser(null);
+              setClassid("");
+            }}><h4>Logout</h4></button>
           </div>
-          
         </>
       ) : (
         <GoogleLogin
@@ -95,7 +90,7 @@ const [imageUrl, setImageUrl] = React.useState('');
             console.log("Decoded JWT:", decoded);
             setUser(decoded);
 
-            // 🔐 Send token to backend for validation + session creation
+            // Send token to backend for validation + session creation
             fetch("http://localhost:5000/api/auth", {
               method: "POST",
               headers: {
@@ -109,10 +104,10 @@ const [imageUrl, setImageUrl] = React.useState('');
           }}
         />
       )}
-
     </div>
   );
 }
+
 export function Main(props: any) {
 
     

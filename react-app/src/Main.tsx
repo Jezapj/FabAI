@@ -11,21 +11,64 @@ setClassid("b2")
 }, [user])
 
 const [image, setImage] = React.useState<any>(null);
+const [imageUrl, setImageUrl] = React.useState('');
+  const [showModal, setShowModal] = React.useState(false);
+  const dialogRef = React.useRef<HTMLDialogElement | null>(null);
 
   // Handle the file upload
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setImage(file);
-    }
-  };
+  const file = e.target.files?.[0];
+  if (file) {
+    setImage(file);
+
+    const formData = new FormData();
+    formData.append("image", file);
+    //formData.append("user_id", userId); // Optional if user info is required
+    // Add user info to the FormData if needed
+
+    // Append user info as a JSON string or individual key-value pairs
+    formData.append("user_info", JSON.stringify(user)); // Send as a JSON string
+
+
+    fetch("http://localhost:5000/api/upload", {
+      method: "POST",
+      body: formData,
+    })
+      .then(res => res.json())
+      .then(data => {
+        console.log("Upload success:", data);
+         
+         // Assuming the response contains the image filename or path
+          const img_id = data.image_id;  // Example, adjust based on your backend response
+
+          // Construct the URL to view the image
+          setImageUrl(`http://localhost:5000/api/image/${img_id}`);
+           if (dialogRef.current) {
+            dialogRef.current.showModal();  // Opens the dialog using the .showModal() method
+          }
+          
+      })
+      .catch(err => {
+        console.error("Upload failed:", err);
+      });
+  }
+};
+
   return (
     <div className={classid}>
     
 
       {user ? (
         <>
+          {<dialog ref={dialogRef} onClick={() => dialogRef.current?.close()}>
+        <div className="modal-content"  onClick={e => e.stopPropagation()}>
+        
+          <img className="imageStyle" src={imageUrl} alt="Uploaded"  />
+          <button className="modal-button" onClick={() => dialogRef.current?.close()} >Close</button>
           
+        </div>
+      </dialog>
+      }
           <Card title={"Welcome " + `${user.name}`} content="Start creating your catalogue here" type="Main" bg={false}/>
           <div style={{"display": "flex"}}>
           <button className="b1"  onClick={() => { document.getElementById('fileInput')?.click()
@@ -78,6 +121,7 @@ export function Main(props: any) {
     <div>
         <Card title="Innovation" content="Welcome to FabAI" type="Feature" img="" bg={true}/> 
     </div>
+    
     <div className="Main">
       <div className="bg"><Card title="AI Classifier" content="Use our AI model to add clothes to your inventory" type="Sub" img="src/assets/shirt.png" img2="src/assets/shoes.png" bg={true}/></div>
         

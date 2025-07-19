@@ -10,10 +10,27 @@ export function Login() {
     setClassid("b2")
   }, [user])
 
+  const [prediction, setPrediction] = React.useState('');
+  const [imageId, setImageId] = React.useState(1);  // Set to the ID of the image you want to classify
+
+  const handlePredict = async () => {
+    try {
+      const response = await fetch(`http://localhost:5000/api/predict_image/${imageId}`);
+      console.log(response)
+      const data = await response.json();
+      setPrediction(data.prediction);  // Set prediction from the response
+      console.log(prediction)
+    } catch (error) {
+      console.error('Error fetching prediction:', error);
+    }
+  };
+
+
   const [image, setImage] = React.useState<any>(null);
   const [imageUrl, setImageUrl] = React.useState('');
   const [showModal, setShowModal] = React.useState(false);
   const dialogRef = React.useRef<HTMLDialogElement | null>(null);
+
 
   // Handle the file upload
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -33,6 +50,7 @@ export function Login() {
         .then(data => {
           console.log("Upload success:", data);
           const img_id = data.image_id;
+          setImageId(img_id)///////
 
           // Construct the URL to view the image
           setImageUrl(`http://localhost:5000/api/image/${img_id}`);
@@ -55,13 +73,17 @@ export function Login() {
             <div className="modal-content" onClick={e => e.stopPropagation()}>
               <div className="modal-header">
                 <h2>Uploaded Image</h2>
-                <button className="modal-close-button" onClick={() => dialogRef.current?.close()}>&times;</button>
+                
               </div>
               <div className="modal-body">
                 <img className="imageStyle" src={imageUrl} alt="Uploaded" />
+                
               </div>
+              <h1>{prediction}</h1>
               <div className="modal-footer">
-                <button className="modal-button" onClick={() => dialogRef.current?.close()}>Close</button>
+                <button className="modal-close-button" onClick={() => {dialogRef.current?.close();setPrediction("")}}>&times;</button>
+                <button className="modal-close-button" onClick={() => handlePredict()}>Predict</button>
+                {/*<button className="modal-button" onClick={() => dialogRef.current?.close()}>Close</button>*/}
               </div>
             </div>
           </dialog>

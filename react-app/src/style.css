@@ -225,10 +225,11 @@ button:hover{
 
 
 .modal-content {
-  width: 90%;
+  width: 80%;
   max-width: 600px;
+  max-height: 70%;
   margin: 0 auto;
-  background: #fff;
+  background: rgba(0,0,0, 0.95);
   border-radius: 10px;
   padding: 20px;
   position: relative;
@@ -246,13 +247,16 @@ button:hover{
   margin: 0;
 }
 
-.modal-close-button {
+.b1 .modal-close-button {
   background: none;
   border: none;
   font-size: 24px;
   cursor: pointer;
+  background-color: rgba(220,220,220, 0.85);
 }
-
+.b1 .modal-close-button:hover {
+  background-color: rgba(24, 0, 43, 0.85);
+}
 .modal-body {
   display: flex;
   justify-content: center;
@@ -266,8 +270,8 @@ button:hover{
   margin-top: 20px;
 }
 
-.modal-button {
-  background-color: #4CAF50;
+.b1 .modal-button {
+  background-color: rgba(220,220,220, 0.85);
   color: white;
   padding: 10px 20px;
   border: none;
@@ -275,11 +279,17 @@ button:hover{
   cursor: pointer;
 }
 
-.modal-button:hover {
-  background-color: #45a049;
+.b1 .modal-button :hover {
+  background-color: rgba(24, 0, 43, 0.85);
 }
 
-.imageStyle img{
-  max-width: auto;
-  max-height: auto;
+.modal-body img{
+  max-width: 400px;
+  max-height: 400px;
+}
+dialog{
+  border: none;
+    color: white;
+    background: rgba(0, 0, 0, 0);
+    text-align: center;
 }

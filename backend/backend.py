@@ -7,12 +7,23 @@ from flask_sqlalchemy import SQLAlchemy
 from authlib.integrations.flask_client import OAuth
 from werkzeug.utils import secure_filename
 import json
+import torch
+
+from torchvision import models, transforms
+import torch.nn as nn
+from PIL import Image as PILImage
+
+from predictor import ClothingClassifier
 
 from google.oauth2 import id_token
 from google.auth.transport import requests as grequests
 
 
 app = Flask(__name__)
+
+# Load the model once during the app startup
+model = ClothingClassifier()
+
 
 CORS(app)
 @app.route("/")
@@ -193,6 +204,24 @@ class Image(db.Model):
     filename = db.Column(db.String(255))
     filepath = db.Column(db.String(512))
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+
+
+
+@app.route('/api/predict_image/<int:image_id>', methods=['GET'])
+def predict_image(image_id):
+    # Retrieve image from the database using its ID
+    image = Image.query.filter_by(id=image_id).first()  # Assuming image has an id and file path
+    if not image:
+        return jsonify({'error': 'Image not found'}), 404
+    
+    # Open the image file using its path
+    image_path = image.filepath  # Assuming filepath is stored in the database
+    image_data = PILImage.open(image_path).convert('RGB')  # Convert to RGB (important for models trained on RGB data)
+
+    #model = ClothingClassifier()
+    label = model.predict(image_path)
+    
+    return jsonify({'prediction': str(label)})  # Send prediction back as JSON
 
 
 if __name__ == "__main__":

@@ -18,6 +18,9 @@ from predictor import ClothingClassifier
 from google.oauth2 import id_token
 from google.auth.transport import requests as grequests
 
+from assigner import clothingAssign
+#from algo import distribute
+
 
 app = Flask(__name__)
 
@@ -117,6 +120,74 @@ def upload_file():
     except ValueError:
         return jsonify({'error': 'Invalid token'}), 400
 
+@app.route('/api/uploadnx', methods=['POST'])
+def upload_file_nx():
+    if 'image' not in request.files:
+        return jsonify({'error': 'No file part'}), 400
+
+    file = request.files['image']
+    user_info = request.form.get('user_info')
+
+    if not user_info:
+        return jsonify({'error': 'User information is missing'}), 400
+
+    # Parse user_info if it's a JSON string
+    user_info = json.loads(user_info)
+
+    if not file or file.filename == '':
+        return jsonify({'error': 'No selected file'}), 400
+
+    token = user_info
+
+    try:
+        # ✅ Decode Google OAuth2 token
+        #user_info = id_token.verify_oauth2_token(token, requests.Request(), os.getenv("GOOGLE_CLIENT_ID"))
+
+        user_id = user_info.get('sub')
+        email = user_info.get('email')
+        name = user_info.get('name')
+
+        # ✅ Find or create user
+        user = User.query.filter_by(oauth_id=user_id).first()
+        if not user:
+            user = User(oauth_provider='google', oauth_id=user_id, email=email, name=name)
+            db.session.add(user)
+            db.session.commit()
+
+        session['user_id'] = user.id
+
+        # ✅ Save image to disk
+        filename = secure_filename(file.filename)
+        user_folder = os.path.join(UPLOAD_FOLDER, str(user.id))
+        os.makedirs(user_folder, exist_ok=True)
+
+        filepath = os.path.join(user_folder, filename)
+        file.save(filepath)
+
+        # Predict clothing type
+        label = model.predict(filepath)
+        # Assign Heat Value
+        value, category = clothingAssign(label, filepath)
+        value = float(value)
+
+        # ✅ Save image to DB
+        new_image = Image(filename=filename, filepath=filepath, user_id=user.id, label=label, value=value, category=category)
+        db.session.add(new_image)
+        db.session.commit()
+
+        # ✅ Return image ID so frontend can request it
+        return jsonify({
+            'message': 'File uploaded',
+            'filename': filename,
+            'image_id': new_image.id,
+            'value': value,
+            'category': category
+
+        })
+
+    except ValueError:
+        return jsonify({'error': 'Invalid token'}), 400
+
 @app.route('/api/image/<int:image_id>')
 def serve_image(image_id):
     image = Image.query.filter_by(id=image_id).first()
@@ -192,6 +263,7 @@ def profile():
     return f"Welcome, {g.user.name}! Email: {g.user.email}"
 
 class User(db.Model):
+    __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)
     oauth_provider = db.Column(db.String(50))
     oauth_id = db.Column(db.String(255), unique=True)
@@ -203,7 +275,63 @@ class Image(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     filename = db.Column(db.String(255))
     filepath = db.Column(db.String(512))
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    label = db.Column(db.String(50))
+    value = db.Column(db.Float)  
+    category = db.Column(db.String(50))
+
+def distribute(target, user_id, db):
+    user = db.session.query(User).filter_by(oauth_id=user_id).first()
+    if not user:
+        return None
+
+    # Category grouping
+    category_map = {
+        "hat": ["Optional", "Head"],
+        "top": ["Top"],
+        "bot": ["Bottom"],
+        "shoe": ["Shoes"]
+    }
+
+    # Group user images
+    images_by_cat = {
+        "hat": [],
+        "top": [],
+        "bot": [],
+        "shoe": []
+    }
+
+    for img in user.images:
+        for group, valid_cats in category_map.items():
+            if img.category in valid_cats:
+                images_by_cat[group].append(img)
+
+    # Optional fallback for hat
+    if not images_by_cat["hat"]:
+        images_by_cat["hat"] = [None]
+
+    # Brute-force all valid combinations (only 1 from each category)
+    best_combo = None
+    best_diff = float('inf')
+
+    for hat in images_by_cat["hat"]:
+        for top in images_by_cat["top"]:
+            for bot in images_by_cat["bot"]:
+                for shoe in images_by_cat["shoe"]:
+                    combo = [hat, top, bot, shoe]
+                    total_value = sum(img.value for img in combo if img is not None)
+                    diff = abs(total_value - target)
+
+                    if diff < best_diff:
+                        best_diff = diff
+                        best_combo = {
+                            "hat": hat,
+                            "top": top,
+                            "bot": bot,
+                            "shoe": shoe
+                        }
+
+    return best_combo
 
 
 
@@ -222,6 +350,27 @@ def predict_image(image_id):
     label = model.predict(image_path)
     
     return jsonify({'prediction': str(label)})  # Send prediction back as JSON
+
+@app.route('/api/outfit', methods=['GET'])
+def get_outfit():
+    user_id = request.args.get('user_id')
+    target = request.args.get('target', type=float)
+
+    if not user_id or target is None:
+        return jsonify({'error': 'Missing user_id or target'}), 400
+
+    outfit = distribute(target, user_id, db)
+    if not outfit:
+        return jsonify({'error': 'User not found or no valid images'}), 404
+
+    return jsonify({
+        part: {
+            'id': item.id,
+            'label': item.label,
+            'value': item.value,
+            'category': item.category
+        } if item else None for part, item in outfit.items()
+    })
 
 
 if __name__ == "__main__":

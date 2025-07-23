@@ -25,6 +25,30 @@ export function Login() {
     }
   };
 
+  
+  const handleOutfit = () => {
+  console.log(user)
+  const userId = user?.sub; // or however you store it
+  
+  const targetValue = 50; // example target value
+
+  if (!userId) {
+    console.error("User ID missing");
+    return;
+  }
+
+  const url = `http://localhost:5000/api/outfit?user_id=${userId}&target=${targetValue}`;
+
+  fetch(url)
+    .then(res => res.json())
+    .then(data => {
+      console.log("Outfit result:", data);
+      // handle result (e.g., update UI)
+    })
+    .catch(err => {
+      console.error("Failed to fetch outfit:", err);
+    });
+};
 
   const [image, setImage] = React.useState<any>(null);
   const [imageUrl, setImageUrl] = React.useState('');
@@ -42,7 +66,7 @@ export function Login() {
       formData.append("image", file);
       formData.append("user_info", JSON.stringify(user)); // Send user info
 
-      fetch("http://localhost:5000/api/upload", {
+      fetch("http://localhost:5000/api/uploadnx", {
         method: "POST",
         body: formData,
       })
@@ -83,6 +107,7 @@ export function Login() {
               <div className="modal-footer">
                 <button className="modal-close-button" onClick={() => {dialogRef.current?.close();setPrediction("")}}>&times;</button>
                 <button className="modal-close-button" onClick={() => handlePredict()}>Predict</button>
+                <button className="modal-close-button" onClick={() => handleOutfit()}>Get Outfit</button>
                 {/*<button className="modal-button" onClick={() => dialogRef.current?.close()}>Close</button>*/}
               </div>
             </div>

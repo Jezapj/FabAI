@@ -77,7 +77,7 @@ img {
 
 }
 
-.cardSub:hover {
+.cardSub.active {
   height: 30vh;
   transition: 0.5s;
   display: inline-flex;

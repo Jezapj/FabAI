@@ -2,6 +2,17 @@ import React, { useCallback, useEffect } from "react";
 import { GoogleLogin, googleLogout } from '@react-oauth/google';
 import { jwtDecode } from 'jwt-decode';
 
+interface OutfitItem {
+  id: number;
+  label: string;
+  value: number;
+  category: string;
+}
+
+interface Outfit {
+  [key: string]: OutfitItem | null;
+}
+
 export function Login() {
   const [user, setUser] = React.useState<any>(null);
   const [classid, setClassid] = React.useState<any>("");
@@ -11,6 +22,7 @@ export function Login() {
   }, [user])
 
   const [prediction, setPrediction] = React.useState('');
+  const [outfit, setOutfit] = React.useState<Outfit | null>(null);
   const [imageId, setImageId] = React.useState(1);  // Set to the ID of the image you want to classify
 
   const handlePredict = async () => {
@@ -27,28 +39,28 @@ export function Login() {
 
   
   const handleOutfit = () => {
-  console.log(user)
-  const userId = user?.sub; // or however you store it
-  
-  const targetValue = 50; // example target value
+    console.log(user)
+    const userId = user?.sub; // or however you store it
 
-  if (!userId) {
-    console.error("User ID missing");
-    return;
-  }
+    const targetValue = 50; // example target value
 
-  const url = `http://localhost:5000/api/outfit?user_id=${userId}&target=${targetValue}`;
+    if (!userId) {
+      console.error("User ID missing");
+      return;
+    }
 
-  fetch(url)
-    .then(res => res.json())
-    .then(data => {
-      console.log("Outfit result:", data);
-      // handle result (e.g., update UI)
-    })
-    .catch(err => {
-      console.error("Failed to fetch outfit:", err);
-    });
-};
+    const url = `http://localhost:5000/api/outfit?user_id=${userId}&target=${targetValue}`;
+
+    fetch(url)
+      .then(res => res.json())
+      .then(data => {
+        console.log("Outfit result:", data);
+        setOutfit(data);
+      })
+      .catch(err => {
+        console.error("Failed to fetch outfit:", err);
+      });
+  };
 
   const [image, setImage] = React.useState<any>(null);
   const [imageUrl, setImageUrl] = React.useState('');
@@ -60,6 +72,8 @@ export function Login() {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      setOutfit(null);
+      setPrediction("");
       setImage(file);
 
       const formData = new FormData();
@@ -96,19 +110,42 @@ export function Login() {
           <dialog ref={dialogRef} onClick={() => dialogRef.current?.close()}>
             <div className="modal-content" onClick={e => e.stopPropagation()}>
               <div className="modal-header">
-                <h2>Uploaded Image</h2>
-                
+                <h2>AI Image Analysis</h2>
               </div>
               <div className="modal-body">
-                <img className="imageStyle" src={imageUrl} alt="Uploaded" />
-                
+                <div className="uploaded-image-section">
+                   <img className="imageStyle" src={imageUrl} alt="Uploaded" />
+                   {prediction && (
+                     <div className="prediction-result">
+                       <h3>AI Prediction: {prediction}</h3>
+                     </div>
+                   )}
+                </div>
+
+                {outfit && (
+                  <div className="outfit-section">
+                    <hr />
+                    <h2>Recommended Outfit</h2>
+                    <div className="outfit-grid">
+                      {Object.entries(outfit).map(([part, item]) => (
+                        item && (
+                          <div key={part} className="outfit-item">
+                            <img src={`http://localhost:5000/api/image/${item.id}`} alt={item.label} />
+                            <div className="outfit-item-info">
+                              <span className="outfit-item-category">{part.toUpperCase()}</span>
+                              <span className="outfit-item-label">{item.label}</span>
+                            </div>
+                          </div>
+                        )
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
-              <h1>{prediction}</h1>
               <div className="modal-footer">
-                <button className="modal-close-button" onClick={() => {dialogRef.current?.close();setPrediction("")}}>&times;</button>
-                <button className="modal-close-button" onClick={() => handlePredict()}>Predict</button>
-                <button className="modal-close-button" onClick={() => handleOutfit()}>Get Outfit</button>
-                {/*<button className="modal-button" onClick={() => dialogRef.current?.close()}>Close</button>*/}
+                <button className="modal-close-button" onClick={() => {dialogRef.current?.close();setPrediction("");setOutfit(null);}}>Close</button>
+                <button className="modal-action-button" onClick={() => handlePredict()}>Predict</button>
+                <button className="modal-action-button" onClick={() => handleOutfit()}>Suggest Outfit</button>
               </div>
             </div>
           </dialog>

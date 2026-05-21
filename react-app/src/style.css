@@ -159,6 +159,7 @@ button{
   margin: 10px 30px;
   height: 30px;
   width: 45%;
+  color: black;
 }
 
 .button{
@@ -225,67 +226,166 @@ button:hover{
 
 
 .modal-content {
-  width: 80%;
-  max-width: 600px;
-  max-height: 70%;
+  width: 90%;
+  max-width: 850px;
+  max-height: 90vh;
+  overflow-y: auto;
   margin: 0 auto;
-  background: rgba(0,0,0, 0.95);
-  border-radius: 10px;
-  padding: 20px;
+  background: rgba(0, 0, 0, 0.95);
+  border-radius: 15px;
+  padding: 30px;
   position: relative;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .modal-header {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
-  padding-bottom: 10px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .modal-header h2 {
-  font-size: 24px;
+  font-size: 28px;
   margin: 0;
+  color: #fff;
+  letter-spacing: 1px;
 }
 
-.b1 .modal-close-button {
-  background: none;
-  border: none;
-  font-size: 24px;
-  cursor: pointer;
-  background-color: rgba(220,220,220, 0.85);
-}
-.b1 .modal-close-button:hover {
-  background-color: rgba(24, 0, 43, 0.85);
-}
 .modal-body {
   display: flex;
+  flex-direction: column;
+  padding: 20px 0;
+}
+
+.uploaded-image-section {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.uploaded-image-section .imageStyle {
+  max-width: 100%;
+  max-height: 350px;
+  border-radius: 10px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.prediction-result {
+  margin-top: 15px;
+  color: #4CAF50;
+  font-size: 20px;
+}
+
+.outfit-section {
+  width: 100%;
+  margin-top: 20px;
+}
+
+.outfit-section hr {
+  border: none;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  margin: 20px 0;
+}
+
+.outfit-section h2 {
+  text-align: center;
+  color: #fff;
+  margin-bottom: 20px;
+}
+
+.outfit-grid {
+  display: flex;
+  flex-wrap: wrap;
   justify-content: center;
-  align-items: center;
-  padding: 20px;
+  gap: 20px;
+}
+
+.outfit-item {
+  background: rgba(255, 255, 255, 0.05);
+  padding: 15px;
+  border-radius: 12px;
+  text-align: center;
+  width: 160px;
+  transition: transform 0.3s ease;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.outfit-item:hover {
+  transform: translateY(-5px);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.outfit-item img {
+  width: 100%;
+  height: 140px;
+  object-fit: contain;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.outfit-item-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.outfit-item-category {
+  font-size: 10px;
+  color: #aaa;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 4px;
+}
+
+.outfit-item-label {
+  font-size: 14px;
+  color: #fff;
+  font-weight: 500;
 }
 
 .modal-footer {
   display: flex;
   justify-content: center;
+  gap: 15px;
   margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.b1 .modal-button {
-  background-color: rgba(220,220,220, 0.85);
-  color: white;
-  padding: 10px 20px;
-  border: none;
-  border-radius: 5px;
+.modal-close-button,
+.modal-action-button {
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 600;
   cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 14px;
+  width: auto;
+  height: auto;
+  margin: 0;
 }
 
-.b1 .modal-button :hover {
-  background-color: rgba(24, 0, 43, 0.85);
+.modal-close-button {
+  background-color: #f44336 !important;
+  color: white !important;
+  border: none !important;
 }
 
-.modal-body img{
-  max-width: 400px;
-  max-height: 400px;
+.modal-close-button:hover {
+  background-color: #d32f2f !important;
+}
+
+.modal-action-button {
+  background-color: #3a0063 !important;
+  color: white !important;
+  border: none !important;
+}
+
+.modal-action-button:hover {
+  background-color: #51008a !important;
+  transform: scale(1.05) !important;
 }
 dialog{
   border: none;

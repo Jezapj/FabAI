@@ -372,6 +372,24 @@ def get_outfit():
         } if item else None for part, item in outfit.items()
     })
 
+@app.route('/api/inventory/<string:oauth_id>', methods=['GET'])
+def get_inventory(oauth_id):
+    user = User.query.filter_by(oauth_id=oauth_id).first()
+    if not user:
+        return jsonify({'error': 'User not found'}), 404
+
+    inventory = []
+    for img in user.images:
+        inventory.append({
+            'id': img.id,
+            'label': img.label,
+            'value': img.value,
+            'category': img.category,
+            'filename': img.filename
+        })
+
+    return jsonify(inventory)
+
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)

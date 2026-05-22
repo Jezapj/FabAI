@@ -55,6 +55,22 @@ export function Login() {
   const [showModal, setShowModal] = React.useState(false);
   const dialogRef = React.useRef<HTMLDialogElement | null>(null);
 
+  const [inventory, setInventory] = React.useState<any[]>([]);
+  const inventoryDialogRef = React.useRef<HTMLDialogElement | null>(null);
+
+  const handleViewInventory = async () => {
+    try {
+      const response = await fetch(`http://localhost:5000/api/inventory/${user.sub}`);
+      const data = await response.json();
+      setInventory(data);
+      if (inventoryDialogRef.current) {
+        inventoryDialogRef.current.showModal();
+      }
+    } catch (error) {
+      console.error('Error fetching inventory:', error);
+    }
+  };
+
 
   // Handle the file upload
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -113,9 +129,33 @@ export function Login() {
             </div>
           </dialog>
 
+          {/* Inventory Dialog */}
+          <dialog ref={inventoryDialogRef} onClick={() => inventoryDialogRef.current?.close()}>
+            <div className="modal-content" onClick={e => e.stopPropagation()}>
+              <div className="modal-header">
+                <h2>Your Inventory</h2>
+                <button className="modal-close-button" onClick={() => inventoryDialogRef.current?.close()}>&times;</button>
+              </div>
+              <div className="modal-body" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '10px' }}>
+                {inventory.length > 0 ? (
+                  inventory.map((item: any) => (
+                    <div key={item.id} style={{ border: '1px solid #ccc', padding: '10px', borderRadius: '5px' }}>
+                      <img src={`http://localhost:5000/api/image/${item.id}`} alt={item.label} style={{ width: '100%', height: 'auto' }} />
+                      <p>{item.label}</p>
+                      <p>Value: {item.value}</p>
+                    </div>
+                  ))
+                ) : (
+                  <p>No items in inventory.</p>
+                )}
+              </div>
+            </div>
+          </dialog>
+
           <Card title={"Welcome " + `${user.name}`} content="Start creating your catalogue here" type="Main" bg={false} />
           <div style={{ display: "flex" }}>
             <button className="b1" onClick={() => { document.getElementById('fileInput')?.click() }}><h4>Add Image</h4></button>
+            <button className="b1" onClick={handleViewInventory}><h4>View Inventory</h4></button>
             <input
               id="fileInput"
               type="file"
@@ -190,36 +230,37 @@ export function Card(props: any ) {
         <h3>{props.content}</h3>
     </div>
     );
-    let active = false;
-    const [ contents, setContents] = React.useState({"display":"none","opacity":"0","transition":"2s","transition-delay":"4.5s"});
-    const [ subContents1, setSubContents1] = React.useState({"display":"block","transition":"2s","opacity":"0"});
-    const [ subContents2, setSubContents2] = React.useState({"display":"block","opacity":"0"});
+    const lingerTimer = React.useRef<any>(null);
+    const [isExpanded, setIsExpanded] = React.useState(false);
+    const [ contents, setContents] = React.useState<React.CSSProperties>({"display":"none","opacity":"0","transition":"2s","transitionDelay":"4.5s"});
+    const [ subContents1, setSubContents1] = React.useState<React.CSSProperties>({"display":"block","transition":"2s","opacity":"0"});
+    const [ subContents2, setSubContents2] = React.useState<React.CSSProperties>({"display":"block","opacity":"0"});
     const cardSub = (
-    <div className='cardSub' onMouseOver={() => {
-      active = true;
-      if (active){
-
+    <div className={`cardSub ${isExpanded ? 'active' : ''}`} onMouseEnter={() => {
+      if (lingerTimer.current) clearTimeout(lingerTimer.current);
+      lingerTimer.current = setTimeout(() => {
+        setIsExpanded(true);
         setTimeout(setSubContents1, 0, {"display":"block","opacity":"0"})
-      setTimeout(setSubContents2, 0, {"display":"block","opacity":"0"})
-      //setTimeout(setContents, 0, ({"display":"inline-flex","opacity":"0"}))
-
-        setContents({"display":"inline-flex","opacity":"1","transition":"2s","transition-delay":"0.5s"})
-          setTimeout(setSubContents1, 1000,{"opacity":"1","transition":"2s"})
-          setTimeout(setSubContents2, 1700,{"opacity":"1","transition":"2s","transition-delay":"0.5s"})
-
-      }
+        setTimeout(setSubContents2, 0, {"display":"block","opacity":"0"})
+        setContents({"display":"inline-flex","opacity":"1","transition":"2s","transitionDelay":"0.5s"})
+        setTimeout(setSubContents1, 1000,{"opacity":"1","transition":"2s"})
+        setTimeout(setSubContents2, 1700,{"opacity":"1","transition":"2s","transitionDelay":"0.5s"})
+      }, 800);
       
           }} 
         onMouseLeave={() => {
-          active = false
-      //setSubContents1({"display":"none","transition":"2s", "opacity":"0"})
-      setTimeout(setSubContents1, 0, {"opacity":"0","transition":"1s","transition-delay":"0s"})
-      setTimeout(setSubContents2, 0, {"opacity":"0","transition":"1s","transition-delay":"0s"})
-      setTimeout(setContents, 1000, ({"opacity":"0","transition":"0s","transition-delay":"0.5s"}))
+          if (lingerTimer.current) {
+            clearTimeout(lingerTimer.current);
+          }
+          setIsExpanded(false);
+          //setSubContents1({"display":"none","transition":"2s", "opacity":"0"})
+          setTimeout(setSubContents1, 0, {"opacity":"0","transition":"1s","transitionDelay":"0s"})
+          setTimeout(setSubContents2, 0, {"opacity":"0","transition":"1s","transitionDelay":"0s"})
+          setTimeout(setContents, 1000, ({"opacity":"0","transition":"0s","transitionDelay":"0.5s"}))
 
-      setTimeout(setSubContents1, 1000, {"display":"none","opacity":"0"})
-      setTimeout(setSubContents2, 1000, {"display":"none","opacity":"0"})
-      setTimeout(setContents, 1000, ({"display":"none","opacity":"0"}))
+          setTimeout(setSubContents1, 1000, {"display":"none","opacity":"0"})
+          setTimeout(setSubContents2, 1000, {"display":"none","opacity":"0"})
+          setTimeout(setContents, 1000, ({"display":"none","opacity":"0"}))
           }} >
       <div className="subText">
         <h1>{props.title}</h1>

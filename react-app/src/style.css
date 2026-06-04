@@ -77,7 +77,7 @@ img {
 
 }
 
-.cardSub.active {
+.cardSub:hover {
   height: 30vh;
   transition: 0.5s;
   display: inline-flex;
@@ -392,4 +392,131 @@ dialog{
     color: white;
     background: rgba(0, 0, 0, 0);
     text-align: center;
+}
+
+/* ── Weather Widget ─────────────────────────────────────────────────────────── */
+.weather-strip {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding-bottom: 6px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+}
+.weather-strip::-webkit-scrollbar        { height: 4px; }
+.weather-strip::-webkit-scrollbar-track  { background: transparent; }
+.weather-strip::-webkit-scrollbar-thumb  {
+  background-color: rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+}
+
+.weather-day {
+  flex-shrink: 0;
+  min-width: 82px;
+  border-radius: 12px;
+  text-align: center;
+  padding: 12px 10px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  transition: background 0.2s;
+}
+.weather-day--today {
+  background: rgba(100, 40, 160, 0.5);
+  border-color: rgba(180, 100, 255, 0.4);
+}
+.weather-day__name {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: #999;
+  margin-bottom: 6px;
+}
+.weather-day--today .weather-day__name { color: #d8b4fe; }
+.weather-day__icon  { font-size: 24px; margin: 4px 0; }
+.weather-day__desc  {
+  font-size: 10px;
+  color: #777;
+  margin-bottom: 6px;
+  min-height: 24px;
+  line-height: 12px;
+}
+.weather-day__max   { font-size: 16px; font-weight: 700; color: #fff; }
+.weather-day__min   { font-size: 11px; color: #555; margin-top: 2px; }
+
+/* ── Inventory Modal ────────────────────────────────────────────────────────── */
+.inv-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 12px;
+  width: 100%;
+}
+
+.inv-item {
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  overflow: hidden;
+  transition: transform 0.2s, background 0.2s;
+  cursor: default;
+}
+.inv-item:hover {
+  background: rgba(255, 255, 255, 0.09);
+  transform: translateY(-3px);
+}
+.inv-item__img-wrap {
+  height: 120px;
+  background: rgba(0, 0, 0, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.inv-item__img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.inv-item__info  { padding: 8px 10px 10px; }
+.inv-item__label {
+  font-weight: 600;
+  font-size: 13px;
+  color: #eee;
+  margin-bottom: 5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.inv-item__cat {
+  border-radius: 8px;
+  padding: 2px 8px;
+  font-size: 10px;
+  color: #ddd;
+  font-weight: 500;
+}
+
+/* Inventory filter chips — override global button sizing */
+.inv-filter {
+  border-radius: 20px !important;
+  padding: 5px 14px !important;
+  cursor: pointer !important;
+  font-size: 12px !important;
+  margin: 0 !important;
+  height: auto !important;
+  width: auto !important;
+  transition: all 0.2s !important;
+  background: rgba(255, 255, 255, 0.06) !important;
+  color: #999 !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  font-weight: 400 !important;
+}
+.inv-filter:hover {
+  background: rgba(255, 255, 255, 0.12) !important;
+  color: #ddd !important;
+}
+.inv-filter--active {
+  background: rgba(110, 40, 180, 0.85) !important;
+  color: #fff !important;
+  border-color: rgba(160, 90, 255, 0.5) !important;
+  font-weight: 700 !important;
 }

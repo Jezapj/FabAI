@@ -19,7 +19,6 @@ from google.oauth2 import id_token
 from google.auth.transport import requests as grequests
 
 from assigner import clothingAssign
-#from algo import distribute
 
 
 app = Flask(__name__)
@@ -54,8 +53,8 @@ oauth.register(
     client_id=os.getenv('GOOGLE_CLIENT_ID'),
     client_secret=os.getenv('GOOGLE_CLIENT_SECRET'),
     server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
-    api_base_url='https://www.googleapis.com/oauth2/v1/',  # <-- Needed!
-    userinfo_endpoint='https://www.googleapis.com/oauth2/v1/userinfo',  # <-- Add this!
+    api_base_url='https://www.googleapis.com/oauth2/v1/',
+    userinfo_endpoint='https://www.googleapis.com/oauth2/v1/userinfo',
     client_kwargs={
         'scope': 'openid email profile'
     }
@@ -72,7 +71,6 @@ def upload_file():
     if not user_info:
         return jsonify({'error': 'User information is missing'}), 400
 
-    # Parse user_info if it's a JSON string
     user_info = json.loads(user_info)
 
     if not file or file.filename == '':
@@ -81,14 +79,10 @@ def upload_file():
     token = user_info
 
     try:
-        # ✅ Decode Google OAuth2 token
-        #user_info = id_token.verify_oauth2_token(token, requests.Request(), os.getenv("GOOGLE_CLIENT_ID"))
-
         user_id = user_info.get('sub')
         email = user_info.get('email')
         name = user_info.get('name')
 
-        # ✅ Find or create user
         user = User.query.filter_by(oauth_id=user_id).first()
         if not user:
             user = User(oauth_provider='google', oauth_id=user_id, email=email, name=name)
@@ -97,7 +91,6 @@ def upload_file():
 
         session['user_id'] = user.id
 
-        # ✅ Save image to disk
         filename = secure_filename(file.filename)
         user_folder = os.path.join(UPLOAD_FOLDER, str(user.id))
         os.makedirs(user_folder, exist_ok=True)
@@ -105,12 +98,10 @@ def upload_file():
         filepath = os.path.join(user_folder, filename)
         file.save(filepath)
 
-        # ✅ Save image to DB
         new_image = Image(filename=filename, filepath=filepath, user_id=user.id)
         db.session.add(new_image)
         db.session.commit()
 
-        # ✅ Return image ID so frontend can request it
         return jsonify({
             'message': 'File uploaded',
             'filename': filename,
@@ -131,7 +122,6 @@ def upload_file_nx():
     if not user_info:
         return jsonify({'error': 'User information is missing'}), 400
 
-    # Parse user_info if it's a JSON string
     user_info = json.loads(user_info)
 
     if not file or file.filename == '':
@@ -140,14 +130,10 @@ def upload_file_nx():
     token = user_info
 
     try:
-        # ✅ Decode Google OAuth2 token
-        #user_info = id_token.verify_oauth2_token(token, requests.Request(), os.getenv("GOOGLE_CLIENT_ID"))
-
         user_id = user_info.get('sub')
         email = user_info.get('email')
         name = user_info.get('name')
 
-        # ✅ Find or create user
         user = User.query.filter_by(oauth_id=user_id).first()
         if not user:
             user = User(oauth_provider='google', oauth_id=user_id, email=email, name=name)
@@ -156,7 +142,6 @@ def upload_file_nx():
 
         session['user_id'] = user.id
 
-        # ✅ Save image to disk
         filename = secure_filename(file.filename)
         user_folder = os.path.join(UPLOAD_FOLDER, str(user.id))
         os.makedirs(user_folder, exist_ok=True)
@@ -170,19 +155,16 @@ def upload_file_nx():
         value, category = clothingAssign(label, filepath)
         value = float(value)
 
-        # ✅ Save image to DB
         new_image = Image(filename=filename, filepath=filepath, user_id=user.id, label=label, value=value, category=category)
         db.session.add(new_image)
         db.session.commit()
 
-        # ✅ Return image ID so frontend can request it
         return jsonify({
             'message': 'File uploaded',
             'filename': filename,
             'image_id': new_image.id,
             'value': value,
             'category': category
-
         })
 
     except ValueError:
@@ -191,10 +173,9 @@ def upload_file_nx():
 @app.route('/api/image/<int:image_id>')
 def serve_image(image_id):
     image = Image.query.filter_by(id=image_id).first()
-    #image = Image.query.get(image_id)
     if not image:
         return jsonify({'error': 'Image not found'}), 404
-    return send_file(image.filepath, mimetype='image/jpeg')  # or dynamic type detect
+    return send_file(image.filepath, mimetype='image/jpeg')
 
 @app.route('/login')
 def login():
@@ -211,7 +192,6 @@ def auth_callback():
     token = oauth.google.authorize_access_token()
     user_info = oauth.google.get('userinfo').json()
 
-    # Find or create user
     user = User.query.filter_by(oauth_id=user_info['id']).first()
     if not user:
         user = User(
@@ -233,9 +213,8 @@ def auth():
         idinfo = id_token.verify_oauth2_token(token, grequests.Request(), os.getenv("GOOGLE_CLIENT_ID"))
         email = idinfo['email']
         name = idinfo['name']
-        sub = idinfo['sub']  # Google user ID
+        sub = idinfo['sub']
 
-        # Look up or create user
         user = User.query.filter_by(oauth_id=sub).first()
         if not user:
             user = User(
@@ -285,7 +264,6 @@ def distribute(target, user_id, db):
     if not user:
         return None
 
-    # Category grouping
     category_map = {
         "hat": ["Optional", "Head"],
         "top": ["Top"],
@@ -293,7 +271,6 @@ def distribute(target, user_id, db):
         "shoe": ["Shoes"]
     }
 
-    # Group user images
     images_by_cat = {
         "hat": [],
         "top": [],
@@ -306,11 +283,9 @@ def distribute(target, user_id, db):
             if img.category in valid_cats:
                 images_by_cat[group].append(img)
 
-    # Optional fallback for hat
     if not images_by_cat["hat"]:
         images_by_cat["hat"] = [None]
 
-    # Brute-force all valid combinations (only 1 from each category)
     best_combo = None
     best_diff = float('inf')
 
@@ -334,22 +309,18 @@ def distribute(target, user_id, db):
     return best_combo
 
 
-
 @app.route('/api/predict_image/<int:image_id>', methods=['GET'])
 def predict_image(image_id):
-    # Retrieve image from the database using its ID
-    image = Image.query.filter_by(id=image_id).first()  # Assuming image has an id and file path
+    image = Image.query.filter_by(id=image_id).first()
     if not image:
         return jsonify({'error': 'Image not found'}), 404
     
-    # Open the image file using its path
-    image_path = image.filepath  # Assuming filepath is stored in the database
-    image_data = PILImage.open(image_path).convert('RGB')  # Convert to RGB (important for models trained on RGB data)
+    image_path = image.filepath
+    image_data = PILImage.open(image_path).convert('RGB')
 
-    #model = ClothingClassifier()
     label = model.predict(image_path)
     
-    return jsonify({'prediction': str(label)})  # Send prediction back as JSON
+    return jsonify({'prediction': str(label)})
 
 @app.route('/api/outfit', methods=['GET'])
 def get_outfit():
@@ -371,6 +342,23 @@ def get_outfit():
             'category': item.category
         } if item else None for part, item in outfit.items()
     })
+
+# ── NEW: return all clothing items for a user ─────────────────────────────────
+@app.route('/api/inventory', methods=['GET'])
+def get_inventory():
+    user_id = request.args.get('user_id')
+    if not user_id:
+        return jsonify({'error': 'Missing user_id'}), 400
+    user = User.query.filter_by(oauth_id=user_id).first()
+    if not user:
+        return jsonify({'error': 'User not found'}), 404
+    images = Image.query.filter_by(user_id=user.id).all()
+    return jsonify([{
+        'id':       img.id,
+        'label':    img.label    or 'Unknown',
+        'value':    float(img.value) if img.value is not None else 0.0,
+        'category': img.category or 'Optional',
+    } for img in images])
 
 
 if __name__ == "__main__":

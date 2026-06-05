@@ -14,7 +14,7 @@ import torch.nn as nn
 from PIL import Image as PILImage
 
 from predictor import ClothingClassifier
-
+from pathlib import Path
 from google.oauth2 import id_token
 from google.auth.transport import requests as grequests
 
@@ -38,8 +38,17 @@ db_pw = os.getenv('DB_PW')
 
 app.secret_key = 'supersecret'  # use a secure one in production
 
-UPLOAD_FOLDER = os.path.join(os.getcwd(), 'uploads')
+
+
+#Get the absolute path of the directory containing this script
+BASE_DIR = Path(__file__).resolve().parent
+
+#Define the upload folder relative to your script
+UPLOAD_FOLDER = os.path.join(BASE_DIR, 'uploads')
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+# UPLOAD_FOLDER = os.path.join(os.getcwd(), 'uploads')
+# os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 # DB Config
 app.config['SQLALCHEMY_DATABASE_URI'] = f'postgresql://postgres:{db_pw}@db:5432/mydb'

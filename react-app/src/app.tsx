@@ -12,7 +12,7 @@ function App() {
   useEffect(() => {
     const b2 = <div className="b1" style={{"display":"none"}}><Login/></div>
     //setDynLogin(b2)
-    setDynMain(<div></div>)
+    setDynMain(<div><Main/></div>)
 
   }, [dynMain])
 

@@ -38,3 +38,6 @@ volumes:
   pgdata:
 # docker-compose up --build  
 # docker-compose exec db psql -U postgres -d mydb
+# \dt
+# do SQL ... SELECT * FROM image; etc
+# TRUNCATE TABLE image;

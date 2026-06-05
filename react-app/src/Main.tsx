@@ -30,11 +30,23 @@ function dayLabel(dateStr: string, i: number): string {
   return new Date(dateStr + 'T12:00:00').toLocaleDateString('en-AU', { weekday: 'short' });
 }
 
+// ── Temperature → warmth target conversion ───────────────────────────────────
+// Maps °C to 0-100 where 0 = very hot (light clothes), 100 = very cold (heavy)
+// Calibrated for range -10 °C (100) → 45 °C (0)
+function tempToTarget(maxTemp: number): number {
+  return Math.max(0, Math.min(100, Math.round(100 - ((maxTemp + 10) / 55) * 100)));
+}
+
 // ── Weather Widget ────────────────────────────────────────────────────────────
-function WeatherWidget() {
+interface WeatherWidgetProps {
+  onDaySelect?: (maxTemp: number, label: string) => void;
+}
+
+function WeatherWidget({ onDaySelect }: WeatherWidgetProps) {
   const [forecast, setForecast] = useState<WeatherDay[]>([]);
   const [city, setCity]         = useState('');
   const [status, setStatus]     = useState<'loading' | 'ok' | 'error'>('loading');
+  const [selectedIdx, setSelectedIdx] = useState(0);
 
   useEffect(() => {
     async function load(lat: number, lon: number) {
@@ -50,6 +62,10 @@ function WeatherWidget() {
           minTemp: Math.round(d.daily.temperature_2m_min[i]),
           weatherCode: d.daily.weathercode[i],
         })));
+        // Notify parent with today's temperature on first load
+        if (onDaySelect) {
+          onDaySelect(Math.round(d.daily.temperature_2m_max[0]), 'Today');
+        }
         setStatus('ok');
       } catch {
         setStatus('error');
@@ -107,9 +123,23 @@ function WeatherWidget() {
       <div className="weather-strip">
         {forecast.map((day, i) => {
           const [emoji, label] = wmo(day.weatherCode);
-          const today = i === 0;
+          const today    = i === 0;
+          const selected = i === selectedIdx;
+          const classes  = [
+            'weather-day',
+            today    ? 'weather-day--today'    : '',
+            selected && !today ? 'weather-day--selected' : '',
+          ].filter(Boolean).join(' ');
           return (
-            <div key={day.date} className={`weather-day${today ? ' weather-day--today' : ''}`}>
+            <div
+              key={day.date}
+              className={classes}
+              onClick={() => {
+                setSelectedIdx(i);
+                if (onDaySelect) onDaySelect(day.maxTemp, dayLabel(day.date, i));
+              }}
+              title={`Select ${dayLabel(day.date, i)} — ${day.maxTemp}°C`}
+            >
               <div className="weather-day__name">{dayLabel(day.date, i)}</div>
               <div className="weather-day__icon">{emoji}</div>
               <div className="weather-day__desc">{label}</div>
@@ -119,6 +149,11 @@ function WeatherWidget() {
           );
         })}
       </div>
+      {forecast.length > 0 && (
+        <p className="weather-day--target-label">
+          🧥 Outfit suggestions will be tailored for <strong style={{ color: '#e2e8f0' }}>{dayLabel(forecast[selectedIdx].date, selectedIdx)}</strong> · {forecast[selectedIdx].maxTemp}°C · warmth target {tempToTarget(forecast[selectedIdx].maxTemp)}/100
+        </p>
+      )}
     </div>
   );
 }
@@ -220,11 +255,18 @@ export function Login() {
   const [outfit,     setOutfit]     = React.useState<Outfit | null>(null);
   const [imageId,    setImageId]    = React.useState(1);
   const [imageUrl,   setImageUrl]   = React.useState('');
+  const [outfitTarget, setOutfitTarget] = React.useState(50);
+  const [selectedDay,  setSelectedDay]  = React.useState('Today');
 
   const dialogRef   = useRef<HTMLDialogElement | null>(null);
   const inventoryRef = useRef<HTMLDialogElement | null>(null);
 
   useEffect(() => { setClassid(user ? 'b2' : '') }, [user]);
+
+  const handleDaySelect = (maxTemp: number, label: string) => {
+    setOutfitTarget(tempToTarget(maxTemp));
+    setSelectedDay(label);
+  };
 
   const handlePredict = async () => {
     try {
@@ -237,7 +279,7 @@ export function Login() {
   const handleOutfit = () => {
     const userId = user?.sub;
     if (!userId) return;
-    fetch(`http://localhost:5000/api/outfit?user_id=${userId}&target=50`)
+    fetch(`http://localhost:5000/api/outfit?user_id=${userId}&target=${outfitTarget}`)
       .then(r => r.json())
       .then(d => setOutfit(d))
       .catch(console.error);
@@ -280,7 +322,7 @@ export function Login() {
                 </div>
                 {outfit && (
                   <div className="outfit-section">
-                    <hr /><h2>Recommended Outfit</h2>
+                    <hr /><h2>Outfit for {selectedDay}</h2>
                     <div className="outfit-grid">
                       {Object.entries(outfit).map(([part, item]) => item && (
                         <div key={part} className="outfit-item">
@@ -314,7 +356,7 @@ export function Login() {
           <Card title={`Welcome, ${user.name}`} content="Your personal wardrobe assistant" type="Main" bg={false} />
 
           <div style={{ maxWidth: 820, margin: '0 auto', padding: '0 16px', width: '100%', boxSizing: 'border-box' }}>
-            <WeatherWidget />
+            <WeatherWidget onDaySelect={handleDaySelect} />
           </div>
 
           <div style={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap' }}>

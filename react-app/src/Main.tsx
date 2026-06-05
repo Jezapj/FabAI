@@ -128,7 +128,7 @@ function WeatherWidget({ onDaySelect }: WeatherWidgetProps) {
           const classes  = [
             'weather-day',
             today    ? 'weather-day--today'    : '',
-            selected && !today ? 'weather-day--selected' : '',
+            selected ? 'weather-day--selected' : '',
           ].filter(Boolean).join(' ');
           return (
             <div
@@ -226,7 +226,21 @@ function InventoryContent({ user, onClose }: InvContentProps) {
                   />
                 </div>
                 <div className="inv-item__info">
-                  <div className="inv-item__label">{item.label}</div>
+                  <input
+                    className="inv-item__label-input"
+                    value={item.label}
+                    onChange={(e) => {
+                      const newLabel = e.target.value;
+                      setItems(prev => prev.map(i => i.id === item.id ? { ...i, label: newLabel } : i));
+                    }}
+                    onBlur={(e) => {
+                      fetch(`http://localhost:5000/api/inventory/${item.id}`, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ label: e.target.value })
+                      });
+                    }}
+                  />
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '4px' }}>
                     <select
                       className="inv-item__cat-select"

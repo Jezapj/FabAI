@@ -24,7 +24,10 @@ from assigner import clothingAssign
 app = Flask(__name__)
 
 # Load the model once during the app startup
-model = ClothingClassifier()
+model = ClothingClassifier(
+    model_path=os.path.join(BASE_DIR, 'models', 'fabAI_clothingClassifierHD.pth'),
+    encoder_path=os.path.join(BASE_DIR, 'label_encoder.pkl')
+)
 
 
 CORS(app)

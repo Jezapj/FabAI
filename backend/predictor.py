@@ -9,8 +9,8 @@ from torchvision.models import ResNet50_Weights
 
 class ClothingClassifier:
     def __init__(self,
-                 model_path="/backend/models/fabAI_clothingClassifierHD.pth",
-                 encoder_path="label_encoder.pkl",
+                 model_path,
+                 encoder_path,
                  device="cpu",
                  use_fp16=False):
         self.device = torch.device(device)

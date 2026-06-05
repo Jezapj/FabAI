@@ -23,6 +23,9 @@ from assigner import clothingAssign
 
 app = Flask(__name__)
 
+#Get the absolute path of the directory containing this script
+BASE_DIR = Path(__file__).resolve().parent
+
 # Load the model once during the app startup
 model = ClothingClassifier(
     model_path=os.path.join(BASE_DIR, 'models', 'fabAI_clothingClassifierHD.pth'),
@@ -41,10 +44,6 @@ db_pw = os.getenv('DB_PW')
 
 app.secret_key = 'supersecret'  # use a secure one in production
 
-
-
-#Get the absolute path of the directory containing this script
-BASE_DIR = Path(__file__).resolve().parent
 
 #Define the upload folder relative to your script
 UPLOAD_FOLDER = os.path.join(BASE_DIR, 'uploads')
@@ -238,7 +237,7 @@ def auth():
             db.session.add(user)
             db.session.commit()
 
-        return jsonify({"message": "Login success", "user": {"name": user.name, "email": user.email}})
+        return jsonify({"message": "Login success", "user": {"name": user.name, "email": user.email, "sub": sub}})
     except ValueError:
         return jsonify({"message": "Invalid token"}), 400
     
@@ -274,7 +273,7 @@ class Image(db.Model):
 def distribute(target, user_id, db):
     user = db.session.query(User).filter_by(oauth_id=user_id).first()
     if not user:
-        return None
+        return []
 
     category_map = {
         "hat": ["Optional", "Head"],
@@ -298,8 +297,7 @@ def distribute(target, user_id, db):
     if not images_by_cat["hat"]:
         images_by_cat["hat"] = [None]
 
-    best_combo = None
-    best_diff = float('inf')
+    combos = []
 
     for hat in images_by_cat["hat"]:
         for top in images_by_cat["top"]:
@@ -308,17 +306,19 @@ def distribute(target, user_id, db):
                     combo = [hat, top, bot, shoe]
                     total_value = sum(img.value for img in combo if img is not None)
                     diff = abs(total_value - target)
-
-                    if diff < best_diff:
-                        best_diff = diff
-                        best_combo = {
+                    combos.append({
+                        "diff": diff,
+                        "outfit": {
                             "hat": hat,
                             "top": top,
                             "bot": bot,
                             "shoe": shoe
                         }
+                    })
 
-    return best_combo
+    # Sort by diff and take top 3
+    combos.sort(key=lambda x: x["diff"])
+    return [c["outfit"] for c in combos[:3]]
 
 
 @app.route('/api/predict_image/<int:image_id>', methods=['GET'])
@@ -328,7 +328,7 @@ def predict_image(image_id):
         return jsonify({'error': 'Image not found'}), 404
     
     image_path = image.filepath
-    image_data = PILImage.open(image_path).convert('RGB')
+    # image_data = PILImage.open(image_path).convert('RGB') # Not used
 
     label = model.predict(image_path)
     
@@ -342,18 +342,21 @@ def get_outfit():
     if not user_id or target is None:
         return jsonify({'error': 'Missing user_id or target'}), 400
 
-    outfit = distribute(target, user_id, db)
-    if not outfit:
-        return jsonify({'error': 'User not found or no valid images'}), 404
+    outfits = distribute(target, user_id, db)
+    if not outfits:
+        return jsonify([])
 
-    return jsonify({
-        part: {
-            'id': item.id,
-            'label': item.label,
-            'value': item.value,
-            'category': item.category
-        } if item else None for part, item in outfit.items()
-    })
+    results = []
+    for outfit in outfits:
+        results.append({
+            part: {
+                'id': item.id,
+                'label': item.label,
+                'value': item.value,
+                'category': item.category
+            } if item else None for part, item in outfit.items()
+        })
+    return jsonify(results)
 
 # ── NEW: return all clothing items for a user ─────────────────────────────────
 @app.route('/api/inventory', methods=['GET'])
@@ -371,6 +374,45 @@ def get_inventory():
         'value':    float(img.value) if img.value is not None else 0.0,
         'category': img.category or 'Optional',
     } for img in images])
+
+@app.route('/api/inventory/<int:image_id>', methods=['DELETE'])
+def delete_item(image_id):
+    image = Image.query.get(image_id)
+    if not image:
+        return jsonify({'error': 'Image not found'}), 404
+
+    try:
+        if os.path.exists(image.filepath):
+            os.remove(image.filepath)
+        db.session.delete(image)
+        db.session.commit()
+        return jsonify({'message': 'Item deleted'})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/inventory/<int:image_id>', methods=['PATCH'])
+def update_item(image_id):
+    image = Image.query.get(image_id)
+    if not image:
+        return jsonify({'error': 'Image not found'}), 404
+
+    data = request.json
+    if 'category' in data:
+        image.category = data['category']
+    if 'label' in data:
+        image.label = data['label']
+
+    # Re-calculate value if label or category changed
+    new_value, _ = clothingAssign(image.label, image.filepath)
+    image.value = float(new_value)
+
+    db.session.commit()
+    return jsonify({
+        'id': image.id,
+        'label': image.label,
+        'category': image.category,
+        'value': image.value
+    })
 
 
 if __name__ == "__main__":

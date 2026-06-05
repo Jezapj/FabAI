@@ -227,12 +227,38 @@ function InventoryContent({ user, onClose }: InvContentProps) {
                 </div>
                 <div className="inv-item__info">
                   <div className="inv-item__label">{item.label}</div>
-                  <span
-                    className="inv-item__cat"
-                    style={{ background: CAT_COLORS[item.category] ?? 'rgba(255,255,255,.1)' }}
-                  >
-                    {item.category}
-                  </span>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '4px' }}>
+                    <select
+                      className="inv-item__cat-select"
+                      value={item.category}
+                      onChange={(e) => {
+                        const newCat = e.target.value;
+                        fetch(`http://localhost:5000/api/inventory/${item.id}`, {
+                          method: 'PATCH',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ category: newCat })
+                        })
+                          .then(r => r.json())
+                          .then(updated => {
+                            setItems(prev => prev.map(i => i.id === item.id ? { ...i, category: updated.category, value: updated.value } : i));
+                          });
+                      }}
+                      style={{ background: CAT_COLORS[item.category] ?? 'rgba(255,255,255,.1)' }}
+                    >
+                      {CATS.filter(c => c !== 'All').map(c => <option key={c} value={c}>{c}</option>)}
+                    </select>
+                    <button
+                      className="inv-item__delete"
+                      onClick={() => {
+                        if (window.confirm('Delete this item?')) {
+                          fetch(`http://localhost:5000/api/inventory/${item.id}`, { method: 'DELETE' })
+                            .then(() => setItems(prev => prev.filter(i => i.id !== item.id)));
+                        }
+                      }}
+                    >
+                      🗑️
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}
@@ -248,29 +274,34 @@ function InventoryContent({ user, onClose }: InvContentProps) {
 }
 
 // ── Login / Dashboard ─────────────────────────────────────────────────────────
-export function Login() {
-  const [user,       setUser]       = React.useState<any>(null);
+export function Login({ user, setUser }: { user: any, setUser: any }) {
   const [classid,    setClassid]    = React.useState<any>('');
   const [prediction, setPrediction] = React.useState('');
-  const [outfit,     setOutfit]     = React.useState<Outfit | null>(null);
-  const [imageId,    setImageId]    = React.useState(1);
+  const [outfits,    setOutfits]    = React.useState<Outfit[]>([]);
+  const [imageId,    setImageId]    = React.useState<number | null>(null);
   const [imageUrl,   setImageUrl]   = React.useState('');
   const [outfitTarget, setOutfitTarget] = React.useState(50);
   const [selectedDay,  setSelectedDay]  = React.useState('Today');
 
-  const dialogRef   = useRef<HTMLDialogElement | null>(null);
   const inventoryRef = useRef<HTMLDialogElement | null>(null);
 
   useEffect(() => { setClassid(user ? 'b2' : '') }, [user]);
+
+  // Auto-fetch outfits on login or target change
+  useEffect(() => {
+    if (user) {
+      handleOutfit();
+    }
+  }, [user, outfitTarget]);
 
   const handleDaySelect = (maxTemp: number, label: string) => {
     setOutfitTarget(tempToTarget(maxTemp));
     setSelectedDay(label);
   };
 
-  const handlePredict = async () => {
+  const handlePredict = async (id: number) => {
     try {
-      const r = await fetch(`http://localhost:5000/api/predict_image/${imageId}`);
+      const r = await fetch(`http://localhost:5000/api/predict_image/${id}`);
       const d = await r.json();
       setPrediction(d.prediction);
     } catch (err) { console.error(err); }
@@ -281,15 +312,14 @@ export function Login() {
     if (!userId) return;
     fetch(`http://localhost:5000/api/outfit?user_id=${userId}&target=${outfitTarget}`)
       .then(r => r.json())
-      .then(d => setOutfit(d))
+      .then(d => setOutfits(Array.isArray(d) ? d : []))
       .catch(console.error);
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    setOutfit(null);
-    setPrediction('');
+    setPrediction('Uploading...');
 
     const formData = new FormData();
     formData.append('image', file);
@@ -300,7 +330,8 @@ export function Login() {
       .then(d => {
         setImageId(d.image_id);
         setImageUrl(`http://localhost:5000/api/image/${d.image_id}`);
-        dialogRef.current?.showModal();
+        handlePredict(d.image_id);
+        handleOutfit();
       })
       .catch(console.error);
   };
@@ -309,44 +340,6 @@ export function Login() {
     <div className={classid}>
       {user ? (
         <>
-          {/* ── Upload / Predict Modal ── */}
-          <dialog ref={dialogRef} onClick={() => dialogRef.current?.close()}>
-            <div className="modal-content" onClick={e => e.stopPropagation()}>
-              <div className="modal-header"><h2>AI Image Analysis</h2></div>
-              <div className="modal-body">
-                <div className="uploaded-image-section">
-                  <img className="imageStyle" src={imageUrl} alt="Uploaded" />
-                  {prediction && (
-                    <div className="prediction-result"><h3>AI Prediction: {prediction}</h3></div>
-                  )}
-                </div>
-                {outfit && (
-                  <div className="outfit-section">
-                    <hr /><h2>Outfit for {selectedDay}</h2>
-                    <div className="outfit-grid">
-                      {Object.entries(outfit).map(([part, item]) => item && (
-                        <div key={part} className="outfit-item">
-                          <img src={`http://localhost:5000/api/image/${item.id}`} alt={item.label} />
-                          <div className="outfit-item-info">
-                            <span className="outfit-item-category">{part.toUpperCase()}</span>
-                            <span className="outfit-item-label">{item.label}</span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-              <div className="modal-footer">
-                <button className="modal-close-button" onClick={() => { dialogRef.current?.close(); setPrediction(''); setOutfit(null); }}>
-                  Close
-                </button>
-                <button className="modal-action-button" onClick={handlePredict}>Predict</button>
-                <button className="modal-action-button" onClick={handleOutfit}>Suggest Outfit</button>
-              </div>
-            </div>
-          </dialog>
-
           {/* ── Inventory Modal ── */}
           <dialog ref={inventoryRef} onClick={() => inventoryRef.current?.close()}>
             <InventoryContent user={user} onClose={() => inventoryRef.current?.close()} />
@@ -355,11 +348,64 @@ export function Login() {
           {/* ── Dashboard ── */}
           <Card title={`Welcome, ${user.name}`} content="Your personal wardrobe assistant" type="Main" bg={false} />
 
-          <div style={{ maxWidth: 820, margin: '0 auto', padding: '0 16px', width: '100%', boxSizing: 'border-box' }}>
-            <WeatherWidget onDaySelect={handleDaySelect} />
+          <div className="dashboard-layout">
+            <div className="dashboard-sidebar">
+              <WeatherWidget onDaySelect={handleDaySelect} />
+
+              <div className="prediction-box">
+                {imageUrl ? (
+                  <>
+                    <img src={imageUrl} alt="Last Uploaded" className="last-uploaded-img" />
+                    <p>AI Classifier: <strong>{prediction || 'Processing...'}</strong></p>
+                  </>
+                ) : (
+                  <p style={{color: '#666', fontSize: '14px'}}>Upload an image to see AI classification</p>
+                )}
+              </div>
+
+              <div className="dashboard-controls">
+                <button className="b1-compact" onClick={() => document.getElementById('fileInput')?.click()}>
+                  Add Image
+                </button>
+                <button className="b1-compact" onClick={() => inventoryRef.current?.showModal()}>
+                  Wardrobe
+                </button>
+                <button className="b1-compact" onClick={() => { googleLogout(); setUser(null); setClassid(''); }}>
+                  Logout
+                </button>
+              </div>
+            </div>
+
+            <div className="dashboard-main">
+              <div className="outfits-container">
+                <h3>Outfit Suggestions for {selectedDay}</h3>
+                {outfits.length > 0 ? (
+                  <div className="outfits-list">
+                    {outfits.map((off, idx) => (
+                      <div key={idx} className="outfit-card">
+                        <h4>Option {idx + 1}</h4>
+                        <div className="outfit-grid-compact">
+                          {Object.entries(off).map(([part, item]) => item && (
+                            <div key={part} className="outfit-item-compact">
+                              <img src={`http://localhost:5000/api/image/${item.id}`} alt={item.label} />
+                              <span className="outfit-item-label-compact">{item.label}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="no-outfits">
+                    <p>Not enough items in your wardrobe to suggest an outfit for this weather.</p>
+                    <p style={{fontSize: '13px', color: '#888'}}>Try adding more Tops, Bottoms, and Shoes!</p>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap' }}>
+          <div style={{ display: 'none', justifyContent: 'center', flexWrap: 'wrap' }}>
             <button className="b1" onClick={() => document.getElementById('fileInput')?.click()}>
               <h4>Add Image</h4>
             </button>

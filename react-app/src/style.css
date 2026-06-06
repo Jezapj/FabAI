@@ -28,17 +28,21 @@ html::-webkit-scrollbar, body::-webkit-scrollbar {
 *::-webkit-scrollbar {
   display: none;
 }
+h1 {
+  color: white;
+}
 img {
   max-width: 100%;
   max-height: 100%;
 }
 .main{
   display: inline-block;
+
 }
 .nav {
   padding: 0.75% 0%;
-  background-color: hsl(0, 0%, 100%);
-  border-radius: 1%;
+  background-color: rgba(0, 0, 0, 0.86);
+  border-radius: 0%;
   margin: 0;
   width: 100%;
   max-width: 100%;
@@ -56,9 +60,9 @@ img {
   color: white;
   background-color: rgba(0,0,0, 0.85);
   background-attachment: fixed;
-  border-radius: 1%;
-  padding: 15px 0% 15px 0%;
-  margin: 0;
+  border-radius: 0%;
+  padding: 1px 0% 1px 0%;
+  margin: -15px 0 -10px;
   width: 100%;
   background-size: 90%;
   background-repeat: no-repeat;
@@ -67,7 +71,7 @@ img {
   text-align: center;
   display: inline-block;
   border: none;
-  font-size: 1.5rem;
+  font-size: 1rem;
 }
 .cardSub {
   color: black;
@@ -75,7 +79,7 @@ img {
   background-attachment: fixed;
   background-size: auto;
   background-size: cover;
-  border-radius: 1%;
+  border-radius: 0%;
   padding: 10px 0% 10px 0%;
   margin: 0% 0% 2% 0%;
   width: 100%;
@@ -128,7 +132,7 @@ img {
   color: white;
   background-color: rgba(0,0,0, 0.85);
   background-attachment: relative;
-  border-radius: 1%;
+  border-radius: 0%;
   background-size: 90%;
   background-repeat: no-repeat;
   background-size: cover;
@@ -189,6 +193,7 @@ button{
   background-color: rgba(0,0,0, 0.85);
   display: flex;
   justify-content: center;
+  padding-bottom: 50vh;
 }
 
 .b2 {
@@ -249,7 +254,8 @@ button:hover{
   padding: 10px 20px;
   gap: 20px;
   overflow: hidden;
-  max-height: calc(100vh - 180px); /* Adjust based on header/nav height */
+  max-height: calc(100vh - 250px); /* Adjust based on header/nav height */
+  margin-bottom: 60vh;
 }
 
 .dashboard-sidebar {
@@ -591,6 +597,7 @@ dialog{
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.07);
   transition: background 0.2s;
+  cursor: pointer;
 }
 .weather-day--today {
   background: rgba(100, 40, 160, 0.5);

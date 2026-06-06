@@ -37,6 +37,8 @@ function tempToTarget(maxTemp: number): number {
   return Math.max(0, Math.min(100, Math.round(100 - ((maxTemp + 10) / 55) * 100)));
 }
 
+
+
 // ── Weather Widget ────────────────────────────────────────────────────────────
 interface WeatherWidgetProps {
   onDaySelect?: (maxTemp: number, label: string) => void;
@@ -96,8 +98,8 @@ function WeatherWidget({ onDaySelect }: WeatherWidgetProps) {
   const wrap: React.CSSProperties = {
     background: 'rgba(0,0,0,0.72)',
     borderRadius: 14,
-    padding: '18px 20px',
-    margin: '12px 0 16px',
+    padding: '12px 20px',
+    margin: '4px 0 4px',
     border: '1px solid rgba(255,255,255,0.08)',
     color: 'white',
     width: '100%',
@@ -505,7 +507,7 @@ export function Card(props: any) {
         setTimeout(setContents,     1000, { "display": "none", "opacity": "0" });
       }}>
       <div className="subText">
-        <h1>{props.title}</h1>
+        <h1 style={{color: "black" } }>{props.title}</h1>
         <h3>{props.content}</h3>
       </div>
       <div className="subImg" style={contents}>

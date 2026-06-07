@@ -33,8 +33,11 @@ function dayLabel(dateStr: string, i: number): string {
 // ── Temperature → warmth target conversion ───────────────────────────────────
 // Maps °C to 0-100 where 0 = very hot (light clothes), 100 = very cold (heavy)
 // Calibrated for range -10 °C (100) → 45 °C (0)
+// Uses a sigmoid to make differences around 15-25°C more pronounced
 function tempToTarget(maxTemp: number): number {
-  return Math.max(0, Math.min(100, Math.round(100 - ((maxTemp + 10) / 55) * 100)));
+  const x = maxTemp;
+  const sigmoid = 1 / (1 + Math.exp(0.15 * (x - 18)));
+  return Math.round(sigmoid * 100);
 }
 
 // ── Weather Widget ────────────────────────────────────────────────────────────
@@ -96,8 +99,8 @@ function WeatherWidget({ onDaySelect }: WeatherWidgetProps) {
   const wrap: React.CSSProperties = {
     background: 'rgba(0,0,0,0.72)',
     borderRadius: 14,
-    padding: '18px 20px',
-    margin: '12px 0 16px',
+    padding: '12px 15px',
+    margin: '8px 0',
     border: '1px solid rgba(255,255,255,0.08)',
     color: 'white',
     width: '100%',
@@ -117,7 +120,7 @@ function WeatherWidget({ onDaySelect }: WeatherWidgetProps) {
 
   return (
     <div style={wrap}>
-      <p style={{ margin: '0 0 14px', fontSize: 13, color: '#bbb', fontWeight: 500 }}>
+      <p style={{ margin: '0 0 10px', fontSize: 13, color: '#bbb', fontWeight: 500 }}>
         📍 {city} &mdash; Weekly Forecast
       </p>
       <div className="weather-strip">
@@ -150,8 +153,8 @@ function WeatherWidget({ onDaySelect }: WeatherWidgetProps) {
         })}
       </div>
       {forecast.length > 0 && (
-        <p className="weather-day--target-label">
-          🧥 Outfit suggestions will be tailored for <strong style={{ color: '#e2e8f0' }}>{dayLabel(forecast[selectedIdx].date, selectedIdx)}</strong> · {forecast[selectedIdx].maxTemp}°C · warmth target {tempToTarget(forecast[selectedIdx].maxTemp)}/100
+        <p className="weather-day--target-label" style={{ fontSize: '11px', marginTop: '8px' }}>
+          🧥 <strong style={{ color: '#e2e8f0' }}>{dayLabel(forecast[selectedIdx].date, selectedIdx)}</strong> suggestions · target {tempToTarget(forecast[selectedIdx].maxTemp)}/100
         </p>
       )}
     </div>
@@ -192,7 +195,6 @@ function InventoryContent({ user, onClose }: InvContentProps) {
         <h2>My Wardrobe{!loading ? ` · ${items.length} item${items.length !== 1 ? 's' : ''}` : ''}</h2>
       </div>
 
-      {/* Category filter chips */}
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', padding: '14px 0 8px' }}>
         {CATS.map(c => (
           <button
@@ -240,6 +242,7 @@ function InventoryContent({ user, onClose }: InvContentProps) {
                         body: JSON.stringify({ label: e.target.value })
                       });
                     }}
+                    onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
                   />
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '4px' }}>
                     <select
@@ -301,10 +304,20 @@ export function Login({ user, setUser }: { user: any, setUser: any }) {
 
   useEffect(() => { setClassid(user ? 'b2' : '') }, [user]);
 
-  // Auto-fetch outfits on login or target change
+  // Auto-fetch outfits and last item on login or target change
   useEffect(() => {
     if (user) {
       handleOutfit();
+      fetch(`http://localhost:5000/api/inventory?user_id=${user.sub}`)
+        .then(r => r.json())
+        .then(items => {
+          if (Array.isArray(items) && items.length > 0) {
+            const last = items[items.length - 1];
+            setImageId(last.id);
+            setImageUrl(`http://localhost:5000/api/image/${last.id}`);
+            setPrediction(last.label);
+          }
+        });
     }
   }, [user, outfitTarget]);
 
@@ -351,15 +364,13 @@ export function Login({ user, setUser }: { user: any, setUser: any }) {
   };
 
   return (
-    <div className={classid}>
+    <div className={classid} style={{ height: user ? '100%' : 'auto', display: 'flex', flexDirection: 'column' }}>
       {user ? (
-        <>
-          {/* ── Inventory Modal ── */}
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
           <dialog ref={inventoryRef} onClick={() => inventoryRef.current?.close()}>
             <InventoryContent user={user} onClose={() => inventoryRef.current?.close()} />
           </dialog>
 
-          {/* ── Dashboard ── */}
           <Card title={`Welcome, ${user.name}`} content="Your personal wardrobe assistant" type="Main" bg={false} />
 
           <div className="dashboard-layout">
@@ -370,29 +381,23 @@ export function Login({ user, setUser }: { user: any, setUser: any }) {
                 {imageUrl ? (
                   <>
                     <img src={imageUrl} alt="Last Uploaded" className="last-uploaded-img" />
-                    <p>AI Classifier: <strong>{prediction || 'Processing...'}</strong></p>
+                    <p style={{fontSize: '12px', margin: '4px 0'}}>AI Classifier: <strong>{prediction || 'Processing...'}</strong></p>
                   </>
                 ) : (
-                  <p style={{color: '#666', fontSize: '14px'}}>Upload an image to see AI classification</p>
+                  <p style={{color: '#666', fontSize: '13px'}}>Upload an image to see AI classification</p>
                 )}
               </div>
 
               <div className="dashboard-controls">
-                <button className="b1-compact" onClick={() => document.getElementById('fileInput')?.click()}>
-                  Add Image
-                </button>
-                <button className="b1-compact" onClick={() => inventoryRef.current?.showModal()}>
-                  Wardrobe
-                </button>
-                <button className="b1-compact" onClick={() => { googleLogout(); setUser(null); setClassid(''); }}>
-                  Logout
-                </button>
+                <button className="b1-compact" onClick={() => document.getElementById('fileInput')?.click()}>Add Image</button>
+                <button className="b1-compact" onClick={() => inventoryRef.current?.showModal()}>Wardrobe</button>
+                <button className="b1-compact" onClick={() => { googleLogout(); setUser(null); setClassid(''); }}>Logout</button>
               </div>
             </div>
 
             <div className="dashboard-main">
               <div className="outfits-container">
-                <h3>Outfit Suggestions for {selectedDay}</h3>
+                <h3 style={{fontSize: '16px', margin: '0 0 12px'}}>Outfit Suggestions for {selectedDay}</h3>
                 {outfits.length > 0 ? (
                   <div className="outfits-list">
                     {outfits.map((off, idx) => (
@@ -411,48 +416,38 @@ export function Login({ user, setUser }: { user: any, setUser: any }) {
                   </div>
                 ) : (
                   <div className="no-outfits">
-                    <p>Not enough items in your wardrobe to suggest an outfit for this weather.</p>
-                    <p style={{fontSize: '13px', color: '#888'}}>Try adding more Tops, Bottoms, and Shoes!</p>
+                    <p>Not enough items in your wardrobe for this weather.</p>
+                    <p style={{fontSize: '12px', color: '#888'}}>Try adding more Tops, Bottoms, and Shoes!</p>
                   </div>
                 )}
               </div>
             </div>
           </div>
-
-          <div style={{ display: 'none', justifyContent: 'center', flexWrap: 'wrap' }}>
-            <button className="b1" onClick={() => document.getElementById('fileInput')?.click()}>
-              <h4>Add Image</h4>
-            </button>
-            <button className="b1" onClick={() => inventoryRef.current?.showModal()}>
-              <h4>View Inventory</h4>
-            </button>
-            <button className="b1" onClick={() => { googleLogout(); setUser(null); setClassid(''); }}>
-              <h4>Logout</h4>
-            </button>
-          </div>
-          <input id="fileInput" type="file" accept="image/*" onChange={handleFileChange} style={{ display: 'none' }} />
-        </>
+        </div>
       ) : (
-        <GoogleLogin
-          onSuccess={credentialResponse => {
-            const decoded: any = jwtDecode(credentialResponse.credential || '');
-            setUser(decoded);
-            fetch('http://localhost:5000/api/auth', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ id_token: credentialResponse.credential }),
-            });
-          }}
-          onError={() => console.log('Login Failed')}
-        />
+        <div style={{ display: 'flex', justifyContent: 'center', padding: '15px' }}>
+          <GoogleLogin
+            onSuccess={credentialResponse => {
+              const decoded: any = jwtDecode(credentialResponse.credential || '');
+              setUser(decoded);
+              fetch('http://localhost:5000/api/auth', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id_token: credentialResponse.credential }),
+              });
+            }}
+            onError={() => console.log('Login Failed')}
+          />
+        </div>
       )}
+      <input id="fileInput" type="file" accept="image/*" onChange={handleFileChange} style={{ display: 'none' }} />
     </div>
   );
 }
 
 export function Main(props: any) {
   return (
-    <>
+    <div style={{ flexShrink: 0 }}>
       <div>
         <Card title="Innovation" content="Welcome to FabAI" type="Feature" img="" bg={true} />
       </div>
@@ -461,7 +456,7 @@ export function Main(props: any) {
           <Card title="AI Classifier" content="Use our AI model to add clothes to your inventory" type="Sub" img="src/assets/shirt.png" img2="src/assets/shoes.png" bg={true} />
         </div>
       </div>
-    </>
+    </div>
   );
 }
 
@@ -480,26 +475,26 @@ export function Card(props: any) {
     </div>
   );
   let active = false;
-  const [contents,     setContents]     = React.useState({ "display": "none", "opacity": "0", "transition": "2s", "transition-delay": "4.5s" });
+  const [contents,     setContents]     = React.useState({ "display": "none", "opacity": "0", "transition": "2s", "transitionDelay": "4.5s" });
   const [subContents1, setSubContents1] = React.useState({ "display": "block", "transition": "2s", "opacity": "0" });
   const [subContents2, setSubContents2] = React.useState({ "display": "block", "opacity": "0" });
   const cardSub = (
     <div className='cardSub'
-      onMouseOver={() => {
+      onMouseEnter={() => {
         active = true;
         if (active) {
           setTimeout(setSubContents1, 0, { "display": "block", "opacity": "0" });
           setTimeout(setSubContents2, 0, { "display": "block", "opacity": "0" });
-          setContents({ "display": "inline-flex", "opacity": "1", "transition": "2s", "transition-delay": "0.5s" });
+          setContents({ "display": "inline-flex", "opacity": "1", "transition": "2s", "transitionDelay": "0.5s" });
           setTimeout(setSubContents1, 1000, { "opacity": "1", "transition": "2s" });
-          setTimeout(setSubContents2, 1700, { "opacity": "1", "transition": "2s", "transition-delay": "0.5s" });
+          setTimeout(setSubContents2, 1700, { "opacity": "1", "transition": "2s", "transitionDelay": "0.5s" });
         }
       }}
       onMouseLeave={() => {
         active = false;
-        setTimeout(setSubContents1, 0, { "opacity": "0", "transition": "1s", "transition-delay": "0s" });
-        setTimeout(setSubContents2, 0, { "opacity": "0", "transition": "1s", "transition-delay": "0s" });
-        setTimeout(setContents,     1000, { "opacity": "0", "transition": "0s", "transition-delay": "0.5s" });
+        setTimeout(setSubContents1, 0, { "opacity": "0", "transition": "1s", "transitionDelay": "0s" });
+        setTimeout(setSubContents2, 0, { "opacity": "0", "transition": "1s", "transitionDelay": "0s" });
+        setTimeout(setContents,     1000, { "opacity": "0", "transition": "0s", "transitionDelay": "0.5s" });
         setTimeout(setSubContents1, 1000, { "display": "none", "opacity": "0" });
         setTimeout(setSubContents2, 1000, { "display": "none", "opacity": "0" });
         setTimeout(setContents,     1000, { "display": "none", "opacity": "0" });
@@ -518,16 +513,13 @@ export function Card(props: any) {
   return props.type === 'Main' ? cardMain : cardSub;
 }
 
-const navClickHandler = () => {
-  window.location.assign('http://localhost:3000/');
-  return 0;
-};
+const navClickHandler = () => { window.location.assign('http://localhost:3000/'); return 0; };
 
 export function Navbar() {
   return (
-    <div className='nav'>
+    <div className='nav' style={{ flexShrink: 0 }}>
       <h1>Fab</h1>
-      <img src="src/assets/CirculationsLogoNoBg.png" onClick={navClickHandler} height="80px" width="100px" />
+      <img src="src/assets/CirculationsLogoNoBg.png" onClick={navClickHandler} height="40px" width="52px" style={{ cursor: 'pointer' }} />
       <h1>AI</h1>
     </div>
   );

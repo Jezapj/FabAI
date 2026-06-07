@@ -57,7 +57,7 @@ img {
   background-color: rgba(0,0,0, 0.85);
   background-attachment: fixed;
   border-radius: 1%;
-  padding: 15px 0% 15px 0%;
+  padding: 8px 0% 8px 0%;
   margin: 0;
   width: 100%;
   background-size: 90%;
@@ -67,7 +67,7 @@ img {
   text-align: center;
   display: inline-block;
   border: none;
-  font-size: 1.5rem;
+  font-size: 1.2rem;
 }
 .cardSub {
   color: black;
@@ -77,23 +77,23 @@ img {
   background-size: cover;
   border-radius: 1%;
   padding: 10px 0% 10px 0%;
-  margin: 0% 0% 2% 0%;
+  margin: 0% 0% 1% 0%;
   width: 100%;
   text-align: center;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   border: none;
-  font-size: 1rem;
+  font-size: 0.9rem;
   transition: 0.9s;
-  height: 15vh;
+  height: 12vh;
   transition-delay: 1s;
   max-width: 100%;
 
 }
 
 .cardSub:hover {
-  height: 30vh;
+  height: 20vh;
   transition: 0.5s;
   display: inline-flex;
   align-items: center;
@@ -133,9 +133,9 @@ img {
   background-repeat: no-repeat;
   background-size: cover;
   background-position: 50%;
-  padding: 15px 0% 15px 0%;
+  padding: 10px 0% 10px 0%;
   margin: 0;
-  height: 35vh;
+  height: 22vh;
   width: 100%;
   max-width: 100%;
   text-align: center;
@@ -249,7 +249,7 @@ button:hover{
   padding: 10px 20px;
   gap: 20px;
   overflow: hidden;
-  max-height: calc(100vh - 180px); /* Adjust based on header/nav height */
+  height: 100%;
 }
 
 .dashboard-sidebar {
@@ -597,9 +597,10 @@ dialog{
   border-color: rgba(180, 100, 255, 0.4);
 }
 .weather-day--selected {
-  border-color: #fff !important;
-  background: rgba(255, 255, 255, 0.15) !important;
-  box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+  border-color: #d8b4fe !important; border-width: 2px !important;
+  background: rgba(168, 85, 247, 0.4) !important;
+  box-shadow: 0 0 12px rgba(168, 85, 247, 0.4);
+  transform: translateY(-2px);
 }
 .weather-day__name {
   font-size: 11px;

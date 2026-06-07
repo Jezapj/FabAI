@@ -294,8 +294,8 @@ def distribute(target, user_id, db):
             if img.category in valid_cats:
                 images_by_cat[group].append(img)
 
-    if not images_by_cat["hat"]:
-        images_by_cat["hat"] = [None]
+    # Always allow 'no hat' option
+    images_by_cat["hat"].append(None)
 
     combos = []
 
@@ -316,9 +316,39 @@ def distribute(target, user_id, db):
                         }
                     })
 
-    # Sort by diff and take top 3
+    # Sort by diff
     combos.sort(key=lambda x: x["diff"])
-    return [c["outfit"] for c in combos[:3]]
+
+    # Select top 3 with variety (guaranteeing one without a hat if available)
+    results = []
+    if not combos:
+        return []
+
+    # Get the overall best
+    results.append(combos[0]["outfit"])
+
+    # Force one with a different hat status (if possible)
+    best_is_hatted = combos[0]["outfit"]["hat"] is not None
+
+    # Try to find the best outfit with the opposite hat status
+    other_hat_status_outfit = None
+    for c in combos[1:]:
+        current_is_hatted = c["outfit"]["hat"] is not None
+        if current_is_hatted != best_is_hatted:
+            other_hat_status_outfit = c["outfit"]
+            break
+
+    if other_hat_status_outfit:
+        results.append(other_hat_status_outfit)
+
+    # Fill remaining slots from the best available combos
+    for c in combos[1:]:
+        if len(results) >= 3:
+            break
+        if c["outfit"] not in results:
+            results.append(c["outfit"])
+
+    return results
 
 
 @app.route('/api/predict_image/<int:image_id>', methods=['GET'])

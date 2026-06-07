@@ -52,7 +52,7 @@ def clothingAssign(label, filepath) -> int:
     }
 
 
-    entry = label_map.get(label, {"val": None, "category": "Optional"})
+    entry = label_map.get(label, {"val": 15, "category": "Optional"})
     val = entry["val"]
     category = entry["category"]
 

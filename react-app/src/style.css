@@ -40,7 +40,7 @@ img {
 
 }
 .nav {
-  padding: 0.75% 0%;
+  padding: 0.2% 0 0.75% 0%;
   background-color: rgba(0, 0, 0, 0.86);
   border-radius: 0%;
   margin: 0;
@@ -62,7 +62,7 @@ img {
   background-attachment: fixed;
   border-radius: 0%;
   padding: 1px 0% 1px 0%;
-  margin: -15px 0 -10px;
+  margin: -30px 0 -10px;
   width: 100%;
   background-size: 90%;
   background-repeat: no-repeat;
@@ -254,7 +254,7 @@ button:hover{
   padding: 10px 20px;
   gap: 20px;
   overflow: hidden;
-  max-height: calc(100vh - 250px); /* Adjust based on header/nav height */
+  max-height: calc(100vh); /* Adjust based on header/nav height */
   margin-bottom: 60vh;
 }
 
@@ -263,6 +263,7 @@ button:hover{
   display: flex;
   flex-direction: column;
   gap: 15px;
+  row-gap: 5px;
 }
 
 .dashboard-main {
@@ -281,6 +282,7 @@ button:hover{
   border: 1px solid rgba(255, 255, 255, 0.08);
   text-align: center;
   color: white;
+  margin-top: 0px;
 }
 
 .last-uploaded-img {

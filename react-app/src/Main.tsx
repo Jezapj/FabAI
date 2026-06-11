@@ -33,8 +33,11 @@ function dayLabel(dateStr: string, i: number): string {
 // ── Temperature → warmth target conversion ───────────────────────────────────
 // Maps °C to 0-100 where 0 = very hot (light clothes), 100 = very cold (heavy)
 // Calibrated for range -10 °C (100) → 45 °C (0)
+// Uses a sigmoid to make differences around 15-25°C more pronounced
 function tempToTarget(maxTemp: number): number {
-  return Math.max(0, Math.min(100, Math.round(100 - ((maxTemp + 10) / 55) * 100)));
+  const x = maxTemp;
+  const sigmoid = 1 / (1 + Math.exp(0.15 * (x - 18)));
+  return Math.round(sigmoid * 100);
 }
 
 
@@ -362,7 +365,7 @@ export function Login({ user, setUser }: { user: any, setUser: any }) {
           </dialog>
 
           {/* ── Dashboard ── */}
-          <Card title={`Welcome, ${user.name}`} content="Your personal wardrobe assistant" type="Main" bg={false} />
+          <Card title={`Welcome, ${user.name}`} content="Your personal wardrobe assistant" type="Main" bg={false} display={imageUrl ? false: true} />
 
           <div className="dashboard-layout">
             <div className="dashboard-sidebar">
@@ -516,6 +519,7 @@ export function Card(props: any) {
       </div>
     </div>
   );
+  if (props.display === false) return null;
   if (props.type === 'Feature') return cardFeature;
   return props.type === 'Main' ? cardMain : cardSub;
 }

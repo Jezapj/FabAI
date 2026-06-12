@@ -1,4 +1,6 @@
 .env
 node_modules
+node_modules/
 Promo.png
 interlude.png
+react-app/node_modules/

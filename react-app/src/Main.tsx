@@ -463,7 +463,7 @@ export function Main(props: any) {
       </div>
       <div className="Main">
         <div className="bg">
-          <Card title="AI Classifier" content="Use our AI model to add clothes to your inventory" type="Sub" img="src/assets/shirt.png" img2="src/assets/shoes.png" bg={true} />
+          <Card title="AI Classifier" content="Use our AI model to add clothes to your inventory" type="Sub" img="shirt.png" img2="shoes.png" bg={true} />
         </div>
       </div>
     </>
@@ -533,7 +533,7 @@ export function Navbar() {
   return (
     <div className='nav'>
       <h1>Fab</h1>
-      <img src="src/assets/CirculationsLogoNoBg.png" onClick={navClickHandler} height="80px" width="100px" />
+      <img src="CirculationsLogoNoBg.png" onClick={navClickHandler} height="80px" width="100px" />
       <h1>AI</h1>
     </div>
   );

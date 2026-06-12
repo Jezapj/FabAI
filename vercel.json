@@ -9,4 +9,8 @@
             "routePrefix": "/_/backend"
         }
     }
+    ,
+    "rewrites": [
+    { "source": "/((?!assets/|images/|.*\\.).*)", "destination": "/index.html" }
+  ]
 }

@@ -1,8 +1,8 @@
 #from models import User
-from flask import Flask, jsonify, request
 from flask_cors import CORS
 import os
-from flask import Flask, redirect, url_for, session, g, send_file
+from io import BytesIO
+from flask import Flask, jsonify, request, Response, redirect, url_for, session, g
 from flask_sqlalchemy import SQLAlchemy
 from authlib.integrations.flask_client import OAuth
 from werkzeug.utils import secure_filename
@@ -44,10 +44,10 @@ db_pw = os.getenv('DB_PW')
 
 app.secret_key = 'supersecret'  # use a secure one in production
 
-
-#Define the upload folder relative to your script
-UPLOAD_FOLDER = os.path.join(BASE_DIR, 'uploads')
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+# (unused)
+# Define the upload folder relative to your script 
+# UPLOAD_FOLDER = os.path.join(BASE_DIR, 'uploads') 
+# os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 # UPLOAD_FOLDER = os.path.join(os.getcwd(), 'uploads')
 # os.makedirs(UPLOAD_FOLDER, exist_ok=True)
@@ -70,7 +70,7 @@ oauth.register(
         'scope': 'openid email profile'
     }
 )
-
+# legacy: UPLOAD_FOLDER = os.path.join(os.getcwd(), 'uploads')
 @app.route('/api/upload', methods=['POST'])
 def upload_file():
     if 'image' not in request.files:
@@ -138,8 +138,6 @@ def upload_file_nx():
     if not file or file.filename == '':
         return jsonify({'error': 'No selected file'}), 400
 
-    token = user_info
-
     try:
         user_id = user_info.get('sub')
         email = user_info.get('email')
@@ -154,19 +152,22 @@ def upload_file_nx():
         session['user_id'] = user.id
 
         filename = secure_filename(file.filename)
-        user_folder = os.path.join(UPLOAD_FOLDER, str(user.id))
-        os.makedirs(user_folder, exist_ok=True)
+        image_bytes = file.read()
+        pil_image = PILImage.open(BytesIO(image_bytes))
 
-        filepath = os.path.join(user_folder, filename)
-        file.save(filepath)
-
-        # Predict clothing type
-        label = model.predict(filepath)
-        # Assign Heat Value
-        value, category = clothingAssign(label, filepath)
+        label = model.predict(pil_image)
+        value, category = clothingAssign(label, pil_image)
         value = float(value)
 
-        new_image = Image(filename=filename, filepath=filepath, user_id=user.id, label=label, value=value, category=category)
+        new_image = Image(
+            filename=filename,
+            mimetype=file.mimetype or 'image/jpeg',
+            data=image_bytes,
+            user_id=user.id,
+            label=label,
+            value=value,
+            category=category,
+        )
         db.session.add(new_image)
         db.session.commit()
 
@@ -184,9 +185,9 @@ def upload_file_nx():
 @app.route('/api/image/<int:image_id>')
 def serve_image(image_id):
     image = Image.query.filter_by(id=image_id).first()
-    if not image:
+    if not image or not image.data:
         return jsonify({'error': 'Image not found'}), 404
-    return send_file(image.filepath, mimetype='image/jpeg')
+    return Response(image.data, mimetype=image.mimetype or 'image/jpeg')
 
 @app.route('/login')
 def login():
@@ -264,10 +265,11 @@ class User(db.Model):
 class Image(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     filename = db.Column(db.String(255))
-    filepath = db.Column(db.String(512))
+    mimetype = db.Column(db.String(50))
+    data = db.Column(db.LargeBinary)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     label = db.Column(db.String(50))
-    value = db.Column(db.Float)  
+    value = db.Column(db.Float)
     category = db.Column(db.String(50))
 
 def distribute(target, user_id, db):
@@ -324,14 +326,12 @@ def distribute(target, user_id, db):
 @app.route('/api/predict_image/<int:image_id>', methods=['GET'])
 def predict_image(image_id):
     image = Image.query.filter_by(id=image_id).first()
-    if not image:
+    if not image or not image.data:
         return jsonify({'error': 'Image not found'}), 404
-    
-    image_path = image.filepath
-    # image_data = PILImage.open(image_path).convert('RGB') # Not used
 
-    label = model.predict(image_path)
-    
+    pil_image = PILImage.open(BytesIO(image.data))
+    label = model.predict(pil_image)
+
     return jsonify({'prediction': str(label)})
 
 @app.route('/api/outfit', methods=['GET'])
@@ -402,8 +402,8 @@ def update_item(image_id):
     if 'label' in data:
         image.label = data['label']
 
-    # Re-calculate value if label or category changed
-    new_value, _ = clothingAssign(image.label, image.filepath)
+    pil_image = PILImage.open(BytesIO(image.data))
+    new_value, _ = clothingAssign(image.label, pil_image)
     image.value = float(new_value)
 
     db.session.commit()

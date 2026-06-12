@@ -1,34 +1,22 @@
 from PIL import Image
 import numpy as np
 
-def get_image_intensity(filepath: str) -> float:
+def get_image_intensity(img: Image.Image) -> float:
     """
-    Compute normalized average pixel intensity from image at `filepath`,
-    scaled to the range [0, 100].
-
-    Supports grayscale and color images.
+    Compute normalized average pixel intensity from a PIL Image,
+    scaled roughly to [-5, 5].
     """
     try:
-        with Image.open(filepath) as img:
-            # Convert to grayscale
-            gray_img = img.convert('L')  # 'L' mode is 8-bit pixels, black and white
-            img_array = np.array(gray_img)
-
-            # Compute average intensity (0–255)
-            avg_intensity = np.mean(img_array)
-
-            # Normalize to [-5, 5]
-            normalized_intensity = ((avg_intensity / 255.0) - 0.5) * 10
-
-            return round(normalized_intensity, 2)
+        gray_img = img.convert('L')
+        img_array = np.array(gray_img)
+        avg_intensity = np.mean(img_array)
+        normalized_intensity = ((avg_intensity / 255.0) - 0.5) * 10
+        return round(normalized_intensity, 2)
     except Exception as e:
         print(f"Error processing image: {e}")
-        return -1  # or raise exception if preferred
+        return -1
 
-def clothingAssign(label, filepath) -> int:
-    # From 0 - 100
-    # Heat value
-    val = 0
+def clothingAssign(label, img: Image.Image):
     label_map = {
         "Blazer":      {"val": 50, "category": "Top"},
         "Blouse":      {"val": 30, "category": "Top"},
@@ -51,12 +39,11 @@ def clothingAssign(label, filepath) -> int:
         "Undershirt":  {"val": 15, "category": "Top"},
     }
 
-
-    entry = label_map.get(label, {"val": None, "category": "Optional"})
+    entry = label_map.get(label, {"val": 0, "category": "Optional"})
     val = entry["val"]
     category = entry["category"]
 
-    sense = get_image_intensity(filepath)
+    sense = get_image_intensity(img)
     val += sense
 
     return val, category

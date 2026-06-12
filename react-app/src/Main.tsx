@@ -485,7 +485,7 @@ export function Card(props: any) {
     </div>
   );
   let active = false;
-  const [contents,     setContents]     = React.useState({ "display": "none", "opacity": "0", "transition": "2s", "transition-delay": "4.5s" });
+  const [contents,     setContents]     = React.useState({ "display": "none", "opacity": "0", "transition": "2s", "transitionDelay": "4.5s" });
   const [subContents1, setSubContents1] = React.useState({ "display": "block", "transition": "2s", "opacity": "0" });
   const [subContents2, setSubContents2] = React.useState({ "display": "block", "opacity": "0" });
   const cardSub = (
@@ -495,16 +495,16 @@ export function Card(props: any) {
         if (active) {
           setTimeout(setSubContents1, 0, { "display": "block", "opacity": "0" });
           setTimeout(setSubContents2, 0, { "display": "block", "opacity": "0" });
-          setContents({ "display": "inline-flex", "opacity": "1", "transition": "2s", "transition-delay": "0.5s" });
+          setContents({ "display": "inline-flex", "opacity": "1", "transition": "2s", "transitionDelay": "0.5s" });
           setTimeout(setSubContents1, 1000, { "opacity": "1", "transition": "2s" });
-          setTimeout(setSubContents2, 1700, { "opacity": "1", "transition": "2s", "transition-delay": "0.5s" });
+          setTimeout(setSubContents2, 1700, { "opacity": "1", "transition": "2s", "transitionDelay": "0.5s" });
         }
       }}
       onMouseLeave={() => {
         active = false;
-        setTimeout(setSubContents1, 0, { "opacity": "0", "transition": "1s", "transition-delay": "0s" });
-        setTimeout(setSubContents2, 0, { "opacity": "0", "transition": "1s", "transition-delay": "0s" });
-        setTimeout(setContents,     1000, { "opacity": "0", "transition": "0s", "transition-delay": "0.5s" });
+        setTimeout(setSubContents1, 0, { "opacity": "0", "transition": "1s", "transitionDelay": "0s" });
+        setTimeout(setSubContents2, 0, { "opacity": "0", "transition": "1s", "transitionDelay": "0s" });
+        setTimeout(setContents,     1000, { "opacity": "0", "transition": "0s", "transitionDelay": "0.5s" });
         setTimeout(setSubContents1, 1000, { "display": "none", "opacity": "0" });
         setTimeout(setSubContents2, 1000, { "display": "none", "opacity": "0" });
         setTimeout(setContents,     1000, { "display": "none", "opacity": "0" });

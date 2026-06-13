@@ -1,16 +1,13 @@
 {
-    "experimentalServices": {
-        "frontend": {
-            "routePrefix": "/",
-            "framework": "vite"
-        },
-        "backend": {
-            "root": "backend",
-            "routePrefix": "/_/backend"
-        }
+  "cleanUrls": true,
+  "rewrites": [
+    {
+      "source": "/(.*\\.(png|jpg|jpeg|gif|svg|ico|json|txt|css|js))$",
+      "destination": "/$1"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
-    ,
-    "rewrites": [
-    { "source": "/((?!assets/|images/|.*\\.).*)", "destination": "/index.html" }
   ]
 }

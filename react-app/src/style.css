@@ -41,7 +41,6 @@ img {
 }
 .nav {
   padding: 0.2% 0 0.75% 0%;
-  background-color: rgba(0, 0, 0, 0.86);
   border-radius: 0%;
   margin: 0;
   width: 100%;
@@ -50,9 +49,13 @@ img {
   display: flex;
   justify-content: center;
   align-items: center;
-  
 }
-.nav > img{
+
+.app-shell:not(.app-shell--dashboard) .nav {
+  background-color: rgba(0, 0, 0, 0.87);
+}
+.nav > img,
+.nav__logo {
   margin: 0 -28px;
   cursor: pointer;
 }
@@ -197,9 +200,12 @@ button{
 }
 
 .b2 {
-  
-  display: inline-block;
-  justify-content: center;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  overflow: hidden;
 }
 .b1  button {
   background-color: rgba(255,255,255, 0.85);
@@ -251,28 +257,67 @@ button:hover{
 .dashboard-layout {
   display: flex;
   flex: 1;
-  padding: 10px 20px;
+  padding: 10px 20px 20px;
   gap: 20px;
   overflow: hidden;
-  max-height: calc(100vh); /* Adjust based on header/nav height */
-  margin-bottom: 60vh;
+  min-height: 0;
+  margin-bottom: 0;
 }
 
 .dashboard-sidebar {
-  flex: 0 0 320px;
+  flex: 1 1 42%;
+  min-width: 280px;
+  max-width: 48%;
   display: flex;
   flex-direction: column;
   gap: 15px;
   row-gap: 5px;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.dashboard-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex-shrink: 0;
+  margin-top: auto;
+  padding-top: 8px;
 }
 
 .dashboard-main {
-  flex: 1;
+  flex: 1 1 58%;
+  min-width: 0;
   background: rgba(0, 0, 0, 0.4);
   border-radius: 14px;
   padding: 20px;
   border: 1px solid rgba(255, 255, 255, 0.08);
   overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.outfits-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.outfits-container h3 {
+  margin: 0 0 20px;
+  color: #fff;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.outfits-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  flex: 1;
+  justify-content: center;
 }
 
 .prediction-box {
@@ -292,12 +337,6 @@ button:hover{
   border-radius: 8px;
 }
 
-.dashboard-controls {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
 .b1-compact {
   width: 100% !important;
   margin: 0 !important;
@@ -313,18 +352,6 @@ button:hover{
 .b1-compact:hover {
   background: #e2e8f0 !important;
   transform: scale(1.02);
-}
-
-.outfits-container h3 {
-  margin: 0 0 20px;
-  color: #fff;
-  font-size: 18px;
-}
-
-.outfits-list {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
 }
 
 .outfit-card {
@@ -347,10 +374,15 @@ button:hover{
   gap: 15px;
   overflow-x: auto;
   padding-bottom: 5px;
+  justify-content: center;
+  flex-wrap: wrap;
 }
 
 .outfit-item-compact {
   flex: 0 0 90px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   text-align: center;
 }
 
@@ -358,9 +390,11 @@ button:hover{
   width: 100%;
   height: 80px;
   object-fit: contain;
+  object-position: center;
   background: rgba(0, 0, 0, 0.2);
   border-radius: 6px;
   margin-bottom: 5px;
+  display: block;
 }
 
 .outfit-item-label-compact {
@@ -373,9 +407,15 @@ button:hover{
 }
 
 .no-outfits {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
   text-align: center;
-  padding: 40px;
+  padding: 40px 24px;
   color: #aaa;
+  min-height: 200px;
 }
 
 .inv-item__cat-select {
@@ -687,7 +727,7 @@ dialog{
   font-weight: 500;
 }
 
-/* Inventory filter chips — override global button sizing */
+/* Inventory filter chips - override global button sizing */
 .inv-filter {
   border-radius: 20px !important;
   padding: 5px 14px !important;
@@ -711,4 +751,439 @@ dialog{
   color: #fff !important;
   border-color: rgba(160, 90, 255, 0.5) !important;
   font-weight: 700 !important;
+}
+
+/* ── App shell ─────────────────────────────────────────────────────────────── */
+.app-shell {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 100vh;
+  width: 100%;
+}
+
+.app-shell--dashboard {
+  height: 100vh;
+  min-height: 100vh;
+  background-color: rgba(0, 0, 0, 0.85);
+  overflow: hidden;
+}
+
+.app-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  width: 100%;
+  overflow: hidden;
+}
+
+.app-footer {
+  flex-shrink: 0;
+  background-color: rgba(0, 0, 0, 0);
+}
+
+.nav__brand {
+  margin: 0;
+  font-size: clamp(1.25rem, 4vw, 2rem);
+}
+
+.nav__logo {
+  height: 80px;
+  width: 100px;
+  margin: 0 -28px;
+  cursor: pointer;
+  object-fit: contain;
+}
+
+.weather-day--target-label {
+  margin: 12px 0 0;
+  font-size: 12px;
+  color: #888;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.day-prefs {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.day-prefs__group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.day-prefs__label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #999;
+}
+
+.day-prefs__toggle {
+  display: flex;
+  gap: 8px;
+}
+
+.day-prefs__btn {
+  flex: 1;
+  margin: 0 !important;
+  width: auto !important;
+  height: 36px !important;
+  min-height: 36px !important;
+  padding: 0 12px !important;
+  border-radius: 8px !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: #bbb !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  transition: background 0.2s, color 0.2s, border-color 0.2s !important;
+}
+
+.day-prefs__btn:hover {
+  background: rgba(255, 255, 255, 0.14) !important;
+  color: #fff !important;
+}
+
+.day-prefs__btn--active {
+  background: rgba(110, 40, 180, 0.85) !important;
+  color: #fff !important;
+  border-color: rgba(160, 90, 255, 0.5) !important;
+}
+
+.day-prefs__select {
+  width: 100%;
+  margin: 0 !important;
+  height: 36px !important;
+  padding: 0 10px !important;
+  border-radius: 8px !important;
+  background: rgba(0, 0, 0, 0.75) !important;
+  color: #eee !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  font-size: 13px !important;
+  cursor: pointer;
+  outline: none;
+  appearance: auto;
+}
+
+.day-prefs__select option {
+  background-color: #1a1a1a;
+  color: #eee;
+}
+
+.day-prefs__select:focus {
+  border-color: rgba(160, 90, 255, 0.6) !important;
+}
+
+.outfit-item-color {
+  color: #aaa;
+  font-size: 10px;
+}
+
+/* ── Mobile & tablet responsive ──────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  html, body {
+    overflow-x: hidden;
+    overflow-y: auto;
+    height: auto;
+    min-height: 100vh;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  #root {
+    height: auto;
+    min-height: 100vh;
+  }
+
+  .nav {
+    padding: 8px 12px;
+    gap: 4px;
+  }
+
+  .nav__logo {
+    height: 56px;
+    width: 72px;
+    margin: 0 -12px;
+  }
+
+  .cardFeature {
+    height: auto;
+    min-height: 28vh;
+    padding: 24px 16px;
+    font-size: 1.1rem;
+  }
+
+  .cardFeature > h1 {
+    font-size: clamp(1.5rem, 6vw, 2rem);
+    margin: 0 0 8px;
+  }
+
+  .cardFeature > h2 {
+    font-size: clamp(1rem, 4vw, 1.25rem);
+    margin: 0;
+  }
+
+  .cardMain {
+    margin: 0;
+    padding: 12px 16px;
+  }
+
+  .cardMain h2,
+  .cardMain h3 {
+    font-size: clamp(1rem, 4vw, 1.25rem);
+  }
+
+  .cardSub {
+    height: auto;
+    min-height: auto;
+    flex-direction: column;
+    padding: 16px 12px;
+    margin-bottom: 12px;
+    cursor: pointer;
+  }
+
+  .cardSub:hover {
+    height: auto;
+    max-width: 100%;
+    padding-left: 12px;
+    flex-direction: column;
+  }
+
+  .cardSub--expanded {
+    min-height: auto;
+  }
+
+  .cardSub .subText h1 {
+    font-size: clamp(1.25rem, 5vw, 1.75rem);
+  }
+
+  .cardSub .subText h3 {
+    font-size: clamp(0.875rem, 3.5vw, 1rem);
+    margin: 8px 0 0;
+  }
+
+  .cardSub .subImg {
+    display: flex !important;
+    justify-content: center;
+    align-items: center;
+    gap: 16px;
+    margin-top: 12px;
+    min-height: 80px;
+  }
+
+  .cardSub .subImg img {
+    max-height: 72px;
+    width: auto;
+    padding-right: 0;
+    opacity: 1 !important;
+    display: block !important;
+  }
+
+  .b1 {
+    padding-bottom: 24px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+  }
+
+  .b1 button {
+    width: min(85vw, 320px);
+    height: auto;
+    min-height: 44px;
+    margin: 8px 16px;
+  }
+
+  .b2 {
+    display: block;
+    width: 100%;
+  }
+
+  .dashboard-layout {
+    flex-direction: column;
+    flex: 1;
+    padding: 8px 12px 12px;
+    gap: 12px;
+    overflow-y: auto;
+    max-height: none;
+    margin-bottom: 0;
+  }
+
+  .dashboard-sidebar {
+    flex: none;
+    width: 100%;
+    display: contents;
+  }
+
+  .weather-widget {
+    order: 1;
+    padding: 12px 14px !important;
+  }
+
+  .dashboard-main {
+    order: 2;
+    padding: 16px;
+    min-height: 200px;
+  }
+
+  .prediction-box {
+    order: 3;
+    padding: 12px;
+  }
+
+  .last-uploaded-img {
+    max-height: 100px;
+  }
+
+  .dashboard-controls {
+    order: 4;
+    position: sticky;
+    bottom: 0;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    gap: 8px;
+    padding: 10px 12px;
+    padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+    background: rgba(0, 0, 0, 0.92);
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
+    z-index: 100;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.4);
+  }
+
+  .dashboard-controls .b1-compact {
+    flex: 1;
+    min-width: 0;
+    min-height: 44px !important;
+    font-size: 13px !important;
+  }
+
+  .outfits-container h3 {
+    font-size: 16px;
+    margin-bottom: 14px;
+  }
+
+  .outfit-card {
+    padding: 12px;
+  }
+
+  .outfit-grid-compact {
+    gap: 10px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .outfit-item-compact {
+    flex: 0 0 76px;
+  }
+
+  .outfit-item-compact img {
+    height: 68px;
+  }
+
+  .weather-day {
+    min-width: 72px;
+    padding: 10px 8px;
+  }
+
+  .weather-day__icon {
+    font-size: 20px;
+  }
+
+  .weather-day--target-label {
+    font-size: 11px;
+    padding: 0 4px;
+  }
+
+  .no-outfits {
+    padding: 24px 16px;
+  }
+
+  dialog {
+    width: 100%;
+    height: 100%;
+    max-width: 100%;
+    max-height: 100%;
+    padding: 0;
+    margin: 0;
+  }
+
+  .modal-content {
+    width: 100%;
+    max-width: 100%;
+    min-height: 100%;
+    max-height: 100vh;
+    border-radius: 0;
+    padding: 16px;
+    padding-top: calc(16px + env(safe-area-inset-top, 0px));
+    padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+    box-sizing: border-box;
+  }
+
+  .modal-header h2 {
+    font-size: 1.25rem;
+    text-align: center;
+  }
+
+  .inv-grid {
+    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+    gap: 10px;
+  }
+
+  .inv-item__img-wrap {
+    height: 100px;
+  }
+
+  .modal-footer {
+    position: sticky;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.95);
+    margin: 0 -16px -16px;
+    padding: 16px;
+  }
+
+  .modal-close-button {
+    width: 100%;
+    min-height: 44px;
+  }
+}
+
+@media (max-width: 480px) {
+  .nav__logo {
+    height: 48px;
+    width: 60px;
+    margin: 0 -8px;
+  }
+
+  .cardFeature {
+    min-height: 24vh;
+    padding: 20px 12px;
+  }
+
+  .dashboard-layout {
+    padding: 6px 10px 12px;
+  }
+
+  .dashboard-controls {
+    padding: 8px 0;
+    padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px));
+    background: transparent;
+    border-top: none;
+    box-shadow: none;
+  }
+
+  .dashboard-controls .b1-compact {
+    font-size: 12px !important;
+    padding: 0 6px !important;
+  }
+
+  .inv-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }

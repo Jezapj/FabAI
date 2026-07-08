@@ -3,10 +3,13 @@ import { GoogleLogin, googleLogout } from '@react-oauth/google';
 import { jwtDecode } from 'jwt-decode';
 
 // ── Types ────────────────────────────────────────────────────────────────────
-interface OutfitItem { id: number; label: string; value: number; category: string; }
+interface OutfitItem { id: number; label: string; value: number; category: string; color?: string; }
 interface Outfit     { [key: string]: OutfitItem | null; }
 interface WeatherDay { date: string; maxTemp: number; minTemp: number; weatherCode: number; }
-interface InvItem    { id: number; label: string; value: number; category: string; }
+interface InvItem    { id: number; label: string; value: number; category: string; color?: string; }
+interface DayPrefs   { formality: 'casual' | 'formal'; colorPreset: string; }
+
+type Formality = DayPrefs['formality'];
 
 // ── WMO weather-code table ───────────────────────────────────────────────────
 const WMO: Record<number, [string, string]> = {
@@ -23,6 +26,23 @@ const WMO: Record<number, [string, string]> = {
   96: ['⛈️', 'Storm + hail'],    99: ['⛈️', 'Storm + hail'],
 };
 const wmo = (code: number): [string, string] => WMO[code] ?? ['🌡️', 'Unknown'];
+
+const RAIN_CODES = new Set([51, 53, 55, 61, 63, 65, 80, 81, 82, 95, 96, 99]);
+
+const COLOR_PRESETS: { id: string; label: string }[] = [
+  { id: 'any',          label: 'Any colours' },
+  { id: 'accent_black', label: 'Single accent + black' },
+  { id: 'earth_sky',    label: 'Light brown + light blue' },
+  { id: 'neutrals',     label: 'Neutrals only' },
+];
+
+function isRainy(code: number): boolean {
+  return RAIN_CODES.has(code);
+}
+
+function defaultDayPrefs(): DayPrefs {
+  return { formality: 'casual', colorPreset: 'any' };
+}
 
 function dayLabel(dateStr: string, i: number): string {
   if (i === 0) return 'Today';
@@ -44,10 +64,20 @@ function tempToTarget(maxTemp: number): number {
 
 // ── Weather Widget ────────────────────────────────────────────────────────────
 interface WeatherWidgetProps {
-  onDaySelect?: (maxTemp: number, label: string) => void;
+  onDaySelect?: (day: WeatherDay, label: string) => void;
+  formality: Formality;
+  colorPreset: string;
+  onFormalityChange: (value: Formality) => void;
+  onColorPresetChange: (value: string) => void;
 }
 
-function WeatherWidget({ onDaySelect }: WeatherWidgetProps) {
+function WeatherWidget({
+  onDaySelect,
+  formality,
+  colorPreset,
+  onFormalityChange,
+  onColorPresetChange,
+}: WeatherWidgetProps) {
   const [forecast, setForecast] = useState<WeatherDay[]>([]);
   const [city, setCity]         = useState('');
   const [status, setStatus]     = useState<'loading' | 'ok' | 'error'>('loading');
@@ -61,15 +91,15 @@ function WeatherWidget({ onDaySelect }: WeatherWidgetProps) {
           `&daily=temperature_2m_max,temperature_2m_min,weathercode&timezone=auto&forecast_days=7`
         );
         const d = await r.json();
-        setForecast(d.daily.time.map((date: string, i: number) => ({
+        const days: WeatherDay[] = d.daily.time.map((date: string, i: number) => ({
           date,
           maxTemp: Math.round(d.daily.temperature_2m_max[i]),
           minTemp: Math.round(d.daily.temperature_2m_min[i]),
           weatherCode: d.daily.weathercode[i],
-        })));
-        // Notify parent with today's temperature on first load
-        if (onDaySelect) {
-          onDaySelect(Math.round(d.daily.temperature_2m_max[0]), 'Today');
+        }));
+        setForecast(days);
+        if (onDaySelect && days.length > 0) {
+          onDaySelect(days[0], 'Today');
         }
         setStatus('ok');
       } catch {
@@ -110,20 +140,20 @@ function WeatherWidget({ onDaySelect }: WeatherWidgetProps) {
   };
 
   if (status === 'loading') return (
-    <div style={wrap}>
+    <div className="weather-widget" style={wrap}>
       <p style={{ textAlign: 'center', color: '#aaa', margin: 0, fontSize: 13 }}>Loading forecast…</p>
     </div>
   );
   if (status === 'error') return (
-    <div style={wrap}>
+    <div className="weather-widget" style={wrap}>
       <p style={{ textAlign: 'center', color: '#666', margin: 0, fontSize: 13 }}>Weather unavailable</p>
     </div>
   );
 
   return (
-    <div style={wrap}>
+    <div className="weather-widget" style={wrap}>
       <p style={{ margin: '0 0 14px', fontSize: 13, color: '#bbb', fontWeight: 500 }}>
-        📍 {city} &mdash; Weekly Forecast
+        📍 {city} · Weekly Forecast
       </p>
       <div className="weather-strip">
         {forecast.map((day, i) => {
@@ -141,9 +171,9 @@ function WeatherWidget({ onDaySelect }: WeatherWidgetProps) {
               className={classes}
               onClick={() => {
                 setSelectedIdx(i);
-                if (onDaySelect) onDaySelect(day.maxTemp, dayLabel(day.date, i));
+                if (onDaySelect) onDaySelect(day, dayLabel(day.date, i));
               }}
-              title={`Select ${dayLabel(day.date, i)} — ${day.maxTemp}°C`}
+              title={`Select ${dayLabel(day.date, i)}, ${day.maxTemp}°C${isRainy(day.weatherCode) ? ' · rainy' : ''}`}
             >
               <div className="weather-day__name">{dayLabel(day.date, i)}</div>
               <div className="weather-day__icon">{emoji}</div>
@@ -155,9 +185,50 @@ function WeatherWidget({ onDaySelect }: WeatherWidgetProps) {
         })}
       </div>
       {forecast.length > 0 && (
-        <p className="weather-day--target-label">
-          🧥 Outfit suggestions will be tailored for <strong style={{ color: '#e2e8f0' }}>{dayLabel(forecast[selectedIdx].date, selectedIdx)}</strong> · {forecast[selectedIdx].maxTemp}°C · warmth target {tempToTarget(forecast[selectedIdx].maxTemp)}/100
-        </p>
+        <>
+          <div className="day-prefs">
+            <div className="day-prefs__group">
+              <span className="day-prefs__label">Style</span>
+              <div className="day-prefs__toggle">
+                <button
+                  type="button"
+                  className={`day-prefs__btn${formality === 'casual' ? ' day-prefs__btn--active' : ''}`}
+                  onClick={() => onFormalityChange('casual')}
+                >
+                  Casual
+                </button>
+                <button
+                  type="button"
+                  className={`day-prefs__btn${formality === 'formal' ? ' day-prefs__btn--active' : ''}`}
+                  onClick={() => onFormalityChange('formal')}
+                >
+                  Formal
+                </button>
+              </div>
+            </div>
+            <div className="day-prefs__group">
+              <label className="day-prefs__label" htmlFor="color-preset">Colour palette</label>
+              <select
+                id="color-preset"
+                className="day-prefs__select"
+                value={colorPreset}
+                onChange={e => onColorPresetChange(e.target.value)}
+              >
+                {COLOR_PRESETS.map(p => (
+                  <option key={p.id} value={p.id}>{p.label}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+          <p className="weather-day--target-label">
+            🧥 Suggestions for <strong style={{ color: '#e2e8f0' }}>{dayLabel(forecast[selectedIdx].date, selectedIdx)}</strong>
+            {' · '}{forecast[selectedIdx].maxTemp}°C
+            {' · '}warmth {tempToTarget(forecast[selectedIdx].maxTemp)}/100
+            {isRainy(forecast[selectedIdx].weatherCode) && ' · 🌧️ rain-aware'}
+            {formality === 'formal' && ' · 👔 formal'}
+            {colorPreset !== 'any' && ` · ${COLOR_PRESETS.find(p => p.id === colorPreset)?.label.toLowerCase()}`}
+          </p>
+        </>
       )}
     </div>
   );
@@ -216,7 +287,7 @@ function InventoryContent({ user, onClose }: InvContentProps) {
         ) : shown.length === 0 ? (
           <p style={{ textAlign: 'center', color: '#666', paddingTop: 40 }}>
             {items.length === 0
-              ? 'No items yet — upload your first piece!'
+              ? 'No items yet. Upload your first piece!'
               : `No ${filter} items in your wardrobe.`}
           </p>
         ) : (
@@ -301,21 +372,77 @@ export function Login({ user, setUser }: { user: any, setUser: any }) {
   const [imageUrl,   setImageUrl]   = React.useState('');
   const [outfitTarget, setOutfitTarget] = React.useState(50);
   const [selectedDay,  setSelectedDay]  = React.useState('Today');
+  const [selectedDate, setSelectedDate] = React.useState('');
+  const [weatherCode,  setWeatherCode]  = React.useState(0);
+  const [formality,    setFormality]    = React.useState<Formality>('casual');
+  const [colorPreset,  setColorPreset]  = React.useState('any');
+  const [dayPrefs,     setDayPrefs]     = React.useState<Record<string, DayPrefs>>({});
+  const [outfitRefresh, setOutfitRefresh] = React.useState(0);
 
   const inventoryRef = useRef<HTMLDialogElement | null>(null);
+  const outfitRequestRef = useRef(0);
 
   useEffect(() => { setClassid(user ? 'b2' : '') }, [user]);
 
-  // Auto-fetch outfits on login or target change
   useEffect(() => {
-    if (user) {
-      handleOutfit();
-    }
-  }, [user, outfitTarget]);
+    if (!user?.sub) return;
 
-  const handleDaySelect = (maxTemp: number, label: string) => {
-    setOutfitTarget(tempToTarget(maxTemp));
+    const requestId = ++outfitRequestRef.current;
+    const timer = window.setTimeout(() => {
+      const params = new URLSearchParams({
+        user_id: user.sub,
+        target: String(outfitTarget),
+        weather_code: String(weatherCode),
+        formality,
+        color_preset: colorPreset,
+      });
+
+      fetch(`http://localhost:5000/api/outfit?${params}`)
+        .then(r => {
+          if (!r.ok) throw new Error(`Outfit request failed (${r.status})`);
+          return r.json();
+        })
+        .then(d => {
+          if (requestId === outfitRequestRef.current) {
+            setOutfits(Array.isArray(d) ? d : []);
+          }
+        })
+        .catch(err => {
+          console.error(err);
+          if (requestId === outfitRequestRef.current) {
+            setOutfits([]);
+          }
+        });
+    }, 300);
+
+    return () => window.clearTimeout(timer);
+  }, [user, outfitTarget, weatherCode, formality, colorPreset, outfitRefresh]);
+
+  const updateDayPrefs = (date: string, patch: Partial<DayPrefs>) => {
+    setDayPrefs(prev => ({
+      ...prev,
+      [date]: { ...(prev[date] ?? defaultDayPrefs()), ...patch },
+    }));
+  };
+
+  const handleDaySelect = (day: WeatherDay, label: string) => {
+    const prefs = dayPrefs[day.date] ?? defaultDayPrefs();
+    setOutfitTarget(tempToTarget(day.maxTemp));
     setSelectedDay(label);
+    setSelectedDate(day.date);
+    setWeatherCode(day.weatherCode);
+    setFormality(prefs.formality);
+    setColorPreset(prefs.colorPreset);
+  };
+
+  const handleFormalityChange = (value: Formality) => {
+    setFormality(value);
+    if (selectedDate) updateDayPrefs(selectedDate, { formality: value });
+  };
+
+  const handleColorPresetChange = (value: string) => {
+    setColorPreset(value);
+    if (selectedDate) updateDayPrefs(selectedDate, { colorPreset: value });
   };
 
   const handlePredict = async (id: number) => {
@@ -324,15 +451,6 @@ export function Login({ user, setUser }: { user: any, setUser: any }) {
       const d = await r.json();
       setPrediction(d.prediction);
     } catch (err) { console.error(err); }
-  };
-
-  const handleOutfit = () => {
-    const userId = user?.sub;
-    if (!userId) return;
-    fetch(`http://localhost:5000/api/outfit?user_id=${userId}&target=${outfitTarget}`)
-      .then(r => r.json())
-      .then(d => setOutfits(Array.isArray(d) ? d : []))
-      .catch(console.error);
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -350,7 +468,7 @@ export function Login({ user, setUser }: { user: any, setUser: any }) {
         setImageId(d.image_id);
         setImageUrl(`http://localhost:5000/api/image/${d.image_id}`);
         handlePredict(d.image_id);
-        handleOutfit();
+        setOutfitRefresh(r => r + 1);
       })
       .catch(console.error);
   };
@@ -369,7 +487,13 @@ export function Login({ user, setUser }: { user: any, setUser: any }) {
 
           <div className="dashboard-layout">
             <div className="dashboard-sidebar">
-              <WeatherWidget onDaySelect={handleDaySelect} />
+              <WeatherWidget
+                onDaySelect={handleDaySelect}
+                formality={formality}
+                colorPreset={colorPreset}
+                onFormalityChange={handleFormalityChange}
+                onColorPresetChange={handleColorPresetChange}
+              />
 
               <div className="prediction-box">
                 {imageUrl ? (
@@ -397,7 +521,7 @@ export function Login({ user, setUser }: { user: any, setUser: any }) {
 
             <div className="dashboard-main">
               <div className="outfits-container">
-                <h3>Outfit Suggestions for {selectedDay}</h3>
+                <h3>Outfit Suggestions for {selectedDay}{formality === 'formal' ? ' (Formal)' : ''}</h3>
                 {outfits.length > 0 ? (
                   <div className="outfits-list">
                     {outfits.map((off, idx) => (
@@ -407,7 +531,10 @@ export function Login({ user, setUser }: { user: any, setUser: any }) {
                           {Object.entries(off).map(([part, item]) => item && (
                             <div key={part} className="outfit-item-compact">
                               <img src={`http://localhost:5000/api/image/${item.id}`} alt={item.label} />
-                              <span className="outfit-item-label-compact">{item.label}</span>
+                              <span className="outfit-item-label-compact">
+                                {item.label}
+                                {item.color && <span className="outfit-item-color"> · {item.color}</span>}
+                              </span>
                             </div>
                           ))}
                         </div>
@@ -485,11 +612,39 @@ export function Card(props: any) {
     </div>
   );
   let active = false;
+  const [expanded, setExpanded] = React.useState(false);
   const [contents,     setContents]     = React.useState({ "display": "none", "opacity": "0", "transition": "2s", "transitionDelay": "4.5s" });
   const [subContents1, setSubContents1] = React.useState({ "display": "block", "transition": "2s", "opacity": "0" });
-  const [subContents2, setSubContents2] = React.useState({ "display": "block", "opacity": "0" });
+  const [subContents2, setSubContents2] = React.useState({ "display": "block", "opacity": "0", "transition": "2s", "transitionDelay": "0s" });
+
+  React.useEffect(() => {
+    const isMobile = window.matchMedia('(max-width: 768px)').matches;
+    if (isMobile) {
+      setExpanded(true);
+      setContents({ "display": "inline-flex", "opacity": "1", "transition": "2s", "transitionDelay": "0s" });
+      setSubContents1({ "display": "block", "opacity": "1", "transition": "2s" });
+      setSubContents2({ "display": "block", "opacity": "1", "transition": "2s", "transitionDelay": "0s" });
+    }
+  }, []);
+
   const cardSub = (
-    <div className='cardSub'
+    <div className={`cardSub${expanded ? ' cardSub--expanded' : ''}`}
+      onClick={() => {
+        if (!window.matchMedia('(max-width: 768px)').matches) return;
+        setExpanded(v => {
+          const next = !v;
+          if (next) {
+            setContents({ "display": "inline-flex", "opacity": "1", "transition": "2s", "transitionDelay": "0s" });
+            setSubContents1({ "display": "block", "opacity": "1", "transition": "2s" });
+            setSubContents2({ "display": "block", "opacity": "1", "transition": "2s", "transitionDelay": "0s" });
+          } else {
+            setContents({ "display": "none", "opacity": "0", "transition": "0s", "transitionDelay": "0s" });
+            setSubContents1({ "display": "none", "opacity": "0", "transition": "2s" });
+            setSubContents2({ "display": "none", "opacity": "0", "transition": "2s", "transitionDelay": "0s" });
+          }
+          return next;
+        });
+      }}
       onMouseOver={() => {
         active = true;
         if (active) {
@@ -532,9 +687,14 @@ const navClickHandler = () => {
 export function Navbar() {
   return (
     <div className='nav'>
-      <h1>Fab</h1>
-      <img src="/CirculationsLogoNoBg.png" onClick={navClickHandler} height="80px" width="100px" />
-      <h1>AI</h1>
+      <h1 className="nav__brand">Fab</h1>
+      <img
+        className="nav__logo"
+        src="/CirculationsLogoNoBg.png"
+        onClick={navClickHandler}
+        alt="FabAI home"
+      />
+      <h1 className="nav__brand">AI</h1>
     </div>
   );
 }

@@ -18,7 +18,15 @@ from pathlib import Path
 from google.oauth2 import id_token
 from google.auth.transport import requests as grequests
 
-from assigner import clothingAssign
+from assigner import (
+    clothingAssign,
+    get_dominant_color,
+    get_formality_score,
+    is_rain_friendly,
+    is_rain_unfriendly,
+    NEUTRAL_COLORS,
+    DARK_COLORS,
+)
 
 
 app = Flask(__name__)
@@ -56,6 +64,10 @@ app.secret_key = 'supersecret'  # use a secure one in production
 app.config['SQLALCHEMY_DATABASE_URI'] = f'postgresql://postgres:{db_pw}@db:5432/mydb'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
+
+@app.teardown_appcontext
+def shutdown_session(exception=None):
+    db.session.remove()
 
 # OAuth Config
 oauth = OAuth(app)
@@ -156,7 +168,7 @@ def upload_file_nx():
         pil_image = PILImage.open(BytesIO(image_bytes))
 
         label = model.predict(pil_image)
-        value, category = clothingAssign(label, pil_image)
+        value, category, color = clothingAssign(label, pil_image)
         value = float(value)
 
         new_image = Image(
@@ -167,6 +179,7 @@ def upload_file_nx():
             label=label,
             value=value,
             category=category,
+            color=color,
         )
         db.session.add(new_image)
         db.session.commit()
@@ -271,15 +284,145 @@ class Image(db.Model):
     label = db.Column(db.String(50))
     value = db.Column(db.Float)
     category = db.Column(db.String(50))
+    color = db.Column(db.String(30))
 
-def distribute(target, user_id, db):
+RAIN_WEATHER_CODES = frozenset({
+    51, 53, 55, 61, 63, 65, 80, 81, 82, 95, 96, 99,
+})
+
+COLOR_PRESETS = {
+    'any': 'Any colours',
+    'accent_black': 'Single accent + black',
+    'earth_sky': 'Light brown + light blue',
+    'neutrals': 'Neutrals only',
+}
+
+
+def is_rainy_weather(weather_code) -> bool:
+    try:
+        return int(weather_code) in RAIN_WEATHER_CODES
+    except (TypeError, ValueError):
+        return False
+
+
+def item_color(img, color_cache: dict | None = None) -> str:
+    if color_cache is not None and img.id in color_cache:
+        return color_cache[img.id]
+    if img.color:
+        return img.color
+    return 'grey'
+
+
+def build_color_cache(images) -> dict:
+    """Compute each item's colour once per request to avoid repeated PIL/DB work."""
+    cache = {}
+    needs_commit = False
+    for img in images:
+        if img.color:
+            cache[img.id] = img.color
+            continue
+        if img.data:
+            pil = PILImage.open(BytesIO(img.data))
+            try:
+                color = get_dominant_color(pil)
+            finally:
+                pil.close()
+            img.color = color
+            cache[img.id] = color
+            needs_commit = True
+        else:
+            cache[img.id] = 'grey'
+    if needs_commit:
+        try:
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+    return cache
+
+
+def score_color_harmony(colors: list[str], preset: str) -> float:
+    if preset == 'any' or not colors:
+        return 0.0
+
+    unique = set(colors)
+    non_neutral = [c for c in unique if c not in NEUTRAL_COLORS]
+
+    if preset == 'neutrals':
+        return 0.0 if not non_neutral else len(non_neutral) * 12
+
+    if preset == 'accent_black':
+        if 'black' not in unique:
+            return 18
+        if len(non_neutral) > 1:
+            return (len(non_neutral) - 1) * 14
+        return 0.0
+
+    if preset == 'earth_sky':
+        browns = unique & {'brown', 'lightbrown'}
+        blues = unique & {'blue', 'lightblue', 'navy'}
+        penalty = 0.0
+        if not browns:
+            penalty += 16
+        if not blues:
+            penalty += 16
+        extras = [c for c in non_neutral if c not in {'brown', 'lightbrown', 'blue', 'lightblue', 'navy'}]
+        penalty += len(extras) * 8
+        return penalty
+
+    return 0.0
+
+
+def score_formality(items, formality: str, color_cache: dict) -> float:
+    if formality != 'formal':
+        return 0.0
+
+    penalty = 0.0
+    for img in items:
+        if not img:
+            continue
+        label_score = get_formality_score(img.label or '')
+        penalty += max(0, 7 - label_score) * 2
+
+        color = item_color(img, color_cache)
+        if color not in DARK_COLORS and color not in NEUTRAL_COLORS:
+            penalty += 6
+        elif color in {'white', 'beige', 'lightblue', 'pink', 'yellow', 'orange'}:
+            penalty += 4
+
+    return penalty
+
+
+def score_rain(items, rainy: bool) -> float:
+    if not rainy:
+        return 0.0
+
+    penalty = 0.0
+    for img in items:
+        if not img:
+            continue
+        label = img.label or ''
+        if is_rain_friendly(label):
+            penalty -= 6
+        elif is_rain_unfriendly(label):
+            penalty += 14
+    return penalty
+
+
+def distribute(target, user_id, db, weather_code=None, formality='casual', color_preset='any'):
     user = db.session.query(User).filter_by(oauth_id=user_id).first()
     if not user:
         return []
 
+    images = list(user.images)
+    color_cache = build_color_cache(images)
+
+    rainy = is_rainy_weather(weather_code)
+    if rainy:
+        target += 12
+
     category_map = {
         "hat": ["Optional", "Head"],
-        "top": ["Top"],
+        "top": ["Top", "One piece"],
         "bot": ["Bottom"],
         "shoe": ["Shoes"]
     }
@@ -291,13 +434,22 @@ def distribute(target, user_id, db):
         "shoe": []
     }
 
-    for img in user.images:
+    for img in images:
         for group, valid_cats in category_map.items():
             if img.category in valid_cats:
                 images_by_cat[group].append(img)
 
-    if not images_by_cat["hat"]:
+    if formality == 'formal':
         images_by_cat["hat"] = [None]
+    elif not images_by_cat["hat"]:
+        images_by_cat["hat"] = [None]
+
+    if not images_by_cat["top"] or not images_by_cat["shoe"]:
+        return []
+
+    # One-piece outfits can omit a separate bottom
+    if not images_by_cat["bot"]:
+        images_by_cat["bot"] = [None]
 
     combos = []
 
@@ -305,11 +457,30 @@ def distribute(target, user_id, db):
         for top in images_by_cat["top"]:
             for bot in images_by_cat["bot"]:
                 for shoe in images_by_cat["shoe"]:
+                    if bot is not None and top.category == 'One piece':
+                        continue
+
                     combo = [hat, top, bot, shoe]
-                    total_value = sum(img.value for img in combo if img is not None)
-                    diff = abs(total_value - target)
+                    active = [img for img in combo if img is not None]
+                    if not active:
+                        continue
+
+                    total_value = sum(img.value for img in active)
+                    warmth_diff = abs(total_value - target)
+                    colors = [item_color(img, color_cache) for img in active]
+                    color_penalty = score_color_harmony(colors, color_preset)
+                    formality_penalty = score_formality(active, formality, color_cache)
+                    rain_penalty = score_rain(active, rainy)
+
+                    total_score = (
+                        warmth_diff
+                        + color_penalty * 0.45
+                        + formality_penalty * 0.35
+                        + rain_penalty * 0.55
+                    )
+
                     combos.append({
-                        "diff": diff,
+                        "score": total_score,
                         "outfit": {
                             "hat": hat,
                             "top": top,
@@ -318,8 +489,7 @@ def distribute(target, user_id, db):
                         }
                     })
 
-    # Sort by diff and take top 3
-    combos.sort(key=lambda x: x["diff"])
+    combos.sort(key=lambda x: x["score"])
     return [c["outfit"] for c in combos[:3]]
 
 
@@ -338,11 +508,24 @@ def predict_image(image_id):
 def get_outfit():
     user_id = request.args.get('user_id')
     target = request.args.get('target', type=float)
+    weather_code = request.args.get('weather_code', type=int)
+    formality = request.args.get('formality', 'casual')
+    color_preset = request.args.get('color_preset', 'any')
 
     if not user_id or target is None:
         return jsonify({'error': 'Missing user_id or target'}), 400
 
-    outfits = distribute(target, user_id, db)
+    if formality not in ('casual', 'formal'):
+        formality = 'casual'
+    if color_preset not in COLOR_PRESETS:
+        color_preset = 'any'
+
+    outfits = distribute(
+        target, user_id, db,
+        weather_code=weather_code,
+        formality=formality,
+        color_preset=color_preset,
+    )
     if not outfits:
         return jsonify([])
 
@@ -353,7 +536,8 @@ def get_outfit():
                 'id': item.id,
                 'label': item.label,
                 'value': item.value,
-                'category': item.category
+                'category': item.category,
+                'color': item.color or 'grey',
             } if item else None for part, item in outfit.items()
         })
     return jsonify(results)
@@ -368,11 +552,13 @@ def get_inventory():
     if not user:
         return jsonify({'error': 'User not found'}), 404
     images = Image.query.filter_by(user_id=user.id).all()
+    color_cache = build_color_cache(images)
     return jsonify([{
         'id':       img.id,
         'label':    img.label    or 'Unknown',
         'value':    float(img.value) if img.value is not None else 0.0,
         'category': img.category or 'Optional',
+        'color':    color_cache.get(img.id, 'grey'),
     } for img in images])
 
 @app.route('/api/inventory/<int:image_id>', methods=['DELETE'])
@@ -403,17 +589,29 @@ def update_item(image_id):
         image.label = data['label']
 
     pil_image = PILImage.open(BytesIO(image.data))
-    new_value, _ = clothingAssign(image.label, pil_image)
+    new_value, _, new_color = clothingAssign(image.label, pil_image)
     image.value = float(new_value)
+    image.color = new_color
 
     db.session.commit()
     return jsonify({
         'id': image.id,
         'label': image.label,
         'category': image.category,
-        'value': image.value
+        'value': image.value,
+        'color': image.color,
     })
 
 
 if __name__ == "__main__":
+    with app.app_context():
+        db.create_all()
+        try:
+            db.session.execute(db.text(
+                "ALTER TABLE image ADD COLUMN IF NOT EXISTS color VARCHAR(30)"
+            ))
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            print(f"Color column migration note: {e}")
     app.run(host="0.0.0.0", port=5000)

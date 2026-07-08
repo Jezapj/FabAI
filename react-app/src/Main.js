@@ -26,6 +26,19 @@ const WMO = {
     96: ['⛈️', 'Storm + hail'], 99: ['⛈️', 'Storm + hail'],
 };
 const wmo = (code) => { var _a; return (_a = WMO[code]) !== null && _a !== void 0 ? _a : ['🌡️', 'Unknown']; };
+const RAIN_CODES = new Set([51, 53, 55, 61, 63, 65, 80, 81, 82, 95, 96, 99]);
+const COLOR_PRESETS = [
+    { id: 'any', label: 'Any colours' },
+    { id: 'accent_black', label: 'Single accent + black' },
+    { id: 'earth_sky', label: 'Light brown + light blue' },
+    { id: 'neutrals', label: 'Neutrals only' },
+];
+function isRainy(code) {
+    return RAIN_CODES.has(code);
+}
+function defaultDayPrefs() {
+    return { formality: 'casual', colorPreset: 'any' };
+}
 function dayLabel(dateStr, i) {
     if (i === 0)
         return 'Today';
@@ -42,7 +55,8 @@ function tempToTarget(maxTemp) {
     const sigmoid = 1 / (1 + Math.exp(0.15 * (x - 18)));
     return Math.round(sigmoid * 100);
 }
-function WeatherWidget({ onDaySelect }) {
+function WeatherWidget({ onDaySelect, formality, colorPreset, onFormalityChange, onColorPresetChange, }) {
+    var _a;
     const [forecast, setForecast] = useState([]);
     const [city, setCity] = useState('');
     const [status, setStatus] = useState('loading');
@@ -54,15 +68,15 @@ function WeatherWidget({ onDaySelect }) {
                     const r = yield fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}` +
                         `&daily=temperature_2m_max,temperature_2m_min,weathercode&timezone=auto&forecast_days=7`);
                     const d = yield r.json();
-                    setForecast(d.daily.time.map((date, i) => ({
+                    const days = d.daily.time.map((date, i) => ({
                         date,
                         maxTemp: Math.round(d.daily.temperature_2m_max[i]),
                         minTemp: Math.round(d.daily.temperature_2m_min[i]),
                         weatherCode: d.daily.weathercode[i],
-                    })));
-                    // Notify parent with today's temperature on first load
-                    if (onDaySelect) {
-                        onDaySelect(Math.round(d.daily.temperature_2m_max[0]), 'Today');
+                    }));
+                    setForecast(days);
+                    if (onDaySelect && days.length > 0) {
+                        onDaySelect(days[0], 'Today');
                     }
                     setStatus('ok');
                 }
@@ -100,10 +114,10 @@ function WeatherWidget({ onDaySelect }) {
         boxSizing: 'border-box',
     };
     if (status === 'loading')
-        return (_jsx("div", { style: wrap, children: _jsx("p", { style: { textAlign: 'center', color: '#aaa', margin: 0, fontSize: 13 }, children: "Loading forecast\u2026" }) }));
+        return (_jsx("div", { className: "weather-widget", style: wrap, children: _jsx("p", { style: { textAlign: 'center', color: '#aaa', margin: 0, fontSize: 13 }, children: "Loading forecast\u2026" }) }));
     if (status === 'error')
-        return (_jsx("div", { style: wrap, children: _jsx("p", { style: { textAlign: 'center', color: '#666', margin: 0, fontSize: 13 }, children: "Weather unavailable" }) }));
-    return (_jsxs("div", { style: wrap, children: [_jsxs("p", { style: { margin: '0 0 14px', fontSize: 13, color: '#bbb', fontWeight: 500 }, children: ["\uD83D\uDCCD ", city, " \u2014 Weekly Forecast"] }), _jsx("div", { className: "weather-strip", children: forecast.map((day, i) => {
+        return (_jsx("div", { className: "weather-widget", style: wrap, children: _jsx("p", { style: { textAlign: 'center', color: '#666', margin: 0, fontSize: 13 }, children: "Weather unavailable" }) }));
+    return (_jsxs("div", { className: "weather-widget", style: wrap, children: [_jsxs("p", { style: { margin: '0 0 14px', fontSize: 13, color: '#bbb', fontWeight: 500 }, children: ["\uD83D\uDCCD ", city, " \u2014 Weekly Forecast"] }), _jsx("div", { className: "weather-strip", children: forecast.map((day, i) => {
                     const [emoji, label] = wmo(day.weatherCode);
                     const today = i === 0;
                     const selected = i === selectedIdx;
@@ -115,9 +129,9 @@ function WeatherWidget({ onDaySelect }) {
                     return (_jsxs("div", { className: classes, onClick: () => {
                             setSelectedIdx(i);
                             if (onDaySelect)
-                                onDaySelect(day.maxTemp, dayLabel(day.date, i));
-                        }, title: `Select ${dayLabel(day.date, i)} — ${day.maxTemp}°C`, children: [_jsx("div", { className: "weather-day__name", children: dayLabel(day.date, i) }), _jsx("div", { className: "weather-day__icon", children: emoji }), _jsx("div", { className: "weather-day__desc", children: label }), _jsxs("div", { className: "weather-day__max", children: [day.maxTemp, "\u00B0"] }), _jsxs("div", { className: "weather-day__min", children: [day.minTemp, "\u00B0"] })] }, day.date));
-                }) }), forecast.length > 0 && (_jsxs("p", { className: "weather-day--target-label", children: ["\uD83E\uDDE5 Outfit suggestions will be tailored for ", _jsx("strong", { style: { color: '#e2e8f0' }, children: dayLabel(forecast[selectedIdx].date, selectedIdx) }), " \u00B7 ", forecast[selectedIdx].maxTemp, "\u00B0C \u00B7 warmth target ", tempToTarget(forecast[selectedIdx].maxTemp), "/100"] }))] }));
+                                onDaySelect(day, dayLabel(day.date, i));
+                        }, title: `Select ${dayLabel(day.date, i)} — ${day.maxTemp}°C${isRainy(day.weatherCode) ? ' · rainy' : ''}`, children: [_jsx("div", { className: "weather-day__name", children: dayLabel(day.date, i) }), _jsx("div", { className: "weather-day__icon", children: emoji }), _jsx("div", { className: "weather-day__desc", children: label }), _jsxs("div", { className: "weather-day__max", children: [day.maxTemp, "\u00B0"] }), _jsxs("div", { className: "weather-day__min", children: [day.minTemp, "\u00B0"] })] }, day.date));
+                }) }), forecast.length > 0 && (_jsxs(_Fragment, { children: [_jsxs("div", { className: "day-prefs", children: [_jsxs("div", { className: "day-prefs__group", children: [_jsx("span", { className: "day-prefs__label", children: "Style" }), _jsxs("div", { className: "day-prefs__toggle", children: [_jsx("button", { type: "button", className: `day-prefs__btn${formality === 'casual' ? ' day-prefs__btn--active' : ''}`, onClick: () => onFormalityChange('casual'), children: "Casual" }), _jsx("button", { type: "button", className: `day-prefs__btn${formality === 'formal' ? ' day-prefs__btn--active' : ''}`, onClick: () => onFormalityChange('formal'), children: "Formal" })] })] }), _jsxs("div", { className: "day-prefs__group", children: [_jsx("label", { className: "day-prefs__label", htmlFor: "color-preset", children: "Colour palette" }), _jsx("select", { id: "color-preset", className: "day-prefs__select", value: colorPreset, onChange: e => onColorPresetChange(e.target.value), children: COLOR_PRESETS.map(p => (_jsx("option", { value: p.id, children: p.label }, p.id))) })] })] }), _jsxs("p", { className: "weather-day--target-label", children: ["\uD83E\uDDE5 Suggestions for ", _jsx("strong", { style: { color: '#e2e8f0' }, children: dayLabel(forecast[selectedIdx].date, selectedIdx) }), ' · ', forecast[selectedIdx].maxTemp, "\u00B0C", ' · ', "warmth ", tempToTarget(forecast[selectedIdx].maxTemp), "/100", isRainy(forecast[selectedIdx].weatherCode) && ' · 🌧️ rain-aware', formality === 'formal' && ' · 👔 formal', colorPreset !== 'any' && ` · ${(_a = COLOR_PRESETS.find(p => p.id === colorPreset)) === null || _a === void 0 ? void 0 : _a.label.toLowerCase()}`] })] }))] }));
 }
 // ── Inventory Modal ───────────────────────────────────────────────────────────
 const CATS = ['All', 'Top', 'Bottom', 'Shoes', 'Optional', 'Head', 'One piece'];
@@ -185,17 +199,72 @@ export function Login({ user, setUser }) {
     const [imageUrl, setImageUrl] = React.useState('');
     const [outfitTarget, setOutfitTarget] = React.useState(50);
     const [selectedDay, setSelectedDay] = React.useState('Today');
+    const [selectedDate, setSelectedDate] = React.useState('');
+    const [weatherCode, setWeatherCode] = React.useState(0);
+    const [formality, setFormality] = React.useState('casual');
+    const [colorPreset, setColorPreset] = React.useState('any');
+    const [dayPrefs, setDayPrefs] = React.useState({});
+    const [outfitRefresh, setOutfitRefresh] = React.useState(0);
     const inventoryRef = useRef(null);
+    const outfitRequestRef = useRef(0);
     useEffect(() => { setClassid(user ? 'b2' : ''); }, [user]);
-    // Auto-fetch outfits on login or target change
     useEffect(() => {
-        if (user) {
-            handleOutfit();
-        }
-    }, [user, outfitTarget]);
-    const handleDaySelect = (maxTemp, label) => {
-        setOutfitTarget(tempToTarget(maxTemp));
+        if (!(user === null || user === void 0 ? void 0 : user.sub))
+            return;
+        const requestId = ++outfitRequestRef.current;
+        const timer = window.setTimeout(() => {
+            const params = new URLSearchParams({
+                user_id: user.sub,
+                target: String(outfitTarget),
+                weather_code: String(weatherCode),
+                formality,
+                color_preset: colorPreset,
+            });
+            fetch(`http://localhost:5000/api/outfit?${params}`)
+                .then(r => {
+                if (!r.ok)
+                    throw new Error(`Outfit request failed (${r.status})`);
+                return r.json();
+            })
+                .then(d => {
+                if (requestId === outfitRequestRef.current) {
+                    setOutfits(Array.isArray(d) ? d : []);
+                }
+            })
+                .catch(err => {
+                console.error(err);
+                if (requestId === outfitRequestRef.current) {
+                    setOutfits([]);
+                }
+            });
+        }, 300);
+        return () => window.clearTimeout(timer);
+    }, [user, outfitTarget, weatherCode, formality, colorPreset, outfitRefresh]);
+    const updateDayPrefs = (date, patch) => {
+        setDayPrefs(prev => {
+            var _a;
+            return (Object.assign(Object.assign({}, prev), { [date]: Object.assign(Object.assign({}, ((_a = prev[date]) !== null && _a !== void 0 ? _a : defaultDayPrefs())), patch) }));
+        });
+    };
+    const handleDaySelect = (day, label) => {
+        var _a;
+        const prefs = (_a = dayPrefs[day.date]) !== null && _a !== void 0 ? _a : defaultDayPrefs();
+        setOutfitTarget(tempToTarget(day.maxTemp));
         setSelectedDay(label);
+        setSelectedDate(day.date);
+        setWeatherCode(day.weatherCode);
+        setFormality(prefs.formality);
+        setColorPreset(prefs.colorPreset);
+    };
+    const handleFormalityChange = (value) => {
+        setFormality(value);
+        if (selectedDate)
+            updateDayPrefs(selectedDate, { formality: value });
+    };
+    const handleColorPresetChange = (value) => {
+        setColorPreset(value);
+        if (selectedDate)
+            updateDayPrefs(selectedDate, { colorPreset: value });
     };
     const handlePredict = (id) => __awaiter(this, void 0, void 0, function* () {
         try {
@@ -207,15 +276,6 @@ export function Login({ user, setUser }) {
             console.error(err);
         }
     });
-    const handleOutfit = () => {
-        const userId = user === null || user === void 0 ? void 0 : user.sub;
-        if (!userId)
-            return;
-        fetch(`http://localhost:5000/api/outfit?user_id=${userId}&target=${outfitTarget}`)
-            .then(r => r.json())
-            .then(d => setOutfits(Array.isArray(d) ? d : []))
-            .catch(console.error);
-    };
     const handleFileChange = (e) => {
         var _a;
         const file = (_a = e.target.files) === null || _a === void 0 ? void 0 : _a[0];
@@ -231,11 +291,11 @@ export function Login({ user, setUser }) {
             setImageId(d.image_id);
             setImageUrl(`http://localhost:5000/api/image/${d.image_id}`);
             handlePredict(d.image_id);
-            handleOutfit();
+            setOutfitRefresh(r => r + 1);
         })
             .catch(console.error);
     };
-    return (_jsx("div", { className: classid, children: user ? (_jsxs(_Fragment, { children: [_jsx("dialog", { ref: inventoryRef, onClick: () => { var _a; return (_a = inventoryRef.current) === null || _a === void 0 ? void 0 : _a.close(); }, children: _jsx(InventoryContent, { user: user, onClose: () => { var _a; return (_a = inventoryRef.current) === null || _a === void 0 ? void 0 : _a.close(); } }) }), _jsx(Card, { title: `Welcome, ${user.name}`, content: "Your personal wardrobe assistant", type: "Main", bg: false, display: imageUrl ? false : true }), _jsxs("div", { className: "dashboard-layout", children: [_jsxs("div", { className: "dashboard-sidebar", children: [_jsx(WeatherWidget, { onDaySelect: handleDaySelect }), _jsx("div", { className: "prediction-box", children: imageUrl ? (_jsxs(_Fragment, { children: [_jsx("img", { src: imageUrl, alt: "Last Uploaded", className: "last-uploaded-img" }), _jsxs("p", { children: ["AI Classifier: ", _jsx("strong", { children: prediction || 'Processing...' })] })] })) : (_jsx("p", { style: { color: '#666', fontSize: '14px' }, children: "Upload an image to see AI classification" })) }), _jsxs("div", { className: "dashboard-controls", children: [_jsx("button", { className: "b1-compact", onClick: () => { var _a; return (_a = document.getElementById('fileInput')) === null || _a === void 0 ? void 0 : _a.click(); }, children: "Add Image" }), _jsx("button", { className: "b1-compact", onClick: () => { var _a; return (_a = inventoryRef.current) === null || _a === void 0 ? void 0 : _a.showModal(); }, children: "Wardrobe" }), _jsx("button", { className: "b1-compact", onClick: () => { googleLogout(); setUser(null); setClassid(''); }, children: "Logout" })] })] }), _jsx("div", { className: "dashboard-main", children: _jsxs("div", { className: "outfits-container", children: [_jsxs("h3", { children: ["Outfit Suggestions for ", selectedDay] }), outfits.length > 0 ? (_jsx("div", { className: "outfits-list", children: outfits.map((off, idx) => (_jsxs("div", { className: "outfit-card", children: [_jsxs("h4", { children: ["Option ", idx + 1] }), _jsx("div", { className: "outfit-grid-compact", children: Object.entries(off).map(([part, item]) => item && (_jsxs("div", { className: "outfit-item-compact", children: [_jsx("img", { src: `http://localhost:5000/api/image/${item.id}`, alt: item.label }), _jsx("span", { className: "outfit-item-label-compact", children: item.label })] }, part))) })] }, idx))) })) : (_jsxs("div", { className: "no-outfits", children: [_jsx("p", { children: "Not enough items in your wardrobe to suggest an outfit for this weather." }), _jsx("p", { style: { fontSize: '13px', color: '#888' }, children: "Try adding more Tops, Bottoms, and Shoes!" })] }))] }) })] }), _jsxs("div", { style: { display: 'none', justifyContent: 'center', flexWrap: 'wrap' }, children: [_jsx("button", { className: "b1", onClick: () => { var _a; return (_a = document.getElementById('fileInput')) === null || _a === void 0 ? void 0 : _a.click(); }, children: _jsx("h4", { children: "Add Image" }) }), _jsx("button", { className: "b1", onClick: () => { var _a; return (_a = inventoryRef.current) === null || _a === void 0 ? void 0 : _a.showModal(); }, children: _jsx("h4", { children: "View Inventory" }) }), _jsx("button", { className: "b1", onClick: () => { googleLogout(); setUser(null); setClassid(''); }, children: _jsx("h4", { children: "Logout" }) })] }), _jsx("input", { id: "fileInput", type: "file", accept: "image/*", onChange: handleFileChange, style: { display: 'none' } })] })) : (_jsx(GoogleLogin, { onSuccess: credentialResponse => {
+    return (_jsx("div", { className: classid, children: user ? (_jsxs(_Fragment, { children: [_jsx("dialog", { ref: inventoryRef, onClick: () => { var _a; return (_a = inventoryRef.current) === null || _a === void 0 ? void 0 : _a.close(); }, children: _jsx(InventoryContent, { user: user, onClose: () => { var _a; return (_a = inventoryRef.current) === null || _a === void 0 ? void 0 : _a.close(); } }) }), _jsx(Card, { title: `Welcome, ${user.name}`, content: "Your personal wardrobe assistant", type: "Main", bg: false, display: imageUrl ? false : true }), _jsxs("div", { className: "dashboard-layout", children: [_jsxs("div", { className: "dashboard-sidebar", children: [_jsx(WeatherWidget, { onDaySelect: handleDaySelect, formality: formality, colorPreset: colorPreset, onFormalityChange: handleFormalityChange, onColorPresetChange: handleColorPresetChange }), _jsx("div", { className: "prediction-box", children: imageUrl ? (_jsxs(_Fragment, { children: [_jsx("img", { src: imageUrl, alt: "Last Uploaded", className: "last-uploaded-img" }), _jsxs("p", { children: ["AI Classifier: ", _jsx("strong", { children: prediction || 'Processing...' })] })] })) : (_jsx("p", { style: { color: '#666', fontSize: '14px' }, children: "Upload an image to see AI classification" })) }), _jsxs("div", { className: "dashboard-controls", children: [_jsx("button", { className: "b1-compact", onClick: () => { var _a; return (_a = document.getElementById('fileInput')) === null || _a === void 0 ? void 0 : _a.click(); }, children: "Add Image" }), _jsx("button", { className: "b1-compact", onClick: () => { var _a; return (_a = inventoryRef.current) === null || _a === void 0 ? void 0 : _a.showModal(); }, children: "Wardrobe" }), _jsx("button", { className: "b1-compact", onClick: () => { googleLogout(); setUser(null); setClassid(''); }, children: "Logout" })] })] }), _jsx("div", { className: "dashboard-main", children: _jsxs("div", { className: "outfits-container", children: [_jsxs("h3", { children: ["Outfit Suggestions for ", selectedDay, formality === 'formal' ? ' (Formal)' : ''] }), outfits.length > 0 ? (_jsx("div", { className: "outfits-list", children: outfits.map((off, idx) => (_jsxs("div", { className: "outfit-card", children: [_jsxs("h4", { children: ["Option ", idx + 1] }), _jsx("div", { className: "outfit-grid-compact", children: Object.entries(off).map(([part, item]) => item && (_jsxs("div", { className: "outfit-item-compact", children: [_jsx("img", { src: `http://localhost:5000/api/image/${item.id}`, alt: item.label }), _jsxs("span", { className: "outfit-item-label-compact", children: [item.label, item.color && _jsxs("span", { className: "outfit-item-color", children: [" \u00B7 ", item.color] })] })] }, part))) })] }, idx))) })) : (_jsxs("div", { className: "no-outfits", children: [_jsx("p", { children: "Not enough items in your wardrobe to suggest an outfit for this weather." }), _jsx("p", { style: { fontSize: '13px', color: '#888' }, children: "Try adding more Tops, Bottoms, and Shoes!" })] }))] }) })] }), _jsxs("div", { style: { display: 'none', justifyContent: 'center', flexWrap: 'wrap' }, children: [_jsx("button", { className: "b1", onClick: () => { var _a; return (_a = document.getElementById('fileInput')) === null || _a === void 0 ? void 0 : _a.click(); }, children: _jsx("h4", { children: "Add Image" }) }), _jsx("button", { className: "b1", onClick: () => { var _a; return (_a = inventoryRef.current) === null || _a === void 0 ? void 0 : _a.showModal(); }, children: _jsx("h4", { children: "View Inventory" }) }), _jsx("button", { className: "b1", onClick: () => { googleLogout(); setUser(null); setClassid(''); }, children: _jsx("h4", { children: "Logout" }) })] }), _jsx("input", { id: "fileInput", type: "file", accept: "image/*", onChange: handleFileChange, style: { display: 'none' } })] })) : (_jsx(GoogleLogin, { onSuccess: credentialResponse => {
                 const decoded = jwtDecode(credentialResponse.credential || '');
                 setUser(decoded);
                 fetch('http://localhost:5000/api/auth', {
@@ -253,10 +313,37 @@ export function Card(props) {
     const cardFeature = (_jsxs("div", { className: 'cardFeature', style: bg, children: [_jsx("h1", { children: props.title }), _jsx("h2", { children: props.content })] }));
     const cardMain = (_jsxs("div", { className: 'cardMain', style: bg, children: [_jsx("h2", { children: props.title }), _jsx("h3", { children: props.content })] }));
     let active = false;
+    const [expanded, setExpanded] = React.useState(false);
     const [contents, setContents] = React.useState({ "display": "none", "opacity": "0", "transition": "2s", "transitionDelay": "4.5s" });
     const [subContents1, setSubContents1] = React.useState({ "display": "block", "transition": "2s", "opacity": "0" });
-    const [subContents2, setSubContents2] = React.useState({ "display": "block", "opacity": "0" });
-    const cardSub = (_jsxs("div", { className: 'cardSub', onMouseOver: () => {
+    const [subContents2, setSubContents2] = React.useState({ "display": "block", "opacity": "0", "transition": "2s", "transitionDelay": "0s" });
+    React.useEffect(() => {
+        const isMobile = window.matchMedia('(max-width: 768px)').matches;
+        if (isMobile) {
+            setExpanded(true);
+            setContents({ "display": "inline-flex", "opacity": "1", "transition": "2s", "transitionDelay": "0s" });
+            setSubContents1({ "display": "block", "opacity": "1", "transition": "2s" });
+            setSubContents2({ "display": "block", "opacity": "1", "transition": "2s", "transitionDelay": "0s" });
+        }
+    }, []);
+    const cardSub = (_jsxs("div", { className: `cardSub${expanded ? ' cardSub--expanded' : ''}`, onClick: () => {
+            if (!window.matchMedia('(max-width: 768px)').matches)
+                return;
+            setExpanded(v => {
+                const next = !v;
+                if (next) {
+                    setContents({ "display": "inline-flex", "opacity": "1", "transition": "2s", "transitionDelay": "0s" });
+                    setSubContents1({ "display": "block", "opacity": "1", "transition": "2s" });
+                    setSubContents2({ "display": "block", "opacity": "1", "transition": "2s", "transitionDelay": "0s" });
+                }
+                else {
+                    setContents({ "display": "none", "opacity": "0", "transition": "0s", "transitionDelay": "0s" });
+                    setSubContents1({ "display": "none", "opacity": "0", "transition": "2s" });
+                    setSubContents2({ "display": "none", "opacity": "0", "transition": "2s", "transitionDelay": "0s" });
+                }
+                return next;
+            });
+        }, onMouseOver: () => {
             active = true;
             if (active) {
                 setTimeout(setSubContents1, 0, { "display": "block", "opacity": "0" });
@@ -285,5 +372,5 @@ const navClickHandler = () => {
     return 0;
 };
 export function Navbar() {
-    return (_jsxs("div", { className: 'nav', children: [_jsx("h1", { children: "Fab" }), _jsx("img", { src: "/CirculationsLogoNoBg.png", onClick: navClickHandler, height: "80px", width: "100px" }), _jsx("h1", { children: "AI" })] }));
+    return (_jsxs("div", { className: 'nav', children: [_jsx("h1", { className: "nav__brand", children: "Fab" }), _jsx("img", { className: "nav__logo", src: "/CirculationsLogoNoBg.png", onClick: navClickHandler, alt: "FabAI home" }), _jsx("h1", { className: "nav__brand", children: "AI" })] }));
 }

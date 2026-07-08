@@ -5,16 +5,16 @@ import { Main, Navbar, Login } from './Main'
 function App() {
   const [user, setUser] = useState<any>(null);
 
-  const footer = { "height": "40px", "backgroundColor": "rgba(0,0,0, 0.85)" };
+  const footer = { height: "40px" };
   return (
-    <>
+    <div className={`app-shell${user ? ' app-shell--dashboard' : ''}`}>
       <Navbar />
       {!user && <Main />}
-      <div className="b1">
+      <div className={user ? 'app-content' : 'b1'}>
         <Login user={user} setUser={setUser} />
       </div>
-      <div style={footer}></div>
-    </>
+      <div className="app-footer" style={footer}></div>
+    </div>
   );
 }
 

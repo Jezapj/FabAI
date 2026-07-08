@@ -363,6 +363,29 @@ function InventoryContent({ user, onClose }: InvContentProps) {
   );
 }
 
+// ── Welcome toast on login ────────────────────────────────────────────────────
+function WelcomeToast({ name, onDone }: { name: string; onDone: () => void }) {
+  const [fading, setFading] = React.useState(false);
+
+  useEffect(() => {
+    const fadeTimer = window.setTimeout(() => setFading(true), 1500);
+    const hideTimer = window.setTimeout(onDone, 2000);
+    return () => {
+      window.clearTimeout(fadeTimer);
+      window.clearTimeout(hideTimer);
+    };
+  }, [onDone]);
+
+  return (
+    <div className={`welcome-toast${fading ? ' welcome-toast--fading' : ''}`} role="status" aria-live="polite">
+      <div className="welcome-toast__content">
+        <h2>Welcome, {name}</h2>
+        <p>Your personal wardrobe assistant</p>
+      </div>
+    </div>
+  );
+}
+
 // ── Login / Dashboard ─────────────────────────────────────────────────────────
 export function Login({ user, setUser }: { user: any, setUser: any }) {
   const [classid,    setClassid]    = React.useState<any>('');
@@ -378,11 +401,16 @@ export function Login({ user, setUser }: { user: any, setUser: any }) {
   const [colorPreset,  setColorPreset]  = React.useState('any');
   const [dayPrefs,     setDayPrefs]     = React.useState<Record<string, DayPrefs>>({});
   const [outfitRefresh, setOutfitRefresh] = React.useState(0);
+  const [showWelcome, setShowWelcome] = React.useState(false);
 
   const inventoryRef = useRef<HTMLDialogElement | null>(null);
   const outfitRequestRef = useRef(0);
 
   useEffect(() => { setClassid(user ? 'b2' : '') }, [user]);
+
+  useEffect(() => {
+    if (!user) setShowWelcome(false);
+  }, [user]);
 
   useEffect(() => {
     if (!user?.sub) return;
@@ -482,8 +510,9 @@ export function Login({ user, setUser }: { user: any, setUser: any }) {
             <InventoryContent user={user} onClose={() => inventoryRef.current?.close()} />
           </dialog>
 
-          {/* ── Dashboard ── */}
-          <Card title={`Welcome, ${user.name}`} content="Your personal wardrobe assistant" type="Main" bg={false} display={imageUrl ? false: true} />
+          {showWelcome && (
+            <WelcomeToast name={user.name} onDone={() => setShowWelcome(false)} />
+          )}
 
           <div className="dashboard-layout">
             <div className="dashboard-sidebar">
@@ -569,6 +598,7 @@ export function Login({ user, setUser }: { user: any, setUser: any }) {
           onSuccess={credentialResponse => {
             const decoded: any = jwtDecode(credentialResponse.credential || '');
             setUser(decoded);
+            setShowWelcome(true);
             fetch('http://localhost:5000/api/auth', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },

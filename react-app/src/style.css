@@ -780,7 +780,46 @@ dialog{
 
 .app-footer {
   flex-shrink: 0;
-  background-color: rgba(0, 0, 0, 0);
+  background-color: rgba(0, 0, 0, 0)!important;
+}
+
+.welcome-toast {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  background: rgba(0, 0, 0, 0.5);
+  opacity: 1;
+  transition: opacity 0.5s ease;
+}
+
+.welcome-toast--fading {
+  opacity: 0;
+}
+
+.welcome-toast__content {
+  background: rgba(0, 0, 0, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 16px;
+  padding: 56px 80px;
+  text-align: center;
+  color: white;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+}
+
+.welcome-toast__content h2 {
+  margin: 0 0 8px;
+  font-size: 1.5rem;
+  color: white;
+}
+
+.welcome-toast__content p {
+  margin: 0;
+  color: #bbb;
+  font-size: 1rem;
 }
 
 .nav__brand {

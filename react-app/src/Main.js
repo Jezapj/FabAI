@@ -313,19 +313,55 @@ export function Login({ user, setUser }) {
         })
             .catch(console.error);
     };
-    return (_jsx("div", { className: classid, children: user ? (_jsxs(_Fragment, { children: [_jsx("dialog", { ref: inventoryRef, onClick: () => { var _a; return (_a = inventoryRef.current) === null || _a === void 0 ? void 0 : _a.close(); }, children: _jsx(InventoryContent, { user: user, onClose: () => { var _a; return (_a = inventoryRef.current) === null || _a === void 0 ? void 0 : _a.close(); } }) }), showWelcome && (_jsx(WelcomeToast, { name: user.name, onDone: () => setShowWelcome(false) })), _jsxs("div", { className: "dashboard-layout", children: [_jsxs("div", { className: "dashboard-sidebar", children: [_jsx(WeatherWidget, { onDaySelect: handleDaySelect, formality: formality, colorPreset: colorPreset, onFormalityChange: handleFormalityChange, onColorPresetChange: handleColorPresetChange }), _jsx("div", { className: "prediction-box", children: imageUrl ? (_jsxs(_Fragment, { children: [_jsx("img", { src: imageUrl, alt: "Last Uploaded", className: "last-uploaded-img" }), _jsxs("p", { children: ["AI Classifier: ", _jsx("strong", { children: prediction || 'Processing...' })] })] })) : (_jsx("p", { style: { color: '#666', fontSize: '14px' }, children: "Upload an image to see AI classification" })) }), _jsxs("div", { className: "dashboard-controls", children: [_jsx("button", { className: "b1-compact", onClick: () => { var _a; return (_a = document.getElementById('fileInput')) === null || _a === void 0 ? void 0 : _a.click(); }, children: "Add Image" }), _jsx("button", { className: "b1-compact", onClick: () => { var _a; return (_a = inventoryRef.current) === null || _a === void 0 ? void 0 : _a.showModal(); }, children: "Wardrobe" }), _jsx("button", { className: "b1-compact", onClick: () => { googleLogout(); setUser(null); setClassid(''); }, children: "Logout" })] })] }), _jsx("div", { className: "dashboard-main", children: _jsxs("div", { className: "outfits-container", children: [_jsxs("h3", { children: ["Outfit Suggestions for ", selectedDay, formality === 'formal' ? ' (Formal)' : ''] }), outfits.length > 0 ? (_jsx("div", { className: "outfits-list", children: outfits.map((off, idx) => (_jsxs("div", { className: "outfit-card", children: [_jsxs("h4", { children: ["Option ", idx + 1] }), _jsx("div", { className: "outfit-grid-compact", children: Object.entries(off).map(([part, item]) => item && (_jsxs("div", { className: "outfit-item-compact", children: [_jsx("img", { src: `http://localhost:5000/api/image/${item.id}`, alt: item.label }), _jsxs("span", { className: "outfit-item-label-compact", children: [item.label, item.color && _jsxs("span", { className: "outfit-item-color", children: [" \u00B7 ", item.color] })] })] }, part))) })] }, idx))) })) : (_jsxs("div", { className: "no-outfits", children: [_jsx("p", { children: "Not enough items in your wardrobe to suggest an outfit for this weather." }), _jsx("p", { style: { fontSize: '13px', color: '#888' }, children: "Try adding more Tops, Bottoms, and Shoes!" })] }))] }) })] }), _jsxs("div", { style: { display: 'none', justifyContent: 'center', flexWrap: 'wrap' }, children: [_jsx("button", { className: "b1", onClick: () => { var _a; return (_a = document.getElementById('fileInput')) === null || _a === void 0 ? void 0 : _a.click(); }, children: _jsx("h4", { children: "Add Image" }) }), _jsx("button", { className: "b1", onClick: () => { var _a; return (_a = inventoryRef.current) === null || _a === void 0 ? void 0 : _a.showModal(); }, children: _jsx("h4", { children: "View Inventory" }) }), _jsx("button", { className: "b1", onClick: () => { googleLogout(); setUser(null); setClassid(''); }, children: _jsx("h4", { children: "Logout" }) })] }), _jsx("input", { id: "fileInput", type: "file", accept: "image/*", onChange: handleFileChange, style: { display: 'none' } })] })) : (_jsx(GoogleLogin, { onSuccess: credentialResponse => {
-                const decoded = jwtDecode(credentialResponse.credential || '');
-                setUser(decoded);
-                setShowWelcome(true);
-                fetch('http://localhost:5000/api/auth', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ id_token: credentialResponse.credential }),
-                });
-            }, onError: () => console.log('Login Failed') })) }));
+    return (_jsx("div", { className: classid, children: user ? (_jsxs(_Fragment, { children: [_jsx("dialog", { ref: inventoryRef, onClick: () => { var _a; return (_a = inventoryRef.current) === null || _a === void 0 ? void 0 : _a.close(); }, children: _jsx(InventoryContent, { user: user, onClose: () => { var _a; return (_a = inventoryRef.current) === null || _a === void 0 ? void 0 : _a.close(); } }) }), showWelcome && (_jsx(WelcomeToast, { name: user.name, onDone: () => setShowWelcome(false) })), _jsxs("div", { className: "dashboard-layout", children: [_jsxs("div", { className: "dashboard-sidebar", children: [_jsx(WeatherWidget, { onDaySelect: handleDaySelect, formality: formality, colorPreset: colorPreset, onFormalityChange: handleFormalityChange, onColorPresetChange: handleColorPresetChange }), _jsx("div", { className: "prediction-box", children: imageUrl ? (_jsxs(_Fragment, { children: [_jsx("img", { src: imageUrl, alt: "Last Uploaded", className: "last-uploaded-img" }), _jsxs("p", { children: ["AI Classifier: ", _jsx("strong", { children: prediction || 'Processing...' })] })] })) : (_jsx("p", { style: { color: '#666', fontSize: '14px' }, children: "Upload an image to see AI classification" })) }), _jsxs("div", { className: "dashboard-controls", children: [_jsx("button", { className: "b1-compact", onClick: () => { var _a; return (_a = document.getElementById('fileInput')) === null || _a === void 0 ? void 0 : _a.click(); }, children: "Add Image" }), _jsx("button", { className: "b1-compact", onClick: () => { var _a; return (_a = inventoryRef.current) === null || _a === void 0 ? void 0 : _a.showModal(); }, children: "Wardrobe" }), _jsx("button", { className: "b1-compact", onClick: () => { googleLogout(); setUser(null); setClassid(''); }, children: "Logout" })] })] }), _jsx("div", { className: "dashboard-main", children: _jsxs("div", { className: "outfits-container", children: [_jsxs("h3", { children: ["Outfit Suggestions for ", selectedDay, formality === 'formal' ? ' (Formal)' : ''] }), outfits.length > 0 ? (_jsx("div", { className: "outfits-list", children: outfits.map((off, idx) => (_jsxs("div", { className: "outfit-card", children: [_jsxs("h4", { children: ["Option ", idx + 1] }), _jsx("div", { className: "outfit-grid-compact", children: Object.entries(off).map(([part, item]) => item && (_jsxs("div", { className: "outfit-item-compact", children: [_jsx("img", { src: `http://localhost:5000/api/image/${item.id}`, alt: item.label }), _jsxs("span", { className: "outfit-item-label-compact", children: [item.label, item.color && _jsxs("span", { className: "outfit-item-color", children: [" \u00B7 ", item.color] })] })] }, part))) })] }, idx))) })) : (_jsxs("div", { className: "no-outfits", children: [_jsx("p", { children: "Not enough items in your wardrobe to suggest an outfit for this weather." }), _jsx("p", { style: { fontSize: '13px', color: '#888' }, children: "Try adding more Tops, Bottoms, and Shoes!" })] }))] }) })] }), _jsxs("div", { style: { display: 'none', justifyContent: 'center', flexWrap: 'wrap' }, children: [_jsx("button", { className: "b1", onClick: () => { var _a; return (_a = document.getElementById('fileInput')) === null || _a === void 0 ? void 0 : _a.click(); }, children: _jsx("h4", { children: "Add Image" }) }), _jsx("button", { className: "b1", onClick: () => { var _a; return (_a = inventoryRef.current) === null || _a === void 0 ? void 0 : _a.showModal(); }, children: _jsx("h4", { children: "View Inventory" }) }), _jsx("button", { className: "b1", onClick: () => { googleLogout(); setUser(null); setClassid(''); }, children: _jsx("h4", { children: "Logout" }) })] }), _jsx("input", { id: "fileInput", type: "file", accept: "image/*", onChange: handleFileChange, style: { display: 'none' } })] })) : (_jsx("div", { className: "landing-auth", children: _jsxs("div", { className: "landing-auth__card", children: [_jsx("h2", { className: "landing-auth__title", children: "Sign in to continue" }), _jsx("p", { className: "landing-auth__subtitle", children: "Connect your Google account to start building your smart wardrobe." }), _jsx("div", { className: "landing-auth__button", children: _jsx(GoogleLogin, { onSuccess: credentialResponse => {
+                                const decoded = jwtDecode(credentialResponse.credential || '');
+                                setUser(decoded);
+                                setShowWelcome(true);
+                                fetch('http://localhost:5000/api/auth', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ id_token: credentialResponse.credential }),
+                                });
+                            }, onError: () => console.log('Login Failed') }) })] }) })) }));
 }
-export function Main(props) {
-    return (_jsxs(_Fragment, { children: [_jsx("div", { children: _jsx(Card, { title: "Innovation", content: "Welcome to FabAI", type: "Feature", img: "", bg: true }) }), _jsx("div", { className: "Main", children: _jsx("div", { className: "bg", children: _jsx(Card, { title: "AI Classifier", content: "Use our AI model to add clothes to your inventory", type: "Sub", img: "/shirt.png", img2: "/shoes.png", bg: true }) }) })] }));
+const LANDING_FEATURES = [
+    {
+        id: 'weather',
+        icon: '🌦️',
+        title: 'Weather-aware outfits',
+        desc: 'Suggestions adapt to rain, temperature, and your day.',
+        detail: 'Pick any forecast day and FabAI balances warmth, layers, and rain-friendly pieces from your closet.',
+    },
+    {
+        id: 'classifier',
+        icon: '👕',
+        title: 'AI wardrobe tagging',
+        desc: 'Upload clothes and let the model classify them instantly.',
+        detail: 'Snap a photo of any garment and FabAI labels it, categorizes it, and adds it to your inventory.',
+        preview: ['/shirt.png', '/shoes.png'],
+    },
+    {
+        id: 'palette',
+        icon: '🎨',
+        title: 'Colour coordination',
+        desc: 'Match palettes like accent + black or earth and sky.',
+        detail: 'Set a colour preset per day so every suggested outfit works together harmoniously.',
+    },
+];
+export function Main() {
+    const [activeFeature, setActiveFeature] = React.useState(null);
+    const toggleFeature = (id) => {
+        setActiveFeature(prev => (prev === id ? null : id));
+    };
+    return (_jsxs("div", { className: "landing", children: [_jsxs("section", { className: "landing-hero", children: [_jsx("p", { className: "landing-hero__eyebrow", children: "Personal wardrobe assistant" }), _jsxs("h1", { className: "landing-hero__title", children: ["Dress smarter.", _jsx("br", {}), _jsx("span", { children: "Every day." })] }), _jsx("p", { className: "landing-hero__subtitle", children: "FabAI reads the forecast, understands your closet, and suggests outfits that fit the weather and your style." })] }), _jsx("section", { className: "landing-features", "aria-label": "Features", children: LANDING_FEATURES.map(feature => {
+                    const active = activeFeature === feature.id;
+                    return (_jsxs("article", { className: `landing-feature${active ? ' landing-feature--active' : ''}`, onMouseEnter: () => setActiveFeature(feature.id), onMouseLeave: () => setActiveFeature(null), onClick: () => toggleFeature(feature.id), onKeyDown: e => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                toggleFeature(feature.id);
+                            }
+                        }, role: "button", tabIndex: 0, "aria-expanded": active, children: [_jsx("div", { className: "landing-feature__glow", "aria-hidden": "true" }), _jsx("span", { className: "landing-feature__icon", children: feature.icon }), _jsx("h3", { className: "landing-feature__title", children: feature.title }), _jsx("p", { className: "landing-feature__desc", children: feature.desc }), _jsx("p", { className: "landing-feature__detail", children: feature.detail }), 'preview' in feature && feature.preview ? (_jsxs("div", { className: "landing-feature__preview", "aria-hidden": !active, children: [_jsx("img", { src: feature.preview[0], alt: "" }), _jsx("img", { src: feature.preview[1], alt: "" })] })) : null] }, feature.id));
+                }) })] }));
 }
 export function Card(props) {
     const bg = props.bg === true ? { "backgroundImage": `url("${props.img}")` } : { "backgroundImage": "", "backgroundColor": "rgba(0, 0, 0, 0)" };

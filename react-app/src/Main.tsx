@@ -245,20 +245,21 @@ const CAT_COLORS: Record<string, string> = {
   'One piece': 'rgba(255,160,80,.25)',
 };
 
-interface InvContentProps { user: any; onClose: () => void; }
+interface InvContentProps { user: any; onClose: () => void; refreshKey: number; }
 
-function InventoryContent({ user, onClose }: InvContentProps) {
+function InventoryContent({ user, onClose, refreshKey }: InvContentProps) {
   const [items,   setItems]   = useState<InvItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter,  setFilter]  = useState('All');
 
   useEffect(() => {
     if (!user?.sub) { setLoading(false); return; }
+    setLoading(true);
     fetch(`http://localhost:5000/api/inventory?user_id=${user.sub}`)
       .then(r => r.json())
       .then(d  => { setItems(Array.isArray(d) ? d : []); setLoading(false); })
       .catch(() => setLoading(false));
-  }, [user]);
+  }, [user, refreshKey]);
 
   const shown = filter === 'All' ? items : items.filter(x => x.category === filter);
 
@@ -401,10 +402,16 @@ export function Login({ user, setUser }: { user: any, setUser: any }) {
   const [colorPreset,  setColorPreset]  = React.useState('any');
   const [dayPrefs,     setDayPrefs]     = React.useState<Record<string, DayPrefs>>({});
   const [outfitRefresh, setOutfitRefresh] = React.useState(0);
+  const [inventoryRefresh, setInventoryRefresh] = React.useState(0);
   const [showWelcome, setShowWelcome] = React.useState(false);
 
   const inventoryRef = useRef<HTMLDialogElement | null>(null);
   const outfitRequestRef = useRef(0);
+
+  const openWardrobe = () => {
+    setInventoryRefresh(r => r + 1);
+    inventoryRef.current?.showModal();
+  };
 
   useEffect(() => { setClassid(user ? 'b2' : '') }, [user]);
 
@@ -497,6 +504,7 @@ export function Login({ user, setUser }: { user: any, setUser: any }) {
         setImageUrl(`http://localhost:5000/api/image/${d.image_id}`);
         handlePredict(d.image_id);
         setOutfitRefresh(r => r + 1);
+        setInventoryRefresh(r => r + 1);
       })
       .catch(console.error);
   };
@@ -507,7 +515,11 @@ export function Login({ user, setUser }: { user: any, setUser: any }) {
         <>
           {/* ── Inventory Modal ── */}
           <dialog ref={inventoryRef} onClick={() => inventoryRef.current?.close()}>
-            <InventoryContent user={user} onClose={() => inventoryRef.current?.close()} />
+            <InventoryContent
+              user={user}
+              refreshKey={inventoryRefresh}
+              onClose={() => inventoryRef.current?.close()}
+            />
           </dialog>
 
           {showWelcome && (
@@ -539,7 +551,7 @@ export function Login({ user, setUser }: { user: any, setUser: any }) {
                 <button className="b1-compact" onClick={() => document.getElementById('fileInput')?.click()}>
                   Add Image
                 </button>
-                <button className="b1-compact" onClick={() => inventoryRef.current?.showModal()}>
+                <button className="b1-compact" onClick={openWardrobe}>
                   Wardrobe
                 </button>
                 <button className="b1-compact" onClick={() => { googleLogout(); setUser(null); setClassid(''); }}>
@@ -584,7 +596,7 @@ export function Login({ user, setUser }: { user: any, setUser: any }) {
             <button className="b1" onClick={() => document.getElementById('fileInput')?.click()}>
               <h4>Add Image</h4>
             </button>
-            <button className="b1" onClick={() => inventoryRef.current?.showModal()}>
+            <button className="b1" onClick={openWardrobe}>
               <h4>View Inventory</h4>
             </button>
             <button className="b1" onClick={() => { googleLogout(); setUser(null); setClassid(''); }}>
@@ -594,36 +606,120 @@ export function Login({ user, setUser }: { user: any, setUser: any }) {
           <input id="fileInput" type="file" accept="image/*" onChange={handleFileChange} style={{ display: 'none' }} />
         </>
       ) : (
-        <GoogleLogin
-          onSuccess={credentialResponse => {
-            const decoded: any = jwtDecode(credentialResponse.credential || '');
-            setUser(decoded);
-            setShowWelcome(true);
-            fetch('http://localhost:5000/api/auth', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ id_token: credentialResponse.credential }),
-            });
-          }}
-          onError={() => console.log('Login Failed')}
-        />
+        <div className="landing-auth">
+          <div className="landing-auth__card">
+            <h2 className="landing-auth__title">Sign in to continue</h2>
+            <p className="landing-auth__subtitle">Connect your Google account to start building your smart wardrobe.</p>
+            <div className="landing-auth__button">
+              <GoogleLogin
+                onSuccess={credentialResponse => {
+                  const decoded: any = jwtDecode(credentialResponse.credential || '');
+                  setUser(decoded);
+                  setShowWelcome(true);
+                  fetch('http://localhost:5000/api/auth', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id_token: credentialResponse.credential }),
+                  });
+                }}
+                onError={() => console.log('Login Failed')}
+              />
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
 }
 
-export function Main(props: any) {
+const LANDING_FEATURES: {
+  id: string;
+  icon: string;
+  title: string;
+  desc: string;
+  detail: string;
+  preview?: [string, string];
+}[] = [
+  {
+    id: 'weather',
+    icon: '🌦️',
+    title: 'Weather-aware outfits',
+    desc: 'Suggestions adapt to rain, temperature, and your day.',
+    detail: 'Pick any forecast day and FabAI balances warmth, layers, and rain-friendly pieces from your closet.',
+  },
+  {
+    id: 'classifier',
+    icon: '👕',
+    title: 'AI wardrobe tagging',
+    desc: 'Upload clothes and let the model classify them instantly.',
+    detail: 'Snap a photo of any garment and FabAI labels it, categorizes it, and adds it to your inventory.',
+   
+  },
+  {
+    id: 'palette',
+    icon: '🎨',
+    title: 'Colour coordination',
+    desc: 'Match palettes like accent + black or earth and sky.',
+    detail: 'Set a colour preset per day so every suggested outfit works together harmoniously.',
+  },
+];
+
+export function Main() {
+  const [activeFeature, setActiveFeature] = React.useState<string | null>(null);
+
+  const toggleFeature = (id: string) => {
+    setActiveFeature(prev => (prev === id ? null : id));
+  };
+
   return (
-    <>
-      <div>
-        <Card title="Innovation" content="Welcome to FabAI" type="Feature" img="" bg={true} />
-      </div>
-      <div className="Main">
-        <div className="bg">
-          <Card title="AI Classifier" content="Use our AI model to add clothes to your inventory" type="Sub" img="/shirt.png" img2="/shoes.png" bg={true} />
-        </div>
-      </div>
-    </>
+    <div className="landing">
+      <section className="landing-hero">
+        <p className="landing-hero__eyebrow">Personal wardrobe assistant</p>
+        <h1 className="landing-hero__title">
+          Dress smarter.<br />
+          <span>Every day.</span>
+        </h1>
+        <p className="landing-hero__subtitle">
+          FabAI reads the forecast, understands your closet, and suggests outfits that fit the weather and your style.
+        </p>
+      </section>
+
+      <section className="landing-features" aria-label="Features">
+        {LANDING_FEATURES.map(feature => {
+          const active = activeFeature === feature.id;
+          return (
+            <article
+              key={feature.id}
+              className={`landing-feature${active ? ' landing-feature--active' : ''}`}
+              onMouseEnter={() => setActiveFeature(feature.id)}
+              onMouseLeave={() => setActiveFeature(null)}
+              onClick={() => toggleFeature(feature.id)}
+              onKeyDown={e => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  toggleFeature(feature.id);
+                }
+              }}
+              role="button"
+              tabIndex={0}
+              aria-expanded={active}
+            >
+              <div className="landing-feature__glow" aria-hidden="true" />
+              <span className="landing-feature__icon">{feature.icon}</span>
+              <h3 className="landing-feature__title">{feature.title}</h3>
+              <p className="landing-feature__desc">{feature.desc}</p>
+              <p className="landing-feature__detail">{feature.detail}</p>
+              {'preview' in feature && feature.preview ? (
+                <div className="landing-feature__preview" aria-hidden={!active}>
+                  <img src={feature.preview[0]} alt="" />
+                  <img src={feature.preview[1]} alt="" />
+                </div>
+              ) : null}
+            </article>
+          );
+        })}
+      </section>
+    </div>
   );
 }
 

@@ -10,7 +10,7 @@ function App() {
     <div className={`app-shell${user ? ' app-shell--dashboard' : ''}`}>
       <Navbar />
       {!user && <Main />}
-      <div className={user ? 'app-content' : 'b1'}>
+      <div className={user ? 'app-content' : 'landing-shell'}>
         <Login user={user} setUser={setUser} />
       </div>
       <div className="app-footer" style={footer}></div>

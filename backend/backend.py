@@ -68,6 +68,18 @@ def build_cors_origins():
 CORS(app, resources={r"/*": {"origins": build_cors_origins()}})
 
 
+@app.after_request
+def apply_cors_fallback(response):
+    """Ensure CORS on error responses (flask-cors usually handles success paths)."""
+    origin = request.headers.get("Origin")
+    if origin and re.fullmatch(r"https://[\w-]+\.onrender\.com", origin):
+        response.headers["Access-Control-Allow-Origin"] = origin
+        response.headers["Access-Control-Allow-Headers"] = "Content-Type"
+        response.headers["Access-Control-Allow-Methods"] = "GET, POST, PATCH, DELETE, OPTIONS"
+        response.headers["Vary"] = "Origin"
+    return response
+
+
 def get_database_uri() -> str:
     database_url = os.getenv('DATABASE_URL')
     if database_url:

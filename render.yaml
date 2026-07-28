@@ -30,8 +30,12 @@ services:
     name: fabai-web
     runtime: static
     rootDir: react-app
-    buildCommand: npm install && npm run build
+    buildCommand: npm install && env -u VITE_API_URL npm run build
     staticPublishPath: dist
+    headers:
+      - path: /*
+        name: Cross-Origin-Opener-Policy
+        value: same-origin-allow-popups
     routes:
       # Proxy API calls to the backend (avoids CORS and build-time VITE_API_URL issues)
       - type: rewrite

@@ -518,8 +518,8 @@ export function Login({ user, setUser }: { user: any, setUser: any }) {
   const runClassification = async (id: number) => {
     setPrediction('Classifying…');
     try {
-      // Direct API URL bypasses static-site proxy timeouts (common cause of 502).
-      const r = await fetch(apiPath(`/api/classify_image/${id}`, { direct: true }), {
+      // Same-origin /api → static rewrite (avoids cross-origin CORS when the API returns 502).
+      const r = await fetch(apiPath(`/api/classify_image/${id}`), {
         method: 'POST',
       });
       const d = await r.json().catch(() => ({}));

@@ -65,19 +65,42 @@ def build_cors_origins():
     return origins
 
 
-CORS(app, resources={r"/*": {"origins": build_cors_origins()}})
+CORS(app, resources={r"/*": {
+    "origins": build_cors_origins(),
+    "methods": ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
+    "allow_headers": ["Content-Type", "Authorization"],
+    "expose_headers": ["Content-Type"],
+    "max_age": 86400,
+}})
 
 
 @app.after_request
 def apply_cors_fallback(response):
-    """Ensure CORS on error responses (flask-cors usually handles success paths)."""
+    """Ensure CORS on responses (including errors) when Origin is allowed."""
     origin = request.headers.get("Origin")
-    if origin and re.fullmatch(r"https://[\w-]+\.onrender\.com", origin):
+    if not origin:
+        return response
+
+    allowed_exact = {
+        "http://localhost:3000",
+        *(p.strip() for p in os.getenv("CORS_ORIGINS", "").split(",") if p.strip()),
+    }
+    front = os.getenv("FRONTEND_URL", "").strip()
+    if front:
+        allowed_exact.add(front)
+
+    if origin in allowed_exact or re.fullmatch(r"https://[\w-]+\.onrender\.com", origin):
         response.headers["Access-Control-Allow-Origin"] = origin
-        response.headers["Access-Control-Allow-Headers"] = "Content-Type"
+        response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
         response.headers["Access-Control-Allow-Methods"] = "GET, POST, PATCH, DELETE, OPTIONS"
         response.headers["Vary"] = "Origin"
     return response
+
+
+@app.route("/api/<path:_any>", methods=["OPTIONS"])
+@app.route("/", methods=["OPTIONS"])
+def cors_preflight(_any=None):
+    return ("", 204)
 
 
 def get_database_uri() -> str:

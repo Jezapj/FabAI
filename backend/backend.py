@@ -52,7 +52,10 @@ def get_model() -> ClothingClassifier:
 
 
 def build_cors_origins():
-    origins: list = [re.compile(r"https://[\w-]+\.onrender\.com")]
+    origins: list = [
+        re.compile(r"https://[\w-]+\.onrender\.com"),
+        re.compile(r"https://[\w-]+\.up\.railway\.app"),
+    ]
     default_local = "http://localhost:3000"
     raw = os.getenv("CORS_ORIGINS", default_local)
     for part in raw.split(","):
@@ -89,7 +92,9 @@ def apply_cors_fallback(response):
     if front:
         allowed_exact.add(front)
 
-    if origin in allowed_exact or re.fullmatch(r"https://[\w-]+\.onrender\.com", origin):
+    if origin in allowed_exact or re.fullmatch(r"https://[\w-]+\.onrender\.com", origin) or re.fullmatch(
+        r"https://[\w-]+\.up\.railway\.app", origin
+    ):
         response.headers["Access-Control-Allow-Origin"] = origin
         response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
         response.headers["Access-Control-Allow-Methods"] = "GET, POST, PATCH, DELETE, OPTIONS"

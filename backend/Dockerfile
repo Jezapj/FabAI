@@ -21,4 +21,5 @@ ENV PORT=5000
 EXPOSE 5000
 
 # Lazy model load in backend.py — worker boots before PyTorch loads.
-CMD gunicorn --bind 0.0.0.0:$PORT --workers 1 --threads 2 --timeout 180 backend:app
+# Railway injects PORT (often 8080).
+CMD sh -c "gunicorn --bind 0.0.0.0:${PORT:-8080} --workers 1 --threads 2 --timeout 180 backend:app"

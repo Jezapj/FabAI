@@ -1263,6 +1263,7 @@ body:has(.app-shell:not(.app-shell--dashboard)) {
   }
   .landing-feature {
     justify-content: center;
+    justify-self: center;
   }
 }
 .landing-feature__icon{

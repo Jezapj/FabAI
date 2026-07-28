@@ -3,10 +3,10 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "start": "vite",
-    "build": "tsc && vite build",
     "dev": "vite",
-    "start:production": "serve -s dist -l tcp://0.0.0.0:${PORT:-3000}"
+    "build": "tsc && vite build",
+    "start": "serve -s dist -l tcp://0.0.0.0:${PORT:-8080}",
+    "preview": "vite preview"
   },
   "dependencies": {
     "@react-oauth/google": "^0.12.2",

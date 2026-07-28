@@ -2,6 +2,6 @@
 buildCommand = "npm install && npm run build"
 
 [deploy]
-startCommand = "npm run start:production"
+startCommand = "npm run start"
 restartPolicyType = "ON_FAILURE"
 numReplicas = 1

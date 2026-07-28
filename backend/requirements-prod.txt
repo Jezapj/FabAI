@@ -1,0 +1,13 @@
+authlib
+flask==3.0.3
+flask_cors
+gunicorn
+numpy==2.0.1
+Flask-SQLAlchemy
+psycopg2-binary
+requests
+google-auth
+google-oauth
+pillow
+joblib
+scikit-learn

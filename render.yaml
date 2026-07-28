@@ -10,7 +10,7 @@ services:
     runtime: docker
     rootDir: backend
     dockerfilePath: Dockerfile
-    plan: starter
+    plan: free
     healthCheckPath: /
     envVars:
       - key: DATABASE_URL

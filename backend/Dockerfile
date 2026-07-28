@@ -1,9 +1,12 @@
 FROM python:3.11-slim
 
 WORKDIR /backend
-COPY requirements.txt .
 
-RUN pip install --no-cache-dir -r requirements.txt
+# CPU-only PyTorch (smaller install; no CUDA). Installed before other deps.
+RUN pip install --no-cache-dir torch torchvision --index-url https://download.pytorch.org/whl/cpu
+
+COPY requirements-prod.txt .
+RUN pip install --no-cache-dir -r requirements-prod.txt
 
 COPY . .
 

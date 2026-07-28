@@ -4,4 +4,6 @@ node_modules/
 Promo.png
 interlude.png
 react-app/node_modules/
+react-app/.env
 dist/
+backend/__pycache__/

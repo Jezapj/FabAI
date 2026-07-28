@@ -11,6 +11,8 @@ services:
       - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
       - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
       - DB_PW=${DB_PW}
+      - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:3000}
+      - FLASK_SECRET_KEY=${FLASK_SECRET_KEY:-dev-only-change-me}
     env_file:
       - .env
   db:

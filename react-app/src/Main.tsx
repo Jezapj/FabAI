@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { GoogleLogin, googleLogout } from '@react-oauth/google';
 import { jwtDecode } from 'jwt-decode';
+import { apiPath } from './config';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 interface OutfitItem { id: number; label: string; value: number; category: string; color?: string; }
@@ -255,7 +256,7 @@ function InventoryContent({ user, onClose, refreshKey }: InvContentProps) {
   useEffect(() => {
     if (!user?.sub) { setLoading(false); return; }
     setLoading(true);
-    fetch(`http://localhost:5000/api/inventory?user_id=${user.sub}`)
+    fetch(apiPath(`/api/inventory?user_id=${user.sub}`))
       .then(r => r.json())
       .then(d  => { setItems(Array.isArray(d) ? d : []); setLoading(false); })
       .catch(() => setLoading(false));
@@ -297,7 +298,7 @@ function InventoryContent({ user, onClose, refreshKey }: InvContentProps) {
               <div key={item.id} className="inv-item">
                 <div className="inv-item__img-wrap">
                   <img
-                    src={`http://localhost:5000/api/image/${item.id}`}
+                    src={apiPath(`/api/image/${item.id}`)}
                     alt={item.label}
                     className="inv-item__img"
                   />
@@ -311,7 +312,7 @@ function InventoryContent({ user, onClose, refreshKey }: InvContentProps) {
                       setItems(prev => prev.map(i => i.id === item.id ? { ...i, label: newLabel } : i));
                     }}
                     onBlur={(e) => {
-                      fetch(`http://localhost:5000/api/inventory/${item.id}`, {
+                      fetch(apiPath(`/api/inventory/${item.id}`), {
                         method: 'PATCH',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ label: e.target.value })
@@ -324,7 +325,7 @@ function InventoryContent({ user, onClose, refreshKey }: InvContentProps) {
                       value={item.category}
                       onChange={(e) => {
                         const newCat = e.target.value;
-                        fetch(`http://localhost:5000/api/inventory/${item.id}`, {
+                        fetch(apiPath(`/api/inventory/${item.id}`), {
                           method: 'PATCH',
                           headers: { 'Content-Type': 'application/json' },
                           body: JSON.stringify({ category: newCat })
@@ -342,7 +343,7 @@ function InventoryContent({ user, onClose, refreshKey }: InvContentProps) {
                       className="inv-item__delete"
                       onClick={() => {
                         if (window.confirm('Delete this item?')) {
-                          fetch(`http://localhost:5000/api/inventory/${item.id}`, { method: 'DELETE' })
+                          fetch(apiPath(`/api/inventory/${item.id}`), { method: 'DELETE' })
                             .then(() => setItems(prev => prev.filter(i => i.id !== item.id)));
                         }
                       }}
@@ -432,7 +433,7 @@ export function Login({ user, setUser }: { user: any, setUser: any }) {
         color_preset: colorPreset,
       });
 
-      fetch(`http://localhost:5000/api/outfit?${params}`)
+      fetch(apiPath(`/api/outfit?${params}`))
         .then(r => {
           if (!r.ok) throw new Error(`Outfit request failed (${r.status})`);
           return r.json();
@@ -482,7 +483,7 @@ export function Login({ user, setUser }: { user: any, setUser: any }) {
 
   const handlePredict = async (id: number) => {
     try {
-      const r = await fetch(`http://localhost:5000/api/predict_image/${id}`);
+      const r = await fetch(apiPath(`/api/predict_image/${id}`));
       const d = await r.json();
       setPrediction(d.prediction);
     } catch (err) { console.error(err); }
@@ -497,11 +498,11 @@ export function Login({ user, setUser }: { user: any, setUser: any }) {
     formData.append('image', file);
     formData.append('user_info', JSON.stringify(user));
 
-    fetch('http://localhost:5000/api/uploadnx', { method: 'POST', body: formData })
+    fetch(apiPath('/api/uploadnx'), { method: 'POST', body: formData })
       .then(r => r.json())
       .then(d => {
         setImageId(d.image_id);
-        setImageUrl(`http://localhost:5000/api/image/${d.image_id}`);
+        setImageUrl(apiPath(`/api/image/${d.image_id}`));
         handlePredict(d.image_id);
         setOutfitRefresh(r => r + 1);
         setInventoryRefresh(r => r + 1);
@@ -571,7 +572,7 @@ export function Login({ user, setUser }: { user: any, setUser: any }) {
                         <div className="outfit-grid-compact">
                           {Object.entries(off).map(([part, item]) => item && (
                             <div key={part} className="outfit-item-compact">
-                              <img src={`http://localhost:5000/api/image/${item.id}`} alt={item.label} />
+                              <img src={apiPath(`/api/image/${item.id}`)} alt={item.label} />
                               <span className="outfit-item-label-compact">
                                 {item.label}
                                 {item.color && <span className="outfit-item-color"> · {item.color}</span>}
@@ -616,7 +617,7 @@ export function Login({ user, setUser }: { user: any, setUser: any }) {
                   const decoded: any = jwtDecode(credentialResponse.credential || '');
                   setUser(decoded);
                   setShowWelcome(true);
-                  fetch('http://localhost:5000/api/auth', {
+                  fetch(apiPath('/api/auth'), {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ id_token: credentialResponse.credential }),
@@ -806,7 +807,7 @@ export function Card(props: any) {
 }
 
 const navClickHandler = () => {
-  window.location.assign('http://localhost:3000/');
+  window.location.assign('/');
   return 0;
 };
 

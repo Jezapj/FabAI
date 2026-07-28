@@ -11,6 +11,7 @@ import { jsx as _jsx, jsxs as _jsxs, Fragment as _Fragment } from "react/jsx-run
 import React, { useEffect, useState, useRef } from "react";
 import { GoogleLogin, googleLogout } from '@react-oauth/google';
 import { jwtDecode } from 'jwt-decode';
+import { apiPath } from './config';
 // ── WMO weather-code table ───────────────────────────────────────────────────
 const WMO = {
     0: ['☀️', 'Clear sky'], 1: ['🌤️', 'Mainly clear'],
@@ -143,7 +144,7 @@ const CAT_COLORS = {
     'Head': 'rgba(255,120,120,.25)',
     'One piece': 'rgba(255,160,80,.25)',
 };
-function InventoryContent({ user, onClose }) {
+function InventoryContent({ user, onClose, refreshKey }) {
     const [items, setItems] = useState([]);
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState('All');
@@ -152,28 +153,29 @@ function InventoryContent({ user, onClose }) {
             setLoading(false);
             return;
         }
-        fetch(`http://localhost:5000/api/inventory?user_id=${user.sub}`)
+        setLoading(true);
+        fetch(apiPath(`/api/inventory?user_id=${user.sub}`))
             .then(r => r.json())
             .then(d => { setItems(Array.isArray(d) ? d : []); setLoading(false); })
             .catch(() => setLoading(false));
-    }, [user]);
+    }, [user, refreshKey]);
     const shown = filter === 'All' ? items : items.filter(x => x.category === filter);
     return (_jsxs("div", { className: "modal-content", onClick: e => e.stopPropagation(), style: { maxWidth: 920 }, children: [_jsx("div", { className: "modal-header", children: _jsxs("h2", { children: ["My Wardrobe", !loading ? ` · ${items.length} item${items.length !== 1 ? 's' : ''}` : ''] }) }), _jsx("div", { style: { display: 'flex', gap: 8, flexWrap: 'wrap', padding: '14px 0 8px' }, children: CATS.map(c => (_jsx("button", { onClick: () => setFilter(c), className: `inv-filter${filter === c ? ' inv-filter--active' : ''}`, children: c }, c))) }), _jsx("div", { className: "modal-body", style: { minHeight: 200 }, children: loading ? (_jsx("p", { style: { textAlign: 'center', color: '#aaa', paddingTop: 40 }, children: "Loading wardrobe\u2026" })) : shown.length === 0 ? (_jsx("p", { style: { textAlign: 'center', color: '#666', paddingTop: 40 }, children: items.length === 0
                         ? 'No items yet. Upload your first piece!'
                         : `No ${filter} items in your wardrobe.` })) : (_jsx("div", { className: "inv-grid", children: shown.map(item => {
                         var _a;
-                        return (_jsxs("div", { className: "inv-item", children: [_jsx("div", { className: "inv-item__img-wrap", children: _jsx("img", { src: `http://localhost:5000/api/image/${item.id}`, alt: item.label, className: "inv-item__img" }) }), _jsxs("div", { className: "inv-item__info", children: [_jsx("input", { className: "inv-item__label-input", value: item.label, onChange: (e) => {
+                        return (_jsxs("div", { className: "inv-item", children: [_jsx("div", { className: "inv-item__img-wrap", children: _jsx("img", { src: apiPath(`/api/image/${item.id}`), alt: item.label, className: "inv-item__img" }) }), _jsxs("div", { className: "inv-item__info", children: [_jsx("input", { className: "inv-item__label-input", value: item.label, onChange: (e) => {
                                                 const newLabel = e.target.value;
                                                 setItems(prev => prev.map(i => i.id === item.id ? Object.assign(Object.assign({}, i), { label: newLabel }) : i));
                                             }, onBlur: (e) => {
-                                                fetch(`http://localhost:5000/api/inventory/${item.id}`, {
+                                                fetch(apiPath(`/api/inventory/${item.id}`), {
                                                     method: 'PATCH',
                                                     headers: { 'Content-Type': 'application/json' },
                                                     body: JSON.stringify({ label: e.target.value })
                                                 });
                                             } }), _jsxs("div", { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '4px' }, children: [_jsx("select", { className: "inv-item__cat-select", value: item.category, onChange: (e) => {
                                                         const newCat = e.target.value;
-                                                        fetch(`http://localhost:5000/api/inventory/${item.id}`, {
+                                                        fetch(apiPath(`/api/inventory/${item.id}`), {
                                                             method: 'PATCH',
                                                             headers: { 'Content-Type': 'application/json' },
                                                             body: JSON.stringify({ category: newCat })
@@ -184,7 +186,7 @@ function InventoryContent({ user, onClose }) {
                                                         });
                                                     }, style: { background: (_a = CAT_COLORS[item.category]) !== null && _a !== void 0 ? _a : 'rgba(255,255,255,.1)' }, children: CATS.filter(c => c !== 'All').map(c => _jsx("option", { value: c, children: c }, c)) }), _jsx("button", { className: "inv-item__delete", onClick: () => {
                                                         if (window.confirm('Delete this item?')) {
-                                                            fetch(`http://localhost:5000/api/inventory/${item.id}`, { method: 'DELETE' })
+                                                            fetch(apiPath(`/api/inventory/${item.id}`), { method: 'DELETE' })
                                                                 .then(() => setItems(prev => prev.filter(i => i.id !== item.id)));
                                                         }
                                                     }, children: "\uD83D\uDDD1\uFE0F" })] })] })] }, item.id));
@@ -218,9 +220,15 @@ export function Login({ user, setUser }) {
     const [colorPreset, setColorPreset] = React.useState('any');
     const [dayPrefs, setDayPrefs] = React.useState({});
     const [outfitRefresh, setOutfitRefresh] = React.useState(0);
+    const [inventoryRefresh, setInventoryRefresh] = React.useState(0);
     const [showWelcome, setShowWelcome] = React.useState(false);
     const inventoryRef = useRef(null);
     const outfitRequestRef = useRef(0);
+    const openWardrobe = () => {
+        var _a;
+        setInventoryRefresh(r => r + 1);
+        (_a = inventoryRef.current) === null || _a === void 0 ? void 0 : _a.showModal();
+    };
     useEffect(() => { setClassid(user ? 'b2' : ''); }, [user]);
     useEffect(() => {
         if (!user)
@@ -238,7 +246,7 @@ export function Login({ user, setUser }) {
                 formality,
                 color_preset: colorPreset,
             });
-            fetch(`http://localhost:5000/api/outfit?${params}`)
+            fetch(apiPath(`/api/outfit?${params}`))
                 .then(r => {
                 if (!r.ok)
                     throw new Error(`Outfit request failed (${r.status})`);
@@ -286,7 +294,7 @@ export function Login({ user, setUser }) {
     };
     const handlePredict = (id) => __awaiter(this, void 0, void 0, function* () {
         try {
-            const r = yield fetch(`http://localhost:5000/api/predict_image/${id}`);
+            const r = yield fetch(apiPath(`/api/predict_image/${id}`));
             const d = yield r.json();
             setPrediction(d.prediction);
         }
@@ -303,21 +311,22 @@ export function Login({ user, setUser }) {
         const formData = new FormData();
         formData.append('image', file);
         formData.append('user_info', JSON.stringify(user));
-        fetch('http://localhost:5000/api/uploadnx', { method: 'POST', body: formData })
+        fetch(apiPath('/api/uploadnx'), { method: 'POST', body: formData })
             .then(r => r.json())
             .then(d => {
             setImageId(d.image_id);
-            setImageUrl(`http://localhost:5000/api/image/${d.image_id}`);
+            setImageUrl(apiPath(`/api/image/${d.image_id}`));
             handlePredict(d.image_id);
             setOutfitRefresh(r => r + 1);
+            setInventoryRefresh(r => r + 1);
         })
             .catch(console.error);
     };
-    return (_jsx("div", { className: classid, children: user ? (_jsxs(_Fragment, { children: [_jsx("dialog", { ref: inventoryRef, onClick: () => { var _a; return (_a = inventoryRef.current) === null || _a === void 0 ? void 0 : _a.close(); }, children: _jsx(InventoryContent, { user: user, onClose: () => { var _a; return (_a = inventoryRef.current) === null || _a === void 0 ? void 0 : _a.close(); } }) }), showWelcome && (_jsx(WelcomeToast, { name: user.name, onDone: () => setShowWelcome(false) })), _jsxs("div", { className: "dashboard-layout", children: [_jsxs("div", { className: "dashboard-sidebar", children: [_jsx(WeatherWidget, { onDaySelect: handleDaySelect, formality: formality, colorPreset: colorPreset, onFormalityChange: handleFormalityChange, onColorPresetChange: handleColorPresetChange }), _jsx("div", { className: "prediction-box", children: imageUrl ? (_jsxs(_Fragment, { children: [_jsx("img", { src: imageUrl, alt: "Last Uploaded", className: "last-uploaded-img" }), _jsxs("p", { children: ["AI Classifier: ", _jsx("strong", { children: prediction || 'Processing...' })] })] })) : (_jsx("p", { style: { color: '#666', fontSize: '14px' }, children: "Upload an image to see AI classification" })) }), _jsxs("div", { className: "dashboard-controls", children: [_jsx("button", { className: "b1-compact", onClick: () => { var _a; return (_a = document.getElementById('fileInput')) === null || _a === void 0 ? void 0 : _a.click(); }, children: "Add Image" }), _jsx("button", { className: "b1-compact", onClick: () => { var _a; return (_a = inventoryRef.current) === null || _a === void 0 ? void 0 : _a.showModal(); }, children: "Wardrobe" }), _jsx("button", { className: "b1-compact", onClick: () => { googleLogout(); setUser(null); setClassid(''); }, children: "Logout" })] })] }), _jsx("div", { className: "dashboard-main", children: _jsxs("div", { className: "outfits-container", children: [_jsxs("h3", { children: ["Outfit Suggestions for ", selectedDay, formality === 'formal' ? ' (Formal)' : ''] }), outfits.length > 0 ? (_jsx("div", { className: "outfits-list", children: outfits.map((off, idx) => (_jsxs("div", { className: "outfit-card", children: [_jsxs("h4", { children: ["Option ", idx + 1] }), _jsx("div", { className: "outfit-grid-compact", children: Object.entries(off).map(([part, item]) => item && (_jsxs("div", { className: "outfit-item-compact", children: [_jsx("img", { src: `http://localhost:5000/api/image/${item.id}`, alt: item.label }), _jsxs("span", { className: "outfit-item-label-compact", children: [item.label, item.color && _jsxs("span", { className: "outfit-item-color", children: [" \u00B7 ", item.color] })] })] }, part))) })] }, idx))) })) : (_jsxs("div", { className: "no-outfits", children: [_jsx("p", { children: "Not enough items in your wardrobe to suggest an outfit for this weather." }), _jsx("p", { style: { fontSize: '13px', color: '#888' }, children: "Try adding more Tops, Bottoms, and Shoes!" })] }))] }) })] }), _jsxs("div", { style: { display: 'none', justifyContent: 'center', flexWrap: 'wrap' }, children: [_jsx("button", { className: "b1", onClick: () => { var _a; return (_a = document.getElementById('fileInput')) === null || _a === void 0 ? void 0 : _a.click(); }, children: _jsx("h4", { children: "Add Image" }) }), _jsx("button", { className: "b1", onClick: () => { var _a; return (_a = inventoryRef.current) === null || _a === void 0 ? void 0 : _a.showModal(); }, children: _jsx("h4", { children: "View Inventory" }) }), _jsx("button", { className: "b1", onClick: () => { googleLogout(); setUser(null); setClassid(''); }, children: _jsx("h4", { children: "Logout" }) })] }), _jsx("input", { id: "fileInput", type: "file", accept: "image/*", onChange: handleFileChange, style: { display: 'none' } })] })) : (_jsx("div", { className: "landing-auth", children: _jsxs("div", { className: "landing-auth__card", children: [_jsx("h2", { className: "landing-auth__title", children: "Sign in to continue" }), _jsx("p", { className: "landing-auth__subtitle", children: "Connect your Google account to start building your smart wardrobe." }), _jsx("div", { className: "landing-auth__button", children: _jsx(GoogleLogin, { onSuccess: credentialResponse => {
+    return (_jsx("div", { className: classid, children: user ? (_jsxs(_Fragment, { children: [_jsx("dialog", { ref: inventoryRef, onClick: () => { var _a; return (_a = inventoryRef.current) === null || _a === void 0 ? void 0 : _a.close(); }, children: _jsx(InventoryContent, { user: user, refreshKey: inventoryRefresh, onClose: () => { var _a; return (_a = inventoryRef.current) === null || _a === void 0 ? void 0 : _a.close(); } }) }), showWelcome && (_jsx(WelcomeToast, { name: user.name, onDone: () => setShowWelcome(false) })), _jsxs("div", { className: "dashboard-layout", children: [_jsxs("div", { className: "dashboard-sidebar", children: [_jsx(WeatherWidget, { onDaySelect: handleDaySelect, formality: formality, colorPreset: colorPreset, onFormalityChange: handleFormalityChange, onColorPresetChange: handleColorPresetChange }), _jsx("div", { className: "prediction-box", children: imageUrl ? (_jsxs(_Fragment, { children: [_jsx("img", { src: imageUrl, alt: "Last Uploaded", className: "last-uploaded-img" }), _jsxs("p", { children: ["AI Classifier: ", _jsx("strong", { children: prediction || 'Processing...' })] })] })) : (_jsx("p", { style: { color: '#666', fontSize: '14px' }, children: "Upload an image to see AI classification" })) }), _jsxs("div", { className: "dashboard-controls", children: [_jsx("button", { className: "b1-compact", onClick: () => { var _a; return (_a = document.getElementById('fileInput')) === null || _a === void 0 ? void 0 : _a.click(); }, children: "Add Image" }), _jsx("button", { className: "b1-compact", onClick: openWardrobe, children: "Wardrobe" }), _jsx("button", { className: "b1-compact", onClick: () => { googleLogout(); setUser(null); setClassid(''); }, children: "Logout" })] })] }), _jsx("div", { className: "dashboard-main", children: _jsxs("div", { className: "outfits-container", children: [_jsxs("h3", { children: ["Outfit Suggestions for ", selectedDay, formality === 'formal' ? ' (Formal)' : ''] }), outfits.length > 0 ? (_jsx("div", { className: "outfits-list", children: outfits.map((off, idx) => (_jsxs("div", { className: "outfit-card", children: [_jsxs("h4", { children: ["Option ", idx + 1] }), _jsx("div", { className: "outfit-grid-compact", children: Object.entries(off).map(([part, item]) => item && (_jsxs("div", { className: "outfit-item-compact", children: [_jsx("img", { src: apiPath(`/api/image/${item.id}`), alt: item.label }), _jsxs("span", { className: "outfit-item-label-compact", children: [item.label, item.color && _jsxs("span", { className: "outfit-item-color", children: [" \u00B7 ", item.color] })] })] }, part))) })] }, idx))) })) : (_jsxs("div", { className: "no-outfits", children: [_jsx("p", { children: "Not enough items in your wardrobe to suggest an outfit for this weather." }), _jsx("p", { style: { fontSize: '13px', color: '#888' }, children: "Try adding more Tops, Bottoms, and Shoes!" })] }))] }) })] }), _jsxs("div", { style: { display: 'none', justifyContent: 'center', flexWrap: 'wrap' }, children: [_jsx("button", { className: "b1", onClick: () => { var _a; return (_a = document.getElementById('fileInput')) === null || _a === void 0 ? void 0 : _a.click(); }, children: _jsx("h4", { children: "Add Image" }) }), _jsx("button", { className: "b1", onClick: openWardrobe, children: _jsx("h4", { children: "View Inventory" }) }), _jsx("button", { className: "b1", onClick: () => { googleLogout(); setUser(null); setClassid(''); }, children: _jsx("h4", { children: "Logout" }) })] }), _jsx("input", { id: "fileInput", type: "file", accept: "image/*", onChange: handleFileChange, style: { display: 'none' } })] })) : (_jsx("div", { className: "landing-auth", children: _jsxs("div", { className: "landing-auth__card", children: [_jsx("h2", { className: "landing-auth__title", children: "Sign in to continue" }), _jsx("p", { className: "landing-auth__subtitle", children: "Connect your Google account to start building your smart wardrobe." }), _jsx("div", { className: "landing-auth__button", children: _jsx(GoogleLogin, { onSuccess: credentialResponse => {
                                 const decoded = jwtDecode(credentialResponse.credential || '');
                                 setUser(decoded);
                                 setShowWelcome(true);
-                                fetch('http://localhost:5000/api/auth', {
+                                fetch(apiPath('/api/auth'), {
                                     method: 'POST',
                                     headers: { 'Content-Type': 'application/json' },
                                     body: JSON.stringify({ id_token: credentialResponse.credential }),
@@ -338,7 +347,6 @@ const LANDING_FEATURES = [
         title: 'AI wardrobe tagging',
         desc: 'Upload clothes and let the model classify them instantly.',
         detail: 'Snap a photo of any garment and FabAI labels it, categorizes it, and adds it to your inventory.',
-        preview: ['/shirt.png', '/shoes.png'],
     },
     {
         id: 'palette',
@@ -423,7 +431,7 @@ export function Card(props) {
     return props.type === 'Main' ? cardMain : cardSub;
 }
 const navClickHandler = () => {
-    window.location.assign('http://localhost:3000/');
+    window.location.assign('/');
     return 0;
 };
 export function Navbar() {

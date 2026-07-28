@@ -3,14 +3,12 @@ FROM python:3.11-slim
 WORKDIR /backend
 COPY requirements.txt .
 
-# Install packages directly (add more libs like matplotlib later)
-RUN pip install -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-# Expose the port Flask runs on
+ENV PORT=5000
 EXPOSE 5000
-CMD ["python", "backend.py"]
 
-# docker build -t backend .      
-# docker run -p 5000:5000 backend 
+# One worker keeps a single in-memory PyTorch model instance.
+CMD gunicorn --bind 0.0.0.0:$PORT --workers 1 --threads 2 --timeout 120 backend:app

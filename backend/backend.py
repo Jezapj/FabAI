@@ -41,29 +41,36 @@ model = ClothingClassifier(
 )
 
 
-CORS(app)
-@app.route("/")
-def hello():
-    return jsonify({"message": "Hello from Flask!"})
+CORS_ORIGINS = [
+    origin.strip()
+    for origin in os.getenv('CORS_ORIGINS', 'http://localhost:3000').split(',')
+    if origin.strip()
+]
+CORS(app, origins=CORS_ORIGINS)
 
 
-db_pw = os.getenv('DB_PW')
+def get_database_uri() -> str:
+    database_url = os.getenv('DATABASE_URL')
+    if database_url:
+        if database_url.startswith('postgres://'):
+            database_url = database_url.replace('postgres://', 'postgresql://', 1)
+        return database_url
+
+    db_pw = os.getenv('DB_PW', 'password')
+    db_host = os.getenv('DB_HOST', 'db')
+    db_name = os.getenv('DB_NAME', 'mydb')
+    db_user = os.getenv('DB_USER', 'postgres')
+    return f'postgresql://{db_user}:{db_pw}@{db_host}:5432/{db_name}'
 
 
-app.secret_key = 'supersecret'  # use a secure one in production
-
-# (unused)
-# Define the upload folder relative to your script 
-# UPLOAD_FOLDER = os.path.join(BASE_DIR, 'uploads') 
-# os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-
-# UPLOAD_FOLDER = os.path.join(os.getcwd(), 'uploads')
-# os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-
-# DB Config
-app.config['SQLALCHEMY_DATABASE_URI'] = f'postgresql://postgres:{db_pw}@db:5432/mydb'
+app.secret_key = os.getenv('FLASK_SECRET_KEY', 'dev-only-change-me')
+app.config['SQLALCHEMY_DATABASE_URI'] = get_database_uri()
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
+
+@app.route("/")
+def hello():
+    return jsonify({"message": "FabAI API"})
 
 @app.teardown_appcontext
 def shutdown_session(exception=None):
@@ -603,7 +610,7 @@ def update_item(image_id):
     })
 
 
-if __name__ == "__main__":
+def init_db():
     with app.app_context():
         db.create_all()
         try:
@@ -614,4 +621,11 @@ if __name__ == "__main__":
         except Exception as e:
             db.session.rollback()
             print(f"Color column migration note: {e}")
-    app.run(host="0.0.0.0", port=5000)
+
+
+init_db()
+
+
+if __name__ == "__main__":
+    port = int(os.getenv('PORT', 5000))
+    app.run(host="0.0.0.0", port=port)

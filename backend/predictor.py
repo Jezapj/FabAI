@@ -1,3 +1,4 @@
+import gc
 import torch
 import joblib
 from PIL import Image
@@ -5,21 +6,31 @@ from torchvision import models, transforms
 from model import ClothingPredictor
 from torchvision.models import ResNet50_Weights
 
+
 class ClothingClassifier:
     def __init__(self, model_path, encoder_path, device="cpu", use_fp16=False):
         self.device = torch.device(device)
         self.use_fp16 = use_fp16
 
+        torch.set_num_threads(int(__import__('os').getenv('TORCH_NUM_THREADS', '1')))
+
         self.label_encoder = joblib.load(encoder_path)
 
         base_model = models.resnet50(weights=ResNet50_Weights.IMAGENET1K_V1)
         self.feature_model = torch.nn.Sequential(*list(base_model.children())[:-1])
+        del base_model
+        gc.collect()
+
         self.feature_model.eval().to(self.device)
         if use_fp16:
             self.feature_model = self.feature_model.half()
 
         self.classifier = ClothingPredictor(input_size=2048)
-        self.classifier.load_state_dict(torch.load(model_path, map_location=self.device))
+        try:
+            state = torch.load(model_path, map_location=self.device, weights_only=True)
+        except TypeError:
+            state = torch.load(model_path, map_location=self.device)
+        self.classifier.load_state_dict(state)
         self.classifier.eval().to(self.device)
         if use_fp16:
             self.classifier = self.classifier.half()
@@ -38,7 +49,7 @@ class ClothingClassifier:
     def predict(self, image: Image.Image):
         image_tensor = self.load_image(image)
 
-        with torch.no_grad():
+        with torch.inference_mode():
             features = self.feature_model(image_tensor)
             features = torch.flatten(features, 1)
 

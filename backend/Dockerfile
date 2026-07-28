@@ -8,10 +8,17 @@ RUN pip install --no-cache-dir torch torchvision --index-url https://download.py
 COPY requirements-prod.txt .
 RUN pip install --no-cache-dir -r requirements-prod.txt
 
+# Cache ResNet50 ImageNet weights at build time (avoids download + memory spike on boot).
+ENV TORCH_HOME=/backend/.torch
+ENV OMP_NUM_THREADS=1
+ENV MKL_NUM_THREADS=1
+ENV OPENBLAS_NUM_THREADS=1
+RUN mkdir -p /backend/.torch && python -c "from torchvision.models import resnet50, ResNet50_Weights; resnet50(weights=ResNet50_Weights.IMAGENET1K_V1)"
+
 COPY . .
 
 ENV PORT=5000
 EXPOSE 5000
 
-# One worker keeps a single in-memory PyTorch model instance.
-CMD gunicorn --bind 0.0.0.0:$PORT --workers 1 --threads 2 --timeout 120 backend:app
+# Lazy model load in backend.py — worker boots before PyTorch loads.
+CMD gunicorn --bind 0.0.0.0:$PORT --workers 1 --threads 2 --timeout 180 backend:app

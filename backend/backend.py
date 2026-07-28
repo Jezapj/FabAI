@@ -1,16 +1,13 @@
 #from models import User
 from flask_cors import CORS
 import os
+import threading
 from io import BytesIO
 from flask import Flask, jsonify, request, Response, redirect, url_for, session, g
 from flask_sqlalchemy import SQLAlchemy
 from authlib.integrations.flask_client import OAuth
 from werkzeug.utils import secure_filename
 import json
-import torch
-
-from torchvision import models, transforms
-import torch.nn as nn
 from PIL import Image as PILImage
 
 from predictor import ClothingClassifier
@@ -34,11 +31,23 @@ app = Flask(__name__)
 #Get the absolute path of the directory containing this script
 BASE_DIR = Path(__file__).resolve().parent
 
-# Load the model once during the app startup
-model = ClothingClassifier(
-    model_path=os.path.join(BASE_DIR, 'models', 'fabAI_clothingClassifierHD.pth'),
-    encoder_path=os.path.join(BASE_DIR, 'label_encoder.pkl')
-)
+_model = None
+_model_lock = threading.Lock()
+
+
+def get_model() -> ClothingClassifier:
+    """Load PyTorch classifier on first use so gunicorn can boot on low-RAM instances."""
+    global _model
+    if _model is None:
+        with _model_lock:
+            if _model is None:
+                use_fp16 = os.getenv('MODEL_FP16', '').lower() in ('1', 'true', 'yes')
+                _model = ClothingClassifier(
+                    model_path=os.path.join(BASE_DIR, 'models', 'fabAI_clothingClassifierHD.pth'),
+                    encoder_path=os.path.join(BASE_DIR, 'label_encoder.pkl'),
+                    use_fp16=use_fp16,
+                )
+    return _model
 
 
 CORS_ORIGINS = [
@@ -174,7 +183,7 @@ def upload_file_nx():
         image_bytes = file.read()
         pil_image = PILImage.open(BytesIO(image_bytes))
 
-        label = model.predict(pil_image)
+        label = get_model().predict(pil_image)
         value, category, color = clothingAssign(label, pil_image)
         value = float(value)
 
@@ -507,7 +516,7 @@ def predict_image(image_id):
         return jsonify({'error': 'Image not found'}), 404
 
     pil_image = PILImage.open(BytesIO(image.data))
-    label = model.predict(pil_image)
+    label = get_model().predict(pil_image)
 
     return jsonify({'prediction': str(label)})
 

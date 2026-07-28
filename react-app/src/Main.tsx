@@ -420,6 +420,12 @@ export function Login({ user, setUser }: { user: any, setUser: any }) {
     if (!user) setShowWelcome(false);
   }, [user]);
 
+  // Wake the API (free tier sleeps after 15 min idle).
+  useEffect(() => {
+    if (!user) return;
+    fetch(apiPath('/')).catch(() => {});
+  }, [user]);
+
   useEffect(() => {
     if (!user?.sub) return;
 
@@ -481,12 +487,23 @@ export function Login({ user, setUser }: { user: any, setUser: any }) {
     if (selectedDate) updateDayPrefs(selectedDate, { colorPreset: value });
   };
 
-  const handlePredict = async (id: number) => {
+  const runClassification = async (id: number) => {
+    setPrediction('Classifying (first run on free tier can take 1–2 min)...');
     try {
-      const r = await fetch(apiPath(`/api/predict_image/${id}`));
-      const d = await r.json();
-      setPrediction(d.prediction);
-    } catch (err) { console.error(err); }
+      const r = await fetch(apiPath(`/api/classify_image/${id}`), { method: 'POST' });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) {
+        throw new Error(
+          typeof d.error === 'string' ? d.error : `Classification failed (${r.status})`
+        );
+      }
+      setPrediction(String(d.prediction ?? d.label ?? ''));
+      setOutfitRefresh(x => x + 1);
+      setInventoryRefresh(x => x + 1);
+    } catch (err) {
+      console.error(err);
+      setPrediction(err instanceof Error ? err.message : 'Classification failed');
+    }
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -511,10 +528,10 @@ export function Login({ user, setUser }: { user: any, setUser: any }) {
         }
         setImageId(d.image_id);
         setImageUrl(apiPath(`/api/image/${d.image_id}`));
-        setPrediction(d.label ? String(d.label) : 'Classifying...');
-        handlePredict(d.image_id);
+        setPrediction('Saved to wardrobe. Starting AI...');
         setOutfitRefresh(r => r + 1);
         setInventoryRefresh(r => r + 1);
+        runClassification(d.image_id);
       })
       .catch((err) => {
         console.error(err);

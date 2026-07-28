@@ -36,6 +36,9 @@ services:
       - path: /*
         name: Cross-Origin-Opener-Policy
         value: same-origin-allow-popups
+      - path: /*
+        name: Cross-Origin-Embedder-Policy
+        value: unsafe-none
     routes:
       # Proxy API calls to the backend (avoids CORS and build-time VITE_API_URL issues)
       - type: rewrite

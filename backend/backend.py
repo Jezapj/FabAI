@@ -205,7 +205,8 @@ def upload_file_nx():
         image_bytes = file.read()
         pil_image = PILImage.open(BytesIO(image_bytes))
 
-        label = get_model().predict(pil_image)
+        # Save immediately; classification runs in /api/classify_image (avoids 502 on slow ML load).
+        label = "Unclassified"
         value, category, color = clothingAssign(label, pil_image)
         value = float(value)
 
@@ -227,7 +228,9 @@ def upload_file_nx():
             'filename': filename,
             'image_id': new_image.id,
             'value': value,
-            'category': category
+            'category': category,
+            'label': label,
+            'needs_classification': True,
         })
 
     except ValueError as e:
@@ -532,6 +535,36 @@ def distribute(target, user_id, db, weather_code=None, formality='casual', color
 
     combos.sort(key=lambda x: x["score"])
     return [c["outfit"] for c in combos[:3]]
+
+
+@app.route('/api/classify_image/<int:image_id>', methods=['POST'])
+def classify_image(image_id):
+    image = Image.query.filter_by(id=image_id).first()
+    if not image or not image.data:
+        return jsonify({'error': 'Image not found'}), 404
+
+    try:
+        pil_image = PILImage.open(BytesIO(image.data))
+        label = get_model().predict(pil_image)
+        value, category, color = clothingAssign(label, pil_image)
+        image.label = label
+        image.value = float(value)
+        image.category = category
+        image.color = color
+        db.session.commit()
+        return jsonify({
+            'prediction': str(label),
+            'label': label,
+            'category': category,
+            'value': image.value,
+            'color': color,
+        })
+    except Exception as e:
+        print(f'classify_image error: {e}')
+        db.session.rollback()
+        return jsonify({
+            'error': 'Classification failed. The AI may still be starting; try again in a minute.',
+        }), 500
 
 
 @app.route('/api/predict_image/<int:image_id>', methods=['GET'])

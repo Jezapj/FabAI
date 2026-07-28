@@ -1265,6 +1265,9 @@ body:has(.app-shell:not(.app-shell--dashboard)) {
     justify-content: center;
     justify-self: center;
   }
+  .landing-feature > p{
+    font-size: 0.60rem;
+  }
 }
 .landing-feature__icon{
   align-self: center;

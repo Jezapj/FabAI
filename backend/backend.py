@@ -208,8 +208,11 @@ def upload_file_nx():
             'category': category
         })
 
-    except ValueError:
-        return jsonify({'error': 'Invalid token'}), 400
+    except ValueError as e:
+        return jsonify({'error': str(e)}), 400
+    except Exception as e:
+        print(f'uploadnx error: {e}')
+        return jsonify({'error': 'Upload failed. The classifier may still be loading; try again in a minute.'}), 500
 
 @app.route('/api/image/<int:image_id>')
 def serve_image(image_id):

@@ -499,15 +499,28 @@ export function Login({ user, setUser }: { user: any, setUser: any }) {
     formData.append('user_info', JSON.stringify(user));
 
     fetch(apiPath('/api/uploadnx'), { method: 'POST', body: formData })
-      .then(r => r.json())
-      .then(d => {
+      .then(async (r) => {
+        const d = await r.json().catch(() => ({}));
+        if (!r.ok) {
+          throw new Error(
+            typeof d.error === 'string' ? d.error : `Upload failed (${r.status})`
+          );
+        }
+        if (!d.image_id) {
+          throw new Error('Upload succeeded but no image_id returned');
+        }
         setImageId(d.image_id);
         setImageUrl(apiPath(`/api/image/${d.image_id}`));
+        setPrediction(d.label ? String(d.label) : 'Classifying...');
         handlePredict(d.image_id);
         setOutfitRefresh(r => r + 1);
         setInventoryRefresh(r => r + 1);
       })
-      .catch(console.error);
+      .catch((err) => {
+        console.error(err);
+        setPrediction(err instanceof Error ? err.message : 'Upload failed');
+        setImageUrl('');
+      });
   };
 
   return (

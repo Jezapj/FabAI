@@ -24,10 +24,7 @@ services:
       - key: FLASK_SECRET_KEY
         generateValue: true
       - key: CORS_ORIGINS
-        fromService:
-          type: web
-          name: fabai-web
-          envVarKey: RENDER_EXTERNAL_URL
+        value: https://fabai-web.onrender.com
 
   - type: web
     name: fabai-web
@@ -39,7 +36,7 @@ services:
       # Proxy API calls to the backend (avoids CORS and build-time VITE_API_URL issues)
       - type: rewrite
         source: /api/*
-        destination: https://fabai-api.onrender.com/api/*
+        destination: https://fabai-api-n4ki.onrender.com/api/*
       - type: rewrite
         source: /*
         destination: /index.html

@@ -1,6 +1,7 @@
 #from models import User
 from flask_cors import CORS
 import os
+import re
 import threading
 from io import BytesIO
 from flask import Flask, jsonify, request, Response, redirect, url_for, session, g
@@ -50,12 +51,21 @@ def get_model() -> ClothingClassifier:
     return _model
 
 
-CORS_ORIGINS = [
-    origin.strip()
-    for origin in os.getenv('CORS_ORIGINS', 'http://localhost:3000').split(',')
-    if origin.strip()
-]
-CORS(app, origins=CORS_ORIGINS)
+def build_cors_origins():
+    origins: list = [re.compile(r"https://[\w-]+\.onrender\.com")]
+    default_local = "http://localhost:3000"
+    raw = os.getenv("CORS_ORIGINS", default_local)
+    for part in raw.split(","):
+        origin = part.strip()
+        if origin:
+            origins.append(origin)
+    front = os.getenv("FRONTEND_URL", "").strip()
+    if front:
+        origins.append(front)
+    return origins
+
+
+CORS(app, resources={r"/*": {"origins": build_cors_origins()}})
 
 
 def get_database_uri() -> str:

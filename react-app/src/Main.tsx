@@ -405,29 +405,57 @@ export function Login({ user, setUser }: { user: any, setUser: any }) {
   const [outfitRefresh, setOutfitRefresh] = React.useState(0);
   const [inventoryRefresh, setInventoryRefresh] = React.useState(0);
   const [showWelcome, setShowWelcome] = React.useState(false);
+  const [backendStatus, setBackendStatus] = React.useState<'starting' | 'ready' | 'error'>('starting');
+  const [busy, setBusy] = React.useState(false);
 
   const inventoryRef = useRef<HTMLDialogElement | null>(null);
   const outfitRequestRef = useRef(0);
+  const wakeAbortRef = useRef<AbortController | null>(null);
 
   const openWardrobe = () => {
     setInventoryRefresh(r => r + 1);
     inventoryRef.current?.showModal();
   };
 
+  const wakeBackend = React.useCallback(async () => {
+    wakeAbortRef.current?.abort();
+    const ac = new AbortController();
+    wakeAbortRef.current = ac;
+    setBackendStatus('starting');
+
+    const deadline = Date.now() + 90_000;
+    while (Date.now() < deadline) {
+      if (ac.signal.aborted) return false;
+      try {
+        const r = await fetch(apiPath('/'), { signal: ac.signal });
+        if (r.ok) {
+          setBackendStatus('ready');
+          return true;
+        }
+      } catch {
+        /* still waking */
+      }
+      await new Promise(res => setTimeout(res, 2000));
+    }
+    setBackendStatus('error');
+    return false;
+  }, []);
+
   useEffect(() => { setClassid(user ? 'b2' : '') }, [user]);
 
   useEffect(() => {
-    if (!user) setShowWelcome(false);
-  }, [user]);
+    if (!user) {
+      setShowWelcome(false);
+      setBackendStatus('starting');
+      wakeAbortRef.current?.abort();
+      return;
+    }
+    wakeBackend();
+    return () => wakeAbortRef.current?.abort();
+  }, [user, wakeBackend]);
 
-  // Wake the API (free tier sleeps after 15 min idle).
   useEffect(() => {
-    if (!user) return;
-    fetch(apiPath('/')).catch(() => {});
-  }, [user]);
-
-  useEffect(() => {
-    if (!user?.sub) return;
+    if (!user?.sub || backendStatus !== 'ready') return;
 
     const requestId = ++outfitRequestRef.current;
     const timer = window.setTimeout(() => {
@@ -458,7 +486,7 @@ export function Login({ user, setUser }: { user: any, setUser: any }) {
     }, 300);
 
     return () => window.clearTimeout(timer);
-  }, [user, outfitTarget, weatherCode, formality, colorPreset, outfitRefresh]);
+  }, [user, outfitTarget, weatherCode, formality, colorPreset, outfitRefresh, backendStatus]);
 
   const updateDayPrefs = (date: string, patch: Partial<DayPrefs>) => {
     setDayPrefs(prev => ({
@@ -488,11 +516,18 @@ export function Login({ user, setUser }: { user: any, setUser: any }) {
   };
 
   const runClassification = async (id: number) => {
-    setPrediction('Classifying (first run on free tier can take 1–2 min)...');
+    setPrediction('Classifying…');
     try {
-      const r = await fetch(apiPath(`/api/classify_image/${id}`), { method: 'POST' });
+      // Direct API URL bypasses static-site proxy timeouts (common cause of 502).
+      const r = await fetch(apiPath(`/api/classify_image/${id}`, { direct: true }), {
+        method: 'POST',
+      });
       const d = await r.json().catch(() => ({}));
       if (!r.ok) {
+        if (r.status === 502 || r.status === 503) {
+          setBackendStatus('starting');
+          wakeBackend();
+        }
         throw new Error(
           typeof d.error === 'string' ? d.error : `Classification failed (${r.status})`
         );
@@ -503,12 +538,18 @@ export function Login({ user, setUser }: { user: any, setUser: any }) {
     } catch (err) {
       console.error(err);
       setPrediction(err instanceof Error ? err.message : 'Classification failed');
+      setBackendStatus('starting');
+      wakeBackend();
     }
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+    e.target.value = '';
     if (!file) return;
+    if (backendStatus !== 'ready' || busy) return;
+
+    setBusy(true);
     setPrediction('Uploading...');
 
     const formData = new FormData();
@@ -519,6 +560,10 @@ export function Login({ user, setUser }: { user: any, setUser: any }) {
       .then(async (r) => {
         const d = await r.json().catch(() => ({}));
         if (!r.ok) {
+          if (r.status === 502 || r.status === 503) {
+            setBackendStatus('starting');
+            wakeBackend();
+          }
           throw new Error(
             typeof d.error === 'string' ? d.error : `Upload failed (${r.status})`
           );
@@ -528,17 +573,25 @@ export function Login({ user, setUser }: { user: any, setUser: any }) {
         }
         setImageId(d.image_id);
         setImageUrl(apiPath(`/api/image/${d.image_id}`));
-        setPrediction('Saved to wardrobe. Starting AI...');
-        setOutfitRefresh(r => r + 1);
-        setInventoryRefresh(r => r + 1);
-        runClassification(d.image_id);
+        setPrediction('Saved to wardrobe. Starting AI…');
+        setOutfitRefresh(x => x + 1);
+        setInventoryRefresh(x => x + 1);
+        await runClassification(d.image_id);
       })
       .catch((err) => {
         console.error(err);
         setPrediction(err instanceof Error ? err.message : 'Upload failed');
-        setImageUrl('');
-      });
+      })
+      .finally(() => setBusy(false));
   };
+
+  const canUpload = backendStatus === 'ready' && !busy;
+  const statusLabel =
+    backendStatus === 'ready'
+      ? (busy ? 'Working…' : 'Backend ready')
+      : backendStatus === 'error'
+        ? 'Backend offline — tap retry'
+        : 'Starting backend…';
 
   return (
     <div className={classid}>
@@ -568,18 +621,38 @@ export function Login({ user, setUser }: { user: any, setUser: any }) {
               />
 
               <div className="prediction-box">
+                <p className={`backend-status backend-status--${backendStatus}`}>
+                  {statusLabel}
+                  {backendStatus === 'error' && (
+                    <>
+                      {' '}
+                      <button type="button" className="backend-status__retry" onClick={() => wakeBackend()}>
+                        Retry
+                      </button>
+                    </>
+                  )}
+                </p>
                 {imageUrl ? (
                   <>
                     <img src={imageUrl} alt="Last Uploaded" className="last-uploaded-img" />
                     <p>AI Classifier: <strong>{prediction || 'Processing...'}</strong></p>
                   </>
                 ) : (
-                  <p style={{color: '#666', fontSize: '14px'}}>Upload an image to see AI classification</p>
+                  <p style={{color: '#666', fontSize: '14px'}}>
+                    {canUpload
+                      ? 'Upload an image to see AI classification'
+                      : 'Waiting for backend before uploads are enabled'}
+                  </p>
                 )}
               </div>
 
               <div className="dashboard-controls">
-                <button className="b1-compact" onClick={() => document.getElementById('fileInput')?.click()}>
+                <button
+                  className="b1-compact"
+                  disabled={!canUpload}
+                  title={!canUpload ? statusLabel : 'Add clothing image'}
+                  onClick={() => document.getElementById('fileInput')?.click()}
+                >
                   Add Image
                 </button>
                 <button className="b1-compact" onClick={openWardrobe}>

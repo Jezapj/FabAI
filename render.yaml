@@ -48,5 +48,7 @@ services:
         source: /*
         destination: /index.html
     envVars:
+      - key: VITE_API_DIRECT_URL
+        value: https://fabai-api-n4ki.onrender.com
       - key: VITE_GOOGLE_CLIENT_ID
         sync: false

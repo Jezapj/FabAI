@@ -333,6 +333,41 @@ button:hover{
   margin-top: 0px;
 }
 
+.backend-status {
+  margin: 0 0 10px;
+  font-size: 12px;
+  letter-spacing: 0.02em;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.backend-status--starting {
+  color: #fbbf24;
+}
+
+.backend-status--ready {
+  color: #86efac;
+}
+
+.backend-status--error {
+  color: #fca5a5;
+}
+
+.backend-status__retry {
+  background: transparent;
+  border: 1px solid rgba(252, 165, 165, 0.6);
+  color: #fecaca;
+  border-radius: 6px;
+  padding: 2px 8px;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.b1-compact:disabled {
+  opacity: 0.45 !important;
+  cursor: not-allowed !important;
+  transform: none !important;
+}
+
 .last-uploaded-img {
   max-height: 120px;
   object-fit: contain;
@@ -1204,6 +1239,8 @@ body:has(.app-shell:not(.app-shell--dashboard)) {
 @media (max-width: 768px) {
   .landing {
     padding: 24px 16px 4px;
+    max-width: 100%;
+    overflow-x: hidden;
   }
 
   .landing-hero {
@@ -1212,10 +1249,78 @@ body:has(.app-shell:not(.app-shell--dashboard)) {
 
   .landing-shell {
     padding: 4px 16px 32px;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow-x: hidden;
+  }
+
+  .landing-features {
+    grid-template-columns: 1fr;
+    gap: 10px;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .landing-feature {
+    min-height: 0;
+    padding: 14px 16px;
+    align-items: center;
+  }
+
+  .landing-feature__desc,
+  .landing-feature__detail,
+  .landing-feature__preview {
+    display: none !important;
+  }
+
+  .landing-feature__title {
+    margin: 0;
+    font-size: 0.95rem;
+  }
+
+  .landing-feature:hover .landing-feature__detail,
+  .landing-feature:focus-visible .landing-feature__detail,
+  .landing-feature--active .landing-feature__detail,
+  .landing-feature:hover .landing-feature__preview,
+  .landing-feature:focus-visible .landing-feature__preview,
+  .landing-feature--active .landing-feature__preview {
+    display: none !important;
+    opacity: 0 !important;
+  }
+
+  .landing-auth {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow-x: hidden;
+    padding: 0;
   }
 
   .landing-auth__card {
-    padding: 10px 0px 10px;
+    padding: 16px 14px;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+  }
+
+  .landing-auth__title,
+  .landing-auth__subtitle {
+    max-width: 100%;
+    overflow-wrap: anywhere;
+  }
+
+  .landing-auth__button {
+    width: 100%;
+    max-width: 100%;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+  }
+
+  .landing-auth__button > div {
+    max-width: 100% !important;
+    transform: none !important;
   }
 
   .landing-feature:active {

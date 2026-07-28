@@ -201,24 +201,20 @@ def upload_file_nx():
 
         session['user_id'] = user.id
 
-        filename = secure_filename(file.filename)
+        filename = secure_filename(file.filename or 'upload.jpg')
         image_bytes = file.read()
-        pil_image = PILImage.open(BytesIO(image_bytes))
 
-        # Save immediately; classification runs in /api/classify_image (avoids 502 on slow ML load).
-        label = "Unclassified"
-        value, category, color = clothingAssign(label, pil_image)
-        value = float(value)
-
+        # Save bytes only — no PIL/ML here (keeps upload fast and avoids OOM on free tier).
+        # Classification updates label/category/color via /api/classify_image.
         new_image = Image(
             filename=filename,
             mimetype=file.mimetype or 'image/jpeg',
             data=image_bytes,
             user_id=user.id,
-            label=label,
-            value=value,
-            category=category,
-            color=color,
+            label='Unclassified',
+            value=0.0,
+            category='Optional',
+            color='grey',
         )
         db.session.add(new_image)
         db.session.commit()
@@ -227,9 +223,9 @@ def upload_file_nx():
             'message': 'File uploaded',
             'filename': filename,
             'image_id': new_image.id,
-            'value': value,
-            'category': category,
-            'label': label,
+            'value': 0.0,
+            'category': 'Optional',
+            'label': 'Unclassified',
             'needs_classification': True,
         })
 
@@ -237,7 +233,7 @@ def upload_file_nx():
         return jsonify({'error': str(e)}), 400
     except Exception as e:
         print(f'uploadnx error: {e}')
-        return jsonify({'error': 'Upload failed. The classifier may still be loading; try again in a minute.'}), 500
+        return jsonify({'error': 'Upload failed. Try again in a moment.'}), 500
 
 @app.route('/api/image/<int:image_id>')
 def serve_image(image_id):

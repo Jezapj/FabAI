@@ -1,0 +1,13 @@
+# Web service: use this when Railway Root Directory is the repo root (not react-app).
+# If Root Directory is react-app, use react-app/railway.toml instead.
+
+[build]
+buildCommand = "cd react-app && npm install && npm run build"
+
+[deploy]
+startCommand = "cd react-app && npm run start"
+restartPolicyType = "ON_FAILURE"
+numReplicas = 1
+# No healthcheckPath — static `serve` can be slow to bind; avoid false deploy failures
+healthcheckPath = ""
+healthcheckTimeout = 300

@@ -1,6 +1,9 @@
 {
-  "devDependencies": {
-    "@vitejs/plugin-react": "^4.6.0",
-    "vite": "^7.0.2"
+  "name": "fabai",
+  "private": true,
+  "scripts": {
+    "build": "cd react-app && npm install && npm run build",
+    "start": "cd react-app && npm run start",
+    "dev:web": "cd react-app && npm run dev"
   }
 }

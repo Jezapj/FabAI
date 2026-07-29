@@ -125,7 +125,19 @@ def get_database_uri() -> str:
 app.secret_key = os.getenv('FLASK_SECRET_KEY', 'dev-only-change-me')
 app.config['SQLALCHEMY_DATABASE_URI'] = get_database_uri()
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+    'pool_pre_ping': True,
+    'connect_args': {'connect_timeout': 10},
+}
 db = SQLAlchemy(app)
+
+_db_initialized = False
+
+
+@app.route("/health")
+def health():
+    """Fast healthcheck for Railway (no DB required)."""
+    return jsonify({"ok": True, "service": "fabai-api"}), 200
 
 @app.route("/")
 def hello():
@@ -702,19 +714,39 @@ def update_item(image_id):
 
 
 def init_db():
-    with app.app_context():
-        db.create_all()
-        try:
-            db.session.execute(db.text(
-                "ALTER TABLE image ADD COLUMN IF NOT EXISTS color VARCHAR(30)"
-            ))
-            db.session.commit()
-        except Exception as e:
-            db.session.rollback()
-            print(f"Color column migration note: {e}")
+    global _db_initialized
+    if _db_initialized:
+        return
+    if not os.getenv('DATABASE_URL'):
+        print('init_db skipped: DATABASE_URL is not set (link Postgres on Railway)')
+        return
+    try:
+        with app.app_context():
+            db.create_all()
+            try:
+                db.session.execute(db.text(
+                    "ALTER TABLE image ADD COLUMN IF NOT EXISTS color VARCHAR(30)"
+                ))
+                db.session.commit()
+            except Exception as e:
+                db.session.rollback()
+                print(f"Color column migration note: {e}")
+        _db_initialized = True
+    except Exception as e:
+        print(f"init_db failed (will retry on next request): {e}")
 
 
-init_db()
+@app.before_request
+def ensure_db_ready():
+    if request.path in ('/health', '/') and request.method == 'GET':
+        return None
+    init_db()
+
+
+try:
+    init_db()
+except Exception as e:
+    print(f"init_db at import: {e}")
 
 
 if __name__ == "__main__":

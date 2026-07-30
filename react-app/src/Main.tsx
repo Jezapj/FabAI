@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { GoogleLogin, googleLogout } from '@react-oauth/google';
 import { jwtDecode } from 'jwt-decode';
-import { apiPath } from './config';
+import { apiPath, parseApiJson, probeApi, API_BASE } from './config';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 interface OutfitItem { id: number; label: string; value: number; category: string; color?: string; }
@@ -257,7 +257,7 @@ function InventoryContent({ user, onClose, refreshKey }: InvContentProps) {
     if (!user?.sub) { setLoading(false); return; }
     setLoading(true);
     fetch(apiPath(`/api/inventory?user_id=${user.sub}`))
-      .then(r => r.json())
+      .then(r => parseApiJson(r))
       .then(d  => { setItems(Array.isArray(d) ? d : []); setLoading(false); })
       .catch(() => setLoading(false));
   }, [user, refreshKey]);
@@ -407,6 +407,7 @@ export function Login({ user, setUser }: { user: any, setUser: any }) {
   const [showWelcome, setShowWelcome] = React.useState(false);
   const [backendStatus, setBackendStatus] = React.useState<'starting' | 'ready' | 'error'>('starting');
   const [busy, setBusy] = React.useState(false);
+  const [authError, setAuthError] = React.useState('');
 
   const inventoryRef = useRef<HTMLDialogElement | null>(null);
   const outfitRequestRef = useRef(0);
@@ -418,6 +419,11 @@ export function Login({ user, setUser }: { user: any, setUser: any }) {
   };
 
   const wakeBackend = React.useCallback(async () => {
+    if (import.meta.env.PROD && !API_BASE) {
+      setBackendStatus('error');
+      return false;
+    }
+
     wakeAbortRef.current?.abort();
     const ac = new AbortController();
     wakeAbortRef.current = ac;
@@ -427,8 +433,7 @@ export function Login({ user, setUser }: { user: any, setUser: any }) {
     while (Date.now() < deadline) {
       if (ac.signal.aborted) return false;
       try {
-        const r = await fetch(apiPath('/'), { signal: ac.signal });
-        if (r.ok) {
+        if (await probeApi(ac.signal)) {
           setBackendStatus('ready');
           return true;
         }
@@ -470,7 +475,7 @@ export function Login({ user, setUser }: { user: any, setUser: any }) {
       fetch(apiPath(`/api/outfit?${params}`))
         .then(r => {
           if (!r.ok) throw new Error(`Outfit request failed (${r.status})`);
-          return r.json();
+          return parseApiJson(r);
         })
         .then(d => {
           if (requestId === outfitRequestRef.current) {
@@ -522,17 +527,18 @@ export function Login({ user, setUser }: { user: any, setUser: any }) {
       const r = await fetch(apiPath(`/api/classify_image/${id}`), {
         method: 'POST',
       });
-      const d = await r.json().catch(() => ({}));
+      const d = await parseApiJson(r);
+      const body = d as Record<string, unknown>;
       if (!r.ok) {
         if (r.status === 502 || r.status === 503) {
           setBackendStatus('starting');
           wakeBackend();
         }
         throw new Error(
-          typeof d.error === 'string' ? d.error : `Classification failed (${r.status})`
+          typeof body.error === 'string' ? body.error : `Classification failed (${r.status})`
         );
       }
-      setPrediction(String(d.prediction ?? d.label ?? ''));
+      setPrediction(String(body.prediction ?? body.label ?? ''));
       setOutfitRefresh(x => x + 1);
       setInventoryRefresh(x => x + 1);
     } catch (err) {
@@ -558,25 +564,29 @@ export function Login({ user, setUser }: { user: any, setUser: any }) {
 
     fetch(apiPath('/api/uploadnx'), { method: 'POST', body: formData })
       .then(async (r) => {
-        const d = await r.json().catch(() => ({}));
+        const d = await parseApiJson(r);
         if (!r.ok) {
           if (r.status === 502 || r.status === 503) {
             setBackendStatus('starting');
             wakeBackend();
           }
+          const errBody = d as Record<string, unknown>;
           throw new Error(
-            typeof d.error === 'string' ? d.error : `Upload failed (${r.status})`
+            typeof errBody.error === 'string' ? errBody.error : `Upload failed (${r.status})`
           );
         }
-        if (!d.image_id) {
+        const body = d as Record<string, unknown>;
+        const uploadedId =
+          typeof body.image_id === 'number' ? body.image_id : Number(body.image_id);
+        if (!uploadedId || Number.isNaN(uploadedId)) {
           throw new Error('Upload succeeded but no image_id returned');
         }
-        setImageId(d.image_id);
-        setImageUrl(apiPath(`/api/image/${d.image_id}`));
+        setImageId(uploadedId);
+        setImageUrl(apiPath(`/api/image/${uploadedId}`));
         setPrediction('Saved to wardrobe. Starting AI…');
         setOutfitRefresh(x => x + 1);
         setInventoryRefresh(x => x + 1);
-        await runClassification(d.image_id);
+        await runClassification(uploadedId);
       })
       .catch((err) => {
         console.error(err);
@@ -588,9 +598,11 @@ export function Login({ user, setUser }: { user: any, setUser: any }) {
   const canUpload = backendStatus === 'ready' && !busy;
   const statusLabel =
     backendStatus === 'ready'
-      ? (busy ? 'Working…' : 'Backend ready')
+      ? (busy ? 'Working…' : `Backend ready${API_BASE ? '' : ' (API URL missing!)'}`)
       : backendStatus === 'error'
-        ? 'Backend offline — tap retry'
+        ? (import.meta.env.PROD && !API_BASE
+            ? 'Set VITE_API_URL on web service & redeploy'
+            : 'Backend offline — tap retry')
         : 'Starting backend…';
 
   return (
@@ -714,9 +726,20 @@ export function Login({ user, setUser }: { user: any, setUser: any }) {
           <div className="landing-auth__card">
             <h2 className="landing-auth__title">Sign in to continue</h2>
             <p className="landing-auth__subtitle">Connect your Google account to start building your smart wardrobe.</p>
+            {import.meta.env.PROD && (
+              <p className="landing-auth__origin" style={{ fontSize: '12px', color: 'rgba(255,255,255,0.55)', marginBottom: 8 }}>
+                Site origin for Google OAuth: <code>{window.location.origin}</code>
+              </p>
+            )}
+            {authError && (
+              <p className="landing-auth__error" style={{ fontSize: '13px', color: '#fca5a5', marginBottom: 8 }}>
+                {authError}
+              </p>
+            )}
             <div className="landing-auth__button">
               <GoogleLogin
                 onSuccess={credentialResponse => {
+                  setAuthError('');
                   const decoded: any = jwtDecode(credentialResponse.credential || '');
                   setUser(decoded);
                   setShowWelcome(true);
@@ -726,7 +749,11 @@ export function Login({ user, setUser }: { user: any, setUser: any }) {
                     body: JSON.stringify({ id_token: credentialResponse.credential }),
                   });
                 }}
-                onError={() => console.log('Login Failed')}
+                onError={() => {
+                  setAuthError(
+                    `Google blocked this site. In Google Cloud Console, add "${window.location.origin}" under Authorized JavaScript origins for your Web client ID (no trailing slash).`
+                  );
+                }}
               />
             </div>
           </div>

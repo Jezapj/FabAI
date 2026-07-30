@@ -6,10 +6,13 @@ const googleClientId =
   process.env.GOOGLE_CLIENT_ID?.trim() ||
   '';
 
+const apiUrl = (process.env.VITE_API_URL || '').trim().replace(/\/$/, '');
+
 export default defineConfig({
   plugins: [react()],
   define: {
     'import.meta.env.VITE_GOOGLE_CLIENT_ID': JSON.stringify(googleClientId),
+    'import.meta.env.VITE_API_URL': JSON.stringify(apiUrl),
   },
   resolve: {
     extensions: ['.tsx', '.ts', '.jsx', '.js', '.mjs', '.json'],

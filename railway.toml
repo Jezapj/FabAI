@@ -8,6 +8,10 @@ buildCommand = "cd react-app && npm install && npm run build"
 startCommand = "cd react-app && npm run start"
 restartPolicyType = "ON_FAILURE"
 numReplicas = 1
-# No healthcheckPath — static `serve` can be slow to bind; avoid false deploy failures
 healthcheckPath = ""
 healthcheckTimeout = 300
+
+# Required on this *web* service (baked in at build):
+#   VITE_GOOGLE_CLIENT_ID = your Web client ID (...apps.googleusercontent.com)
+#   VITE_API_URL = https://your-api-service.up.railway.app
+# Optional fallback: GOOGLE_CLIENT_ID (same value) is also read at build time.

@@ -1,8 +1,16 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
+const googleClientId =
+  process.env.VITE_GOOGLE_CLIENT_ID?.trim() ||
+  process.env.GOOGLE_CLIENT_ID?.trim() ||
+  '';
+
 export default defineConfig({
   plugins: [react()],
+  define: {
+    'import.meta.env.VITE_GOOGLE_CLIENT_ID': JSON.stringify(googleClientId),
+  },
   resolve: {
     extensions: ['.tsx', '.ts', '.jsx', '.js', '.mjs', '.json'],
   },

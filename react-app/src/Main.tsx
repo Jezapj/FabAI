@@ -51,6 +51,41 @@ function dayLabel(dateStr: string, i: number): string {
   return new Date(dateStr + 'T12:00:00').toLocaleDateString('en-AU', { weekday: 'short' });
 }
 
+const OUTFIT_ORDER = ['hat', 'top', 'bot', 'shoe'] as const;
+const OUTFIT_PART_LABEL: Record<(typeof OUTFIT_ORDER)[number], string> = {
+  hat: 'Hat',
+  top: 'Top',
+  bot: 'Bottom',
+  shoe: 'Shoes',
+};
+
+type SwipeView = 0 | 1 | 2; // Wardrobe | Landing | Add
+
+const SWIPE_THRESHOLD_PX = 56;
+const VIEW_LABELS = ['Wardrobe', 'Home', 'Add'] as const;
+
+// ── Loading overlay (section-scoped) ─────────────────────────────────────────
+interface LoadingOverlayProps {
+  loading: boolean;
+  message?: string;
+  className?: string;
+  children: React.ReactNode;
+}
+
+function LoadingOverlay({ loading, message = 'Loading...', className, children }: LoadingOverlayProps) {
+  return (
+    <div className={`loading-overlay-host${className ? ` ${className}` : ''}`}>
+      {children}
+      {loading && (
+        <div className="loading-overlay" role="status" aria-live="polite" aria-busy="true">
+          <div className="loading-overlay__spinner" aria-hidden="true" />
+          <p className="loading-overlay__text">{message}</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Temperature → warmth target conversion ───────────────────────────────────
 // Maps °C to 0-100 where 0 = very hot (light clothes), 100 = very cold (heavy)
 // Calibrated for range -10 °C (100) → 45 °C (0)
@@ -132,12 +167,13 @@ function WeatherWidget({
   const wrap: React.CSSProperties = {
     background: 'rgba(0,0,0,0.72)',
     borderRadius: 14,
-    padding: '12px 20px',
-    margin: '4px 0 4px',
+    padding: '8px 14px',
+    margin: 0,
     border: '1px solid rgba(255,255,255,0.08)',
     color: 'white',
     width: '100%',
     boxSizing: 'border-box',
+    flexShrink: 0,
   };
 
   if (status === 'loading') return (
@@ -153,7 +189,7 @@ function WeatherWidget({
 
   return (
     <div className="weather-widget" style={wrap}>
-      <p style={{ margin: '0 0 14px', fontSize: 13, color: '#bbb', fontWeight: 500 }}>
+      <p style={{ margin: '0 0 8px', fontSize: 12, color: '#bbb', fontWeight: 500 }}>
         📍 {city} · Weekly Forecast
       </p>
       <div className="weather-strip">
@@ -187,7 +223,7 @@ function WeatherWidget({
       </div>
       {forecast.length > 0 && (
         <>
-          <div className="day-prefs">
+          <div className="day-prefs" onPointerDown={e => e.stopPropagation()}>
             <div className="day-prefs__group">
               <span className="day-prefs__label">Style</span>
               <div className="day-prefs__toggle">
@@ -246,9 +282,9 @@ const CAT_COLORS: Record<string, string> = {
   'One piece': 'rgba(255,160,80,.25)',
 };
 
-interface InvContentProps { user: any; onClose: () => void; refreshKey: number; }
+interface InvContentProps { user: any; refreshKey: number; }
 
-function InventoryContent({ user, onClose, refreshKey }: InvContentProps) {
+function InventoryContent({ user, refreshKey }: InvContentProps) {
   const [items,   setItems]   = useState<InvItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter,  setFilter]  = useState('All');
@@ -265,16 +301,16 @@ function InventoryContent({ user, onClose, refreshKey }: InvContentProps) {
   const shown = filter === 'All' ? items : items.filter(x => x.category === filter);
 
   return (
-    <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: 920 }}>
-      <div className="modal-header">
-        <h2>My Wardrobe{!loading ? ` · ${items.length} item${items.length !== 1 ? 's' : ''}` : ''}</h2>
+    <div className="wardrobe-view">
+      <div className="wardrobe-view__header">
+        <h2>My Wardrobe{!loading ? ` · ${items.length}` : ''}</h2>
       </div>
 
-      {/* Category filter chips */}
-      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', padding: '14px 0 8px' }}>
+      <div className="wardrobe-view__filters" onPointerDown={e => e.stopPropagation()}>
         {CATS.map(c => (
           <button
             key={c}
+            type="button"
             onClick={() => setFilter(c)}
             className={`inv-filter${filter === c ? ' inv-filter--active' : ''}`}
           >
@@ -283,13 +319,13 @@ function InventoryContent({ user, onClose, refreshKey }: InvContentProps) {
         ))}
       </div>
 
-      <div className="modal-body" style={{ minHeight: 200 }}>
+      <LoadingOverlay loading={loading} message="Loading..." className="wardrobe-view__body">
         {loading ? (
-          <p style={{ textAlign: 'center', color: '#aaa', paddingTop: 40 }}>Loading wardrobe…</p>
+          <div className="wardrobe-view__empty" aria-hidden="true" />
         ) : shown.length === 0 ? (
-          <p style={{ textAlign: 'center', color: '#666', paddingTop: 40 }}>
+          <p className="wardrobe-view__empty">
             {items.length === 0
-              ? 'No items yet. Upload your first piece!'
+              ? 'No items yet. Swipe left to add your first piece!'
               : `No ${filter} items in your wardrobe.`}
           </p>
         ) : (
@@ -319,7 +355,7 @@ function InventoryContent({ user, onClose, refreshKey }: InvContentProps) {
                       });
                     }}
                   />
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '4px' }}>
+                  <div className="inv-item__meta">
                     <select
                       className="inv-item__cat-select"
                       value={item.category}
@@ -340,6 +376,7 @@ function InventoryContent({ user, onClose, refreshKey }: InvContentProps) {
                       {CATS.filter(c => c !== 'All').map(c => <option key={c} value={c}>{c}</option>)}
                     </select>
                     <button
+                      type="button"
                       className="inv-item__delete"
                       onClick={() => {
                         if (window.confirm('Delete this item?')) {
@@ -356,12 +393,146 @@ function InventoryContent({ user, onClose, refreshKey }: InvContentProps) {
             ))}
           </div>
         )}
+      </LoadingOverlay>
+    </div>
+  );
+}
+
+// ── Outfit carousel (gesture-isolated from page swipe) ───────────────────────
+interface OutfitCarouselProps {
+  outfits: Outfit[];
+  selectedDay: string;
+  formality: Formality;
+  loading: boolean;
+}
+
+function OutfitCarousel({ outfits, selectedDay, formality, loading }: OutfitCarouselProps) {
+  const [index, setIndex] = useState(0);
+  const [dragX, setDragX] = useState(0);
+  const [dragging, setDragging] = useState(false);
+  const startX = useRef(0);
+  const startY = useRef(0);
+  const locked = useRef<'h' | 'v' | null>(null);
+  const pointerId = useRef<number | null>(null);
+
+  useEffect(() => {
+    setIndex(0);
+    setDragX(0);
+  }, [outfits]);
+
+  useEffect(() => {
+    if (index >= outfits.length && outfits.length > 0) {
+      setIndex(outfits.length - 1);
+    }
+  }, [index, outfits.length]);
+
+  const commitSwipe = (dx: number) => {
+    if (Math.abs(dx) < SWIPE_THRESHOLD_PX) {
+      setDragX(0);
+      return;
+    }
+    if (dx < 0 && index < outfits.length - 1) setIndex(i => i + 1);
+    else if (dx > 0 && index > 0) setIndex(i => i - 1);
+    setDragX(0);
+  };
+
+  const onPointerDown = (e: React.PointerEvent) => {
+    e.stopPropagation();
+    pointerId.current = e.pointerId;
+    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    startX.current = e.clientX;
+    startY.current = e.clientY;
+    locked.current = null;
+    setDragging(true);
+  };
+
+  const onPointerMove = (e: React.PointerEvent) => {
+    e.stopPropagation();
+    if (pointerId.current !== e.pointerId || !dragging) return;
+    const dx = e.clientX - startX.current;
+    const dy = e.clientY - startY.current;
+    if (!locked.current) {
+      if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
+      locked.current = Math.abs(dx) >= Math.abs(dy) ? 'h' : 'v';
+    }
+    if (locked.current === 'v') return;
+    e.preventDefault();
+    const atStart = index === 0 && dx > 0;
+    const atEnd = index >= outfits.length - 1 && dx < 0;
+    setDragX(atStart || atEnd ? dx * 0.25 : dx);
+  };
+
+  const onPointerUp = (e: React.PointerEvent) => {
+    e.stopPropagation();
+    if (pointerId.current !== e.pointerId) return;
+    pointerId.current = null;
+    setDragging(false);
+    if (locked.current === 'h') commitSwipe(e.clientX - startX.current);
+    else setDragX(0);
+    locked.current = null;
+  };
+
+  const orderedItems = (outfit: Outfit) =>
+    OUTFIT_ORDER
+      .map(part => ({ part, item: outfit[part] ?? null }))
+      .filter((row): row is { part: (typeof OUTFIT_ORDER)[number]; item: OutfitItem } => row.item != null);
+
+  return (
+    <LoadingOverlay loading={loading} message="Thinking..." className="outfit-carousel-wrap">
+      <div className="outfit-carousel-header">
+        <h3>
+          Outfits for {selectedDay}
+          {formality === 'formal' ? ' · Formal' : ''}
+        </h3>
+        {outfits.length > 0 && (
+          <span className="outfit-carousel-count">{index + 1} / {outfits.length}</span>
+        )}
       </div>
 
-      <div className="modal-footer">
-        <button className="modal-close-button" onClick={onClose}>Close</button>
-      </div>
-    </div>
+      {!loading && outfits.length === 0 ? (
+        <div className="no-outfits">
+          <p>Not enough items to suggest an outfit for this weather.</p>
+          <p className="no-outfits__hint">Add more Tops, Bottoms, and Shoes — swipe left to upload.</p>
+        </div>
+      ) : (
+        <div
+          className="outfit-carousel"
+          onPointerDown={onPointerDown}
+          onPointerMove={onPointerMove}
+          onPointerUp={onPointerUp}
+          onPointerCancel={onPointerUp}
+        >
+          <div
+            className={`outfit-carousel__track${dragging ? ' outfit-carousel__track--dragging' : ''}`}
+            style={{
+              transform: `translateX(calc(-${index * 100}% + ${dragX}px))`,
+            }}
+          >
+            {outfits.map((outfit, idx) => {
+              const rows = orderedItems(outfit);
+              return (
+                <div key={idx} className="outfit-carousel__slide">
+                  <div className={`outfit-stack outfit-stack--${rows.length}`}>
+                    {rows.map(({ part, item }) => (
+                      <div key={part} className="outfit-stack__row">
+                        <img src={apiPath(`/api/image/${item.id}`)} alt={item.label} />
+                        <div className="outfit-stack__meta">
+                          <span className="outfit-stack__part">{OUTFIT_PART_LABEL[part]}</span>
+                          <span className="outfit-stack__label">
+                            {item.label}
+                            {item.color ? ` · ${item.color}` : ''}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </LoadingOverlay>
   );
 }
 
@@ -393,7 +564,7 @@ export function Login({ user, setUser }: { user: any, setUser: any }) {
   const [classid,    setClassid]    = React.useState<any>('');
   const [prediction, setPrediction] = React.useState('');
   const [outfits,    setOutfits]    = React.useState<Outfit[]>([]);
-  const [imageId,    setImageId]    = React.useState<number | null>(null);
+  const [outfitsLoading, setOutfitsLoading] = React.useState(false);
   const [imageUrl,   setImageUrl]   = React.useState('');
   const [outfitTarget, setOutfitTarget] = React.useState(50);
   const [selectedDay,  setSelectedDay]  = React.useState('Today');
@@ -408,15 +579,17 @@ export function Login({ user, setUser }: { user: any, setUser: any }) {
   const [backendStatus, setBackendStatus] = React.useState<'starting' | 'ready' | 'error'>('starting');
   const [busy, setBusy] = React.useState(false);
   const [authError, setAuthError] = React.useState('');
+  const [viewIndex, setViewIndex] = React.useState<SwipeView>(1);
+  const [pageDragX, setPageDragX] = React.useState(0);
+  const [pageDragging, setPageDragging] = React.useState(false);
 
-  const inventoryRef = useRef<HTMLDialogElement | null>(null);
   const outfitRequestRef = useRef(0);
   const wakeAbortRef = useRef<AbortController | null>(null);
-
-  const openWardrobe = () => {
-    setInventoryRefresh(r => r + 1);
-    inventoryRef.current?.showModal();
-  };
+  const pageStartX = useRef(0);
+  const pageStartY = useRef(0);
+  const pageLocked = useRef<'h' | 'v' | null>(null);
+  const pagePointerId = useRef<number | null>(null);
+  const shellWidthRef = useRef(1);
 
   const wakeBackend = React.useCallback(async () => {
     if (import.meta.env.PROD && !API_BASE) {
@@ -452,17 +625,24 @@ export function Login({ user, setUser }: { user: any, setUser: any }) {
     if (!user) {
       setShowWelcome(false);
       setBackendStatus('starting');
+      setViewIndex(1);
       wakeAbortRef.current?.abort();
       return;
     }
+    setViewIndex(1);
+    setInventoryRefresh(r => r + 1);
     wakeBackend();
     return () => wakeAbortRef.current?.abort();
   }, [user, wakeBackend]);
 
   useEffect(() => {
-    if (!user?.sub || backendStatus !== 'ready') return;
+    if (!user?.sub || backendStatus !== 'ready') {
+      setOutfitsLoading(false);
+      return;
+    }
 
     const requestId = ++outfitRequestRef.current;
+    setOutfitsLoading(true);
     const timer = window.setTimeout(() => {
       const params = new URLSearchParams({
         user_id: user.sub,
@@ -480,12 +660,14 @@ export function Login({ user, setUser }: { user: any, setUser: any }) {
         .then(d => {
           if (requestId === outfitRequestRef.current) {
             setOutfits(Array.isArray(d) ? d : []);
+            setOutfitsLoading(false);
           }
         })
         .catch(err => {
           console.error(err);
           if (requestId === outfitRequestRef.current) {
             setOutfits([]);
+            setOutfitsLoading(false);
           }
         });
     }, 300);
@@ -581,7 +763,6 @@ export function Login({ user, setUser }: { user: any, setUser: any }) {
         if (!uploadedId || Number.isNaN(uploadedId)) {
           throw new Error('Upload succeeded but no image_id returned');
         }
-        setImageId(uploadedId);
         setImageUrl(apiPath(`/api/image/${uploadedId}`));
         setPrediction('Saved to wardrobe. Starting AI…');
         setOutfitRefresh(x => x + 1);
@@ -605,120 +786,176 @@ export function Login({ user, setUser }: { user: any, setUser: any }) {
             : 'Backend offline — tap retry')
         : 'Starting backend…';
 
+  const commitPageSwipe = (dx: number) => {
+    if (Math.abs(dx) < SWIPE_THRESHOLD_PX) {
+      setPageDragX(0);
+      return;
+    }
+    if (dx < 0 && viewIndex < 2) setViewIndex(v => (v + 1) as SwipeView);
+    else if (dx > 0 && viewIndex > 0) setViewIndex(v => (v - 1) as SwipeView);
+    setPageDragX(0);
+  };
+
+  const onPagePointerDown = (e: React.PointerEvent) => {
+    if (e.button !== 0 && e.pointerType === 'mouse') return;
+    pagePointerId.current = e.pointerId;
+    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    pageStartX.current = e.clientX;
+    pageStartY.current = e.clientY;
+    pageLocked.current = null;
+    shellWidthRef.current = (e.currentTarget as HTMLElement).clientWidth || 1;
+    setPageDragging(true);
+  };
+
+  const onPagePointerMove = (e: React.PointerEvent) => {
+    if (pagePointerId.current !== e.pointerId || !pageDragging) return;
+    const dx = e.clientX - pageStartX.current;
+    const dy = e.clientY - pageStartY.current;
+    if (!pageLocked.current) {
+      if (Math.abs(dx) < 10 && Math.abs(dy) < 10) return;
+      pageLocked.current = Math.abs(dx) >= Math.abs(dy) ? 'h' : 'v';
+    }
+    if (pageLocked.current === 'v') return;
+    e.preventDefault();
+    const atLeft = viewIndex === 0 && dx > 0;
+    const atRight = viewIndex === 2 && dx < 0;
+    setPageDragX(atLeft || atRight ? dx * 0.2 : dx);
+  };
+
+  const onPagePointerUp = (e: React.PointerEvent) => {
+    if (pagePointerId.current !== e.pointerId) return;
+    pagePointerId.current = null;
+    setPageDragging(false);
+    if (pageLocked.current === 'h') commitPageSwipe(e.clientX - pageStartX.current);
+    else setPageDragX(0);
+    pageLocked.current = null;
+  };
+
+  const logout = () => {
+    googleLogout();
+    setUser(null);
+    setClassid('');
+  };
+
+  const trackPct = -viewIndex * 100;
+  const dragPct = (pageDragX / shellWidthRef.current) * 100;
+
   return (
     <div className={classid}>
       {user ? (
         <>
-          {/* ── Inventory Modal ── */}
-          <dialog ref={inventoryRef} onClick={() => inventoryRef.current?.close()}>
-            <InventoryContent
-              user={user}
-              refreshKey={inventoryRefresh}
-              onClose={() => inventoryRef.current?.close()}
-            />
-          </dialog>
-
           {showWelcome && (
             <WelcomeToast name={user.name} onDone={() => setShowWelcome(false)} />
           )}
 
-          <div className="dashboard-layout">
-            <div className="dashboard-sidebar">
-              <WeatherWidget
-                onDaySelect={handleDaySelect}
-                formality={formality}
-                colorPreset={colorPreset}
-                onFormalityChange={handleFormalityChange}
-                onColorPresetChange={handleColorPresetChange}
-              />
+          <div
+            className="swipe-shell"
+            onPointerDown={onPagePointerDown}
+            onPointerMove={onPagePointerMove}
+            onPointerUp={onPagePointerUp}
+            onPointerCancel={onPagePointerUp}
+          >
+            <div
+              className={`swipe-track${pageDragging ? ' swipe-track--dragging' : ''}`}
+              style={{ transform: `translateX(calc(${trackPct}% + ${dragPct}%))` }}
+            >
+              {/* ── Left: Wardrobe ── */}
+              <section className="swipe-pane swipe-pane--wardrobe" aria-label="Wardrobe">
+                <InventoryContent user={user} refreshKey={inventoryRefresh} />
+              </section>
 
-              <div className="prediction-box">
-                <p className={`backend-status backend-status--${backendStatus}`}>
-                  {statusLabel}
-                  {backendStatus === 'error' && (
-                    <>
-                      {' '}
-                      <button type="button" className="backend-status__retry" onClick={() => wakeBackend()}>
-                        Retry
-                      </button>
-                    </>
-                  )}
-                </p>
-                {imageUrl ? (
-                  <>
-                    <img src={imageUrl} alt="Last Uploaded" className="last-uploaded-img" />
-                    <p>AI Classifier: <strong>{prediction || 'Processing...'}</strong></p>
-                  </>
-                ) : (
-                  <p style={{color: '#666', fontSize: '14px'}}>
-                    {canUpload
-                      ? 'Upload an image to see AI classification'
-                      : 'Waiting for backend before uploads are enabled'}
-                  </p>
-                )}
-              </div>
+              {/* ── Middle: Landing ── */}
+              <section className="swipe-pane swipe-pane--landing" aria-label="Home">
+                <WeatherWidget
+                  onDaySelect={handleDaySelect}
+                  formality={formality}
+                  colorPreset={colorPreset}
+                  onFormalityChange={handleFormalityChange}
+                  onColorPresetChange={handleColorPresetChange}
+                />
+                <OutfitCarousel
+                  outfits={outfits}
+                  selectedDay={selectedDay}
+                  formality={formality}
+                  loading={outfitsLoading}
+                />
+              </section>
 
-              <div className="dashboard-controls">
-                <button
-                  className="b1-compact"
-                  disabled={!canUpload}
-                  title={!canUpload ? statusLabel : 'Add clothing image'}
-                  onClick={() => document.getElementById('fileInput')?.click()}
-                >
-                  Add Image
-                </button>
-                <button className="b1-compact" onClick={openWardrobe}>
-                  Wardrobe
-                </button>
-                <button className="b1-compact" onClick={() => { googleLogout(); setUser(null); setClassid(''); }}>
-                  Logout
-                </button>
-              </div>
-            </div>
+              {/* ── Right: Add / AI Classification ── */}
+              <section className="swipe-pane swipe-pane--add" aria-label="Add items">
+                <div className="add-view">
+                  <div className="add-view__header">
+                    <h2>Add item</h2>
+                    <p className={`backend-status backend-status--${backendStatus}`}>
+                      {statusLabel}
+                      {backendStatus === 'error' && (
+                        <>
+                          {' '}
+                          <button type="button" className="backend-status__retry" onClick={() => wakeBackend()}>
+                            Retry
+                          </button>
+                        </>
+                      )}
+                    </p>
+                  </div>
 
-            <div className="dashboard-main">
-              <div className="outfits-container">
-                <h3>Outfit Suggestions for {selectedDay}{formality === 'formal' ? ' (Formal)' : ''}</h3>
-                {outfits.length > 0 ? (
-                  <div className="outfits-list">
-                    {outfits.map((off, idx) => (
-                      <div key={idx} className="outfit-card">
-                        <h4>Option {idx + 1}</h4>
-                        <div className="outfit-grid-compact">
-                          {Object.entries(off).map(([part, item]) => item && (
-                            <div key={part} className="outfit-item-compact">
-                              <img src={apiPath(`/api/image/${item.id}`)} alt={item.label} />
-                              <span className="outfit-item-label-compact">
-                                {item.label}
-                                {item.color && <span className="outfit-item-color"> · {item.color}</span>}
-                              </span>
-                            </div>
-                          ))}
-                        </div>
+                  <LoadingOverlay loading={busy} message="Thinking..." className="add-view__stage">
+                    {imageUrl ? (
+                      <div className="add-view__result">
+                        <img src={imageUrl} alt="Uploaded clothing" className="add-view__img" />
+                        <p className="add-view__prediction">
+                          AI Classifier: <strong>{prediction || 'Processing...'}</strong>
+                        </p>
                       </div>
-                    ))}
+                    ) : (
+                      <div className="add-view__placeholder">
+                        <p>
+                          {canUpload
+                            ? 'Upload a clothing photo for AI classification'
+                            : 'Waiting for backend before uploads are enabled'}
+                        </p>
+                      </div>
+                    )}
+                  </LoadingOverlay>
+
+                  <div className="add-view__actions" onPointerDown={e => e.stopPropagation()}>
+                    <button
+                      type="button"
+                      className="b1-compact"
+                      disabled={!canUpload}
+                      title={!canUpload ? statusLabel : 'Add clothing image'}
+                      onClick={() => document.getElementById('fileInput')?.click()}
+                    >
+                      Add Image
+                    </button>
                   </div>
-                ) : (
-                  <div className="no-outfits">
-                    <p>Not enough items in your wardrobe to suggest an outfit for this weather.</p>
-                    <p style={{fontSize: '13px', color: '#888'}}>Try adding more Tops, Bottoms, and Shoes!</p>
-                  </div>
-                )}
-              </div>
+                </div>
+              </section>
             </div>
+
+            <nav
+              className="swipe-chrome"
+              aria-label="Views"
+              onPointerDown={e => e.stopPropagation()}
+            >
+              <div className="swipe-dots">
+                {VIEW_LABELS.map((label, i) => (
+                  <button
+                    key={label}
+                    type="button"
+                    className={`swipe-dot${viewIndex === i ? ' swipe-dot--active' : ''}`}
+                    aria-label={label}
+                    aria-current={viewIndex === i ? 'page' : undefined}
+                    onClick={() => setViewIndex(i as SwipeView)}
+                  />
+                ))}
+              </div>
+              <button type="button" className="swipe-logout" onClick={logout}>
+                Logout
+              </button>
+            </nav>
           </div>
 
-          <div style={{ display: 'none', justifyContent: 'center', flexWrap: 'wrap' }}>
-            <button className="b1" onClick={() => document.getElementById('fileInput')?.click()}>
-              <h4>Add Image</h4>
-            </button>
-            <button className="b1" onClick={openWardrobe}>
-              <h4>View Inventory</h4>
-            </button>
-            <button className="b1" onClick={() => { googleLogout(); setUser(null); setClassid(''); }}>
-              <h4>Logout</h4>
-            </button>
-          </div>
           <input id="fileInput" type="file" accept="image/*" onChange={handleFileChange} style={{ display: 'none' }} />
         </>
       ) : (

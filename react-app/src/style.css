@@ -256,7 +256,474 @@ button:hover{
   flex-direction: column;
 }
 
-/* ── Dashboard Layout ── */
+/* ── Loading overlay ────────────────────────────────────────────────────────── */
+.loading-overlay-host {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  flex: 1;
+  overflow: hidden;
+}
+
+.loading-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  background: rgba(0, 0, 0, 0.62);
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.loading-overlay__spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid rgba(255, 255, 255, 0.2);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: loading-spin 0.75s linear infinite;
+}
+
+.loading-overlay__text {
+  margin: 0;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+@keyframes loading-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Swipeable three-view shell ─────────────────────────────────────────────── */
+.swipe-shell {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  overflow: hidden;
+  touch-action: none;
+  display: flex;
+  flex-direction: column;
+}
+
+.swipe-track {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+}
+
+.swipe-track--dragging {
+  transition: none;
+}
+
+.swipe-pane {
+  flex: 0 0 100%;
+  width: 100%;
+  height: 100%;
+  min-width: 100%;
+  box-sizing: border-box;
+  padding: 8px 14px 44px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.swipe-pane--landing {
+  gap: 8px;
+}
+
+.swipe-chrome {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 6px 12px calc(6px + env(safe-area-inset-bottom, 0px));
+  pointer-events: none;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.55), transparent);
+}
+
+.swipe-dots {
+  display: flex;
+  gap: 8px;
+  pointer-events: auto;
+}
+
+.swipe-dot {
+  width: 8px !important;
+  height: 8px !important;
+  min-height: 8px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border-radius: 50% !important;
+  background: rgba(255, 255, 255, 0.28) !important;
+  border: none !important;
+  cursor: pointer;
+}
+
+.swipe-dot--active {
+  background: #fff !important;
+  transform: scale(1.15);
+}
+
+.swipe-logout {
+  pointer-events: auto;
+  margin: 0 !important;
+  width: auto !important;
+  height: 28px !important;
+  min-height: 28px !important;
+  padding: 0 12px !important;
+  border-radius: 8px !important;
+  background: rgba(255, 255, 255, 0.12) !important;
+  color: #eee !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+}
+
+.swipe-logout:hover {
+  background: rgba(255, 255, 255, 0.2) !important;
+  color: #fff !important;
+}
+
+/* ── Wardrobe full view ─────────────────────────────────────────────────────── */
+.wardrobe-view {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.55);
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 12px 14px;
+  overflow: hidden;
+  color: #fff;
+}
+
+.wardrobe-view__header {
+  flex-shrink: 0;
+  text-align: center;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.wardrobe-view__header h2 {
+  margin: 0;
+  font-size: clamp(1rem, 2.5vw, 1.35rem);
+  color: #fff;
+  letter-spacing: 0.5px;
+}
+
+.wardrobe-view__filters {
+  display: flex;
+  gap: 6px;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  padding: 8px 0;
+  flex-shrink: 0;
+}
+
+.wardrobe-view__body {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.wardrobe-view__empty {
+  margin: 0;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: #777;
+  font-size: 14px;
+  padding: 16px;
+}
+
+.wardrobe-view .inv-grid {
+  height: 100%;
+  overflow: hidden;
+  align-content: start;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 8px;
+}
+
+.wardrobe-view .inv-item__img-wrap {
+  height: 72px;
+}
+
+.wardrobe-view .inv-item__info {
+  padding: 4px 6px 6px;
+}
+
+.wardrobe-view .inv-item__label-input {
+  font-size: 11px;
+  margin-bottom: 2px;
+}
+
+.inv-item__meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 2px;
+  gap: 4px;
+}
+
+/* ── Outfit carousel ────────────────────────────────────────────────────────── */
+.outfit-carousel-wrap {
+  flex: 1;
+  min-height: 0;
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 10px 12px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.outfit-carousel-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  flex-shrink: 0;
+  margin-bottom: 6px;
+}
+
+.outfit-carousel-header h3 {
+  margin: 0;
+  color: #fff;
+  font-size: clamp(0.9rem, 2vw, 1.05rem);
+}
+
+.outfit-carousel-count {
+  color: #888;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+
+.outfit-carousel {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  touch-action: none;
+  cursor: grab;
+  user-select: none;
+}
+
+.outfit-carousel:active {
+  cursor: grabbing;
+}
+
+.outfit-carousel__track {
+  display: flex;
+  height: 100%;
+  width: 100%;
+  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+}
+
+.outfit-carousel__track--dragging {
+  transition: none;
+}
+
+.outfit-carousel__slide {
+  flex: 0 0 100%;
+  width: 100%;
+  height: 100%;
+  min-width: 100%;
+  box-sizing: border-box;
+  padding: 0 4px;
+  overflow: hidden;
+}
+
+.outfit-stack {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  justify-content: center;
+}
+
+.outfit-stack__row {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 4px 10px;
+  overflow: hidden;
+}
+
+.outfit-stack__row img {
+  height: 100%;
+  width: auto;
+  max-width: 28%;
+  object-fit: contain;
+  object-position: center;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+
+.outfit-stack__meta {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.outfit-stack__part {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #999;
+  font-weight: 700;
+}
+
+.outfit-stack__label {
+  font-size: clamp(12px, 2vw, 14px);
+  color: #eee;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.no-outfits {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 16px;
+  color: #aaa;
+  min-height: 0;
+}
+
+.no-outfits__hint {
+  font-size: 13px;
+  color: #888;
+  margin: 8px 0 0;
+}
+
+/* ── Add / classify view ────────────────────────────────────────────────────── */
+.add-view {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.55);
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 12px 14px;
+  overflow: hidden;
+  color: #fff;
+  gap: 10px;
+}
+
+.add-view__header {
+  flex-shrink: 0;
+  text-align: center;
+}
+
+.add-view__header h2 {
+  margin: 0 0 4px;
+  font-size: clamp(1rem, 2.5vw, 1.35rem);
+  color: #fff;
+}
+
+.add-view__header .backend-status {
+  margin: 0;
+}
+
+.add-view__stage {
+  flex: 1;
+  min-height: 0;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  overflow: hidden;
+}
+
+.add-view__result,
+.add-view__placeholder {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 12px;
+  gap: 10px;
+  box-sizing: border-box;
+}
+
+.add-view__placeholder p {
+  margin: 0;
+  color: #777;
+  font-size: 14px;
+  max-width: 280px;
+}
+
+.add-view__img {
+  max-height: min(42vh, 280px);
+  max-width: 100%;
+  width: auto;
+  object-fit: contain;
+  border-radius: 10px;
+}
+
+.add-view__prediction {
+  margin: 0;
+  font-size: 14px;
+  color: #ddd;
+}
+
+.add-view__actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.add-view__actions .b1-compact {
+  flex: 1;
+}
+
+.b1-compact--ghost {
+  background: rgba(255, 255, 255, 0.12) !important;
+  color: #eee !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+}
+
+.b1-compact--ghost:hover {
+  background: rgba(255, 255, 255, 0.2) !important;
+}
+
+/* ── Legacy dashboard bits (unused by swipe shell) ── */
 .dashboard-layout {
   display: flex;
   flex: 1;
@@ -276,7 +743,7 @@ button:hover{
   gap: 15px;
   row-gap: 5px;
   min-height: 0;
-  overflow-y: auto;
+  overflow: hidden;
 }
 
 .dashboard-controls {
@@ -295,7 +762,7 @@ button:hover{
   border-radius: 14px;
   padding: 20px;
   border: 1px solid rgba(255, 255, 255, 0.08);
-  overflow-y: auto;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   min-height: 0;
@@ -451,9 +918,9 @@ button:hover{
   justify-content: center;
   align-items: center;
   text-align: center;
-  padding: 40px 24px;
+  padding: 16px;
   color: #aaa;
-  min-height: 200px;
+  min-height: 0;
 }
 
 .inv-item__cat-select {
@@ -653,6 +1120,86 @@ dialog{
 }
 
 /* ── Weather Widget ─────────────────────────────────────────────────────────── */
+.app-shell--dashboard .weather-widget {
+  flex-shrink: 0;
+}
+
+.app-shell--dashboard .weather-strip {
+  gap: 4px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+}
+
+.app-shell--dashboard .weather-day {
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 6px 4px;
+}
+
+.app-shell--dashboard .weather-day__icon {
+  font-size: 18px;
+  margin: 2px 0;
+}
+
+.app-shell--dashboard .weather-day__desc {
+  display: none;
+}
+
+.app-shell--dashboard .weather-day__max {
+  font-size: 13px;
+}
+
+.app-shell--dashboard .weather-day__min {
+  font-size: 10px;
+}
+
+.app-shell--dashboard .day-prefs {
+  margin-top: 8px;
+  padding-top: 8px;
+  gap: 8px;
+  flex-direction: row;
+  align-items: flex-end;
+}
+
+.app-shell--dashboard .day-prefs__group {
+  flex: 1;
+  min-width: 0;
+}
+
+.app-shell--dashboard .day-prefs__btn {
+  height: 30px !important;
+  min-height: 30px !important;
+  font-size: 12px !important;
+}
+
+.app-shell--dashboard .day-prefs__select {
+  height: 30px !important;
+  font-size: 12px !important;
+}
+
+.app-shell--dashboard .weather-day--target-label {
+  margin: 6px 0 0;
+  font-size: 11px;
+}
+
+.app-shell--dashboard .nav {
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.app-shell--dashboard .nav__logo {
+  height: 56px;
+  width: 72px;
+}
+
+.app-shell--dashboard .nav__brand {
+  font-size: clamp(1rem, 3vw, 1.5rem);
+}
+
+.app-shell--dashboard .app-footer {
+  display: none;
+}
+
 .weather-strip {
   display: flex;
   gap: 7px;
@@ -1284,14 +1831,44 @@ body:has(.app-shell:not(.app-shell--dashboard)) {
     -webkit-overflow-scrolling: touch;
   }
 
+  html:has(.app-shell--dashboard),
+  body:has(.app-shell--dashboard) {
+    overflow: hidden;
+    height: 100%;
+    max-height: 100dvh;
+  }
+
   #root {
     height: auto;
     min-height: 100vh;
   }
 
+  #root:has(.app-shell--dashboard) {
+    height: 100%;
+    max-height: 100dvh;
+    overflow: hidden;
+  }
+
+  .app-shell--dashboard {
+    height: 100dvh;
+    max-height: 100dvh;
+    min-height: 0;
+    overflow: hidden;
+  }
+
   .nav {
     padding: 8px 12px 8px 6px;
     gap: 10px;
+  }
+
+  .app-shell--dashboard .nav {
+    padding: 2px 8px 0;
+  }
+
+  .app-shell--dashboard .nav__logo {
+    height: 44px;
+    width: 56px;
+    margin: 0 -8px;
   }
 
   .nav__logo {
@@ -1389,80 +1966,49 @@ body:has(.app-shell:not(.app-shell--dashboard)) {
   }
 
   .b2 {
-    display: block;
-    width: 100%;
-  }
-
-  .dashboard-layout {
+    display: flex;
     flex-direction: column;
     flex: 1;
-    padding: 8px 12px 12px;
-    gap: 12px;
-    overflow-y: auto;
-    max-height: none;
-    margin-bottom: 0;
-  }
-
-  .dashboard-sidebar {
-    flex: none;
+    min-height: 0;
     width: 100%;
-    display: contents;
+    overflow: hidden;
   }
 
-  .weather-widget {
-    order: 1;
-    padding: 12px 14px !important;
+  .swipe-pane {
+    padding: 6px 10px 42px;
   }
 
-  .dashboard-main {
-    order: 2;
-    padding: 16px;
-    min-height: 200px;
+  .app-shell--dashboard .day-prefs {
+    flex-direction: column;
+    align-items: stretch;
   }
 
-  .prediction-box {
-    order: 3;
-    padding: 12px;
+  .app-shell--dashboard .weather-day {
+    flex: 0 0 auto;
+    min-width: 48px;
   }
 
-  .last-uploaded-img {
-    max-height: 100px;
+  .wardrobe-view,
+  .add-view {
+    padding: 10px;
   }
 
-  .dashboard-controls {
-    order: 4;
-    position: sticky;
-    bottom: 0;
-    flex-direction: row;
-    flex-wrap: nowrap;
+  .wardrobe-view .inv-grid {
+    grid-template-columns: repeat(auto-fill, minmax(88px, 1fr));
+    gap: 6px;
+  }
+
+  .wardrobe-view .inv-item__img-wrap {
+    height: 60px;
+  }
+
+  .outfit-stack__row {
     gap: 8px;
-    padding: 10px 12px;
-    padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
-    background: rgba(0, 0, 0, 0.92);
-    border-top: 1px solid rgba(255, 255, 255, 0.12);
-    z-index: 100;
-    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.4);
+    padding: 3px 8px;
   }
 
-  .dashboard-controls .b1-compact {
-    flex: 1;
-    min-width: 0;
-    min-height: 44px !important;
-    font-size: 13px !important;
-  }
-
-  .outfits-container h3 {
-    font-size: 16px;
-    margin-bottom: 14px;
-  }
-
-  .outfit-card {
-    padding: 12px;
-  }
-
-  .outfit-grid-compact {
-    gap: 10px;
-    -webkit-overflow-scrolling: touch;
+  .add-view__img {
+    max-height: min(36vh, 220px);
   }
 
   .outfit-item-compact {
@@ -1473,22 +2019,9 @@ body:has(.app-shell:not(.app-shell--dashboard)) {
     height: 68px;
   }
 
-  .weather-day {
-    min-width: 72px;
-    padding: 10px 8px;
-  }
-
-  .weather-day__icon {
-    font-size: 20px;
-  }
-
   .weather-day--target-label {
     font-size: 11px;
     padding: 0 4px;
-  }
-
-  .no-outfits {
-    padding: 24px 16px;
   }
 
   dialog {
@@ -1548,29 +2081,26 @@ body:has(.app-shell:not(.app-shell--dashboard)) {
     margin: 0 -8px;
   }
 
+  .app-shell--dashboard .nav__logo {
+    height: 40px;
+    width: 50px;
+  }
+
   .cardFeature {
     min-height: 24vh;
     padding: 20px 12px;
   }
 
-  .dashboard-layout {
-    padding: 6px 10px 12px;
+  .swipe-pane {
+    padding: 4px 8px 40px;
   }
 
-  .dashboard-controls {
-    padding: 8px 0;
-    padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px));
-    background: transparent;
-    border-top: none;
-    box-shadow: none;
+  .inv-filter {
+    padding: 4px 10px !important;
+    font-size: 11px !important;
   }
 
-  .dashboard-controls .b1-compact {
-    font-size: 12px !important;
-    padding: 0 6px !important;
-  }
-
-  .inv-grid {
-    grid-template-columns: repeat(2, 1fr);
+  .wardrobe-view .inv-grid {
+    grid-template-columns: repeat(3, 1fr);
   }
 }

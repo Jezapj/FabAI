@@ -231,7 +231,7 @@ function DayControls({
 }: DayControlsProps) {
   return (
     <div className="day-prefs day-prefs--column" onPointerDown={e => e.stopPropagation()}>
-      <div className="day-prefs__group">
+      <div className="day-prefs__group day-prefs__group--style">
         <span className="day-prefs__label">Style</span>
         <div className="day-prefs__toggle">
           <button
@@ -250,7 +250,7 @@ function DayControls({
           </button>
         </div>
       </div>
-      <div className="day-prefs__group">
+      <div className="day-prefs__group day-prefs__group--colour">
         <label className="day-prefs__label" htmlFor="color-preset">Colour palette</label>
         <select
           id="color-preset"

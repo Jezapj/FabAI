@@ -98,22 +98,12 @@ function tempToTarget(maxTemp: number): number {
 
 
 
-// ── Weather Widget ────────────────────────────────────────────────────────────
+// ── Weather Widget (forecast only — prefs live in landing left column) ────────
 interface WeatherWidgetProps {
   onDaySelect?: (day: WeatherDay, label: string) => void;
-  formality: Formality;
-  colorPreset: string;
-  onFormalityChange: (value: Formality) => void;
-  onColorPresetChange: (value: string) => void;
 }
 
-function WeatherWidget({
-  onDaySelect,
-  formality,
-  colorPreset,
-  onFormalityChange,
-  onColorPresetChange,
-}: WeatherWidgetProps) {
+function WeatherWidget({ onDaySelect }: WeatherWidgetProps) {
   const [forecast, setForecast] = useState<WeatherDay[]>([]);
   const [city, setCity]         = useState('');
   const [status, setStatus]     = useState<'loading' | 'ok' | 'error'>('loading');
@@ -221,65 +211,161 @@ function WeatherWidget({
           );
         })}
       </div>
-      {forecast.length > 0 && (
-        <>
-          <div className="day-prefs" onPointerDown={e => e.stopPropagation()}>
-            <div className="day-prefs__group">
-              <span className="day-prefs__label">Style</span>
-              <div className="day-prefs__toggle">
-                <button
-                  type="button"
-                  className={`day-prefs__btn${formality === 'casual' ? ' day-prefs__btn--active' : ''}`}
-                  onClick={() => onFormalityChange('casual')}
-                >
-                  Casual
-                </button>
-                <button
-                  type="button"
-                  className={`day-prefs__btn${formality === 'formal' ? ' day-prefs__btn--active' : ''}`}
-                  onClick={() => onFormalityChange('formal')}
-                >
-                  Formal
-                </button>
-              </div>
-            </div>
-            <div className="day-prefs__group">
-              <label className="day-prefs__label" htmlFor="color-preset">Colour palette</label>
-              <select
-                id="color-preset"
-                className="day-prefs__select"
-                value={colorPreset}
-                onChange={e => onColorPresetChange(e.target.value)}
-              >
-                {COLOR_PRESETS.map(p => (
-                  <option key={p.id} value={p.id}>{p.label}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-          <p className="weather-day--target-label">
-            🧥 Suggestions for <strong style={{ color: '#e2e8f0' }}>{dayLabel(forecast[selectedIdx].date, selectedIdx)}</strong>
-            {' · '}{forecast[selectedIdx].maxTemp}°C
-            {' · '}warmth {tempToTarget(forecast[selectedIdx].maxTemp)}/100
-            {isRainy(forecast[selectedIdx].weatherCode) && ' · 🌧️ rain-aware'}
-            {formality === 'formal' && ' · 👔 formal'}
-            {colorPreset !== 'any' && ` · ${COLOR_PRESETS.find(p => p.id === colorPreset)?.label.toLowerCase()}`}
-          </p>
-        </>
-      )}
     </div>
   );
 }
 
-// ── Inventory Modal ───────────────────────────────────────────────────────────
-const CATS = ['All', 'Top', 'Bottom', 'Shoes', 'Optional', 'Head', 'One piece'];
+// ── Landing left-column: style / colour / stats ───────────────────────────────
+interface DayControlsProps {
+  formality: Formality;
+  colorPreset: string;
+  onFormalityChange: (value: Formality) => void;
+  onColorPresetChange: (value: string) => void;
+}
+
+function DayControls({
+  formality,
+  colorPreset,
+  onFormalityChange,
+  onColorPresetChange,
+}: DayControlsProps) {
+  return (
+    <div className="day-prefs day-prefs--column" onPointerDown={e => e.stopPropagation()}>
+      <div className="day-prefs__group">
+        <span className="day-prefs__label">Style</span>
+        <div className="day-prefs__toggle">
+          <button
+            type="button"
+            className={`day-prefs__btn${formality === 'casual' ? ' day-prefs__btn--active' : ''}`}
+            onClick={() => onFormalityChange('casual')}
+          >
+            Casual
+          </button>
+          <button
+            type="button"
+            className={`day-prefs__btn${formality === 'formal' ? ' day-prefs__btn--active' : ''}`}
+            onClick={() => onFormalityChange('formal')}
+          >
+            Formal
+          </button>
+        </div>
+      </div>
+      <div className="day-prefs__group">
+        <label className="day-prefs__label" htmlFor="color-preset">Colour palette</label>
+        <select
+          id="color-preset"
+          className="day-prefs__select"
+          value={colorPreset}
+          onChange={e => onColorPresetChange(e.target.value)}
+        >
+          {COLOR_PRESETS.map(p => (
+            <option key={p.id} value={p.id}>{p.label}</option>
+          ))}
+        </select>
+      </div>
+    </div>
+  );
+}
+
+interface DayStatsProps {
+  selectedDay: string;
+  maxTemp: number | null;
+  weatherCode: number;
+  formality: Formality;
+  colorPreset: string;
+  outfitTarget: number;
+}
+
+function DayStats({
+  selectedDay,
+  maxTemp,
+  weatherCode,
+  formality,
+  colorPreset,
+  outfitTarget,
+}: DayStatsProps) {
+  return (
+    <p className="weather-day--target-label day-stats">
+      🧥 Suggestions for <strong style={{ color: '#e2e8f0' }}>{selectedDay}</strong>
+      {maxTemp != null && <>{' · '}{maxTemp}°C</>}
+      {' · '}warmth {outfitTarget}/100
+      {isRainy(weatherCode) && ' · 🌧️ rain-aware'}
+      {formality === 'formal' && ' · 👔 formal'}
+      {colorPreset !== 'any' && ` · ${COLOR_PRESETS.find(p => p.id === colorPreset)?.label.toLowerCase()}`}
+    </p>
+  );
+}
+
+// ── Placeholder modals (Settings / Upgrade) ───────────────────────────────────
+function PlaceholderModal({
+  open,
+  title,
+  onClose,
+  children,
+}: {
+  open: boolean;
+  title: string;
+  onClose: () => void;
+  children: React.ReactNode;
+}) {
+  const ref = useRef<HTMLDialogElement | null>(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    if (open && !el.open) el.showModal();
+    if (!open && el.open) el.close();
+  }, [open]);
+
+  return (
+    <dialog
+      ref={ref}
+      className="app-modal"
+      onClose={onClose}
+      onClick={e => {
+        if (e.target === ref.current) onClose();
+      }}
+    >
+      <div className="app-modal__content" onClick={e => e.stopPropagation()}>
+        <div className="app-modal__header">
+          <h2>{title}</h2>
+          <button type="button" className="app-modal__close" onClick={onClose} aria-label="Close">
+            ×
+          </button>
+        </div>
+        <div className="app-modal__body">{children}</div>
+      </div>
+    </dialog>
+  );
+}
+
+// ── Inventory / Wardrobe ──────────────────────────────────────────────────────
+// UI categories: Hat · Top · Bottom · Shoes · Other (maps to backend categories)
+const FILTER_CATS = ['All', 'Hat', 'Top', 'Bottom', 'Shoes', 'Other'] as const;
+const EDIT_CATS = ['Hat', 'Top', 'Bottom', 'Shoes', 'Other'] as const;
+type UiCategory = (typeof EDIT_CATS)[number];
+
+const HAT_BACKEND = new Set(['Optional', 'Head', 'Hat']);
+const MAIN_BACKEND = new Set(['Top', 'Bottom', 'Shoes']);
+
+function toUiCategory(cat: string): UiCategory {
+  if (HAT_BACKEND.has(cat)) return 'Hat';
+  if (MAIN_BACKEND.has(cat)) return cat as UiCategory;
+  return 'Other';
+}
+
+function toApiCategory(ui: UiCategory): string {
+  if (ui === 'Hat') return 'Optional';
+  if (ui === 'Other') return 'One piece';
+  return ui;
+}
+
 const CAT_COLORS: Record<string, string> = {
-  'Top':       'rgba(80,150,255,.25)',
-  'Bottom':    'rgba(80,200,120,.25)',
-  'Shoes':     'rgba(255,180,60,.25)',
-  'Optional':  'rgba(180,100,255,.25)',
-  'Head':      'rgba(255,120,120,.25)',
-  'One piece': 'rgba(255,160,80,.25)',
+  Hat:     'rgba(255,120,120,.25)',
+  Top:     'rgba(80,150,255,.25)',
+  Bottom:  'rgba(80,200,120,.25)',
+  Shoes:   'rgba(255,180,60,.25)',
+  Other:   'rgba(180,100,255,.25)',
 };
 
 interface InvContentProps { user: any; refreshKey: number; }
@@ -287,7 +373,7 @@ interface InvContentProps { user: any; refreshKey: number; }
 function InventoryContent({ user, refreshKey }: InvContentProps) {
   const [items,   setItems]   = useState<InvItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter,  setFilter]  = useState('All');
+  const [filter,  setFilter]  = useState<string>('All');
 
   useEffect(() => {
     if (!user?.sub) { setLoading(false); return; }
@@ -298,7 +384,9 @@ function InventoryContent({ user, refreshKey }: InvContentProps) {
       .catch(() => setLoading(false));
   }, [user, refreshKey]);
 
-  const shown = filter === 'All' ? items : items.filter(x => x.category === filter);
+  const shown = filter === 'All'
+    ? items
+    : items.filter(x => toUiCategory(x.category) === filter);
 
   return (
     <div className="wardrobe-view">
@@ -307,7 +395,7 @@ function InventoryContent({ user, refreshKey }: InvContentProps) {
       </div>
 
       <div className="wardrobe-view__filters" onPointerDown={e => e.stopPropagation()}>
-        {CATS.map(c => (
+        {FILTER_CATS.map(c => (
           <button
             key={c}
             type="button"
@@ -330,7 +418,9 @@ function InventoryContent({ user, refreshKey }: InvContentProps) {
           </p>
         ) : (
           <div className="inv-grid">
-            {shown.map(item => (
+            {shown.map(item => {
+              const uiCat = toUiCategory(item.category);
+              return (
               <div key={item.id} className="inv-item">
                 <div className="inv-item__img-wrap">
                   <img
@@ -358,9 +448,10 @@ function InventoryContent({ user, refreshKey }: InvContentProps) {
                   <div className="inv-item__meta">
                     <select
                       className="inv-item__cat-select"
-                      value={item.category}
+                      value={uiCat}
                       onChange={(e) => {
-                        const newCat = e.target.value;
+                        const newUi = e.target.value as UiCategory;
+                        const newCat = toApiCategory(newUi);
                         fetch(apiPath(`/api/inventory/${item.id}`), {
                           method: 'PATCH',
                           headers: { 'Content-Type': 'application/json' },
@@ -371,9 +462,9 @@ function InventoryContent({ user, refreshKey }: InvContentProps) {
                             setItems(prev => prev.map(i => i.id === item.id ? { ...i, category: updated.category, value: updated.value } : i));
                           });
                       }}
-                      style={{ background: CAT_COLORS[item.category] ?? 'rgba(255,255,255,.1)' }}
+                      style={{ background: CAT_COLORS[uiCat] ?? 'rgba(255,255,255,.1)' }}
                     >
-                      {CATS.filter(c => c !== 'All').map(c => <option key={c} value={c}>{c}</option>)}
+                      {EDIT_CATS.map(c => <option key={c} value={c}>{c}</option>)}
                     </select>
                     <button
                       type="button"
@@ -390,7 +481,8 @@ function InventoryContent({ user, refreshKey }: InvContentProps) {
                   </div>
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </LoadingOverlay>
@@ -569,6 +661,7 @@ export function Login({ user, setUser }: { user: any, setUser: any }) {
   const [outfitTarget, setOutfitTarget] = React.useState(50);
   const [selectedDay,  setSelectedDay]  = React.useState('Today');
   const [selectedDate, setSelectedDate] = React.useState('');
+  const [selectedMaxTemp, setSelectedMaxTemp] = React.useState<number | null>(null);
   const [weatherCode,  setWeatherCode]  = React.useState(0);
   const [formality,    setFormality]    = React.useState<Formality>('casual');
   const [colorPreset,  setColorPreset]  = React.useState('any');
@@ -582,6 +675,8 @@ export function Login({ user, setUser }: { user: any, setUser: any }) {
   const [viewIndex, setViewIndex] = React.useState<SwipeView>(1);
   const [pageDragX, setPageDragX] = React.useState(0);
   const [pageDragging, setPageDragging] = React.useState(false);
+  const [settingsOpen, setSettingsOpen] = React.useState(false);
+  const [upgradeOpen, setUpgradeOpen] = React.useState(false);
 
   const outfitRequestRef = useRef(0);
   const wakeAbortRef = useRef<AbortController | null>(null);
@@ -687,6 +782,7 @@ export function Login({ user, setUser }: { user: any, setUser: any }) {
     setOutfitTarget(tempToTarget(day.maxTemp));
     setSelectedDay(label);
     setSelectedDate(day.date);
+    setSelectedMaxTemp(day.maxTemp);
     setWeatherCode(day.weatherCode);
     setFormality(prefs.formality);
     setColorPreset(prefs.colorPreset);
@@ -866,19 +962,52 @@ export function Login({ user, setUser }: { user: any, setUser: any }) {
 
               {/* ── Middle: Landing ── */}
               <section className="swipe-pane swipe-pane--landing" aria-label="Home">
-                <WeatherWidget
-                  onDaySelect={handleDaySelect}
-                  formality={formality}
-                  colorPreset={colorPreset}
-                  onFormalityChange={handleFormalityChange}
-                  onColorPresetChange={handleColorPresetChange}
-                />
-                <OutfitCarousel
-                  outfits={outfits}
-                  selectedDay={selectedDay}
-                  formality={formality}
-                  loading={outfitsLoading}
-                />
+                <div className="landing-home">
+                  <aside className="landing-home__left">
+                    <DayControls
+                      formality={formality}
+                      colorPreset={colorPreset}
+                      onFormalityChange={handleFormalityChange}
+                      onColorPresetChange={handleColorPresetChange}
+                    />
+                    <DayStats
+                      selectedDay={selectedDay}
+                      maxTemp={selectedMaxTemp}
+                      weatherCode={weatherCode}
+                      formality={formality}
+                      colorPreset={colorPreset}
+                      outfitTarget={outfitTarget}
+                    />
+                    <div
+                      className="landing-home__actions"
+                      onPointerDown={e => e.stopPropagation()}
+                    >
+                      <button
+                        type="button"
+                        className="b1-compact"
+                        onClick={() => setSettingsOpen(true)}
+                      >
+                        Settings
+                      </button>
+                      <button
+                        type="button"
+                        className="b1-compact b1-compact--pro"
+                        onClick={() => setUpgradeOpen(true)}
+                      >
+                        Upgrade to Pro
+                      </button>
+                    </div>
+                  </aside>
+                  <div className="landing-home__right">
+                    <WeatherWidget onDaySelect={handleDaySelect} />
+                    <OutfitCarousel
+                      outfits={outfits}
+                      selectedDay={selectedDay}
+                      formality={formality}
+                      loading={outfitsLoading}
+                    />
+                  </div>
+                </div>
               </section>
 
               {/* ── Right: Add / AI Classification ── */}
@@ -957,6 +1086,29 @@ export function Login({ user, setUser }: { user: any, setUser: any }) {
           </div>
 
           <input id="fileInput" type="file" accept="image/*" onChange={handleFileChange} style={{ display: 'none' }} />
+
+          <PlaceholderModal
+            open={settingsOpen}
+            title="Settings"
+            onClose={() => setSettingsOpen(false)}
+          >
+            <p className="app-modal__placeholder">
+              Settings will live here — account, preferences, and notifications coming soon.
+            </p>
+          </PlaceholderModal>
+
+          <PlaceholderModal
+            open={upgradeOpen}
+            title="Upgrade to Pro"
+            onClose={() => setUpgradeOpen(false)}
+          >
+            <p className="app-modal__placeholder">
+              Unlock Pro features with a subscription. Stripe checkout will be wired in here.
+            </p>
+            <div className="app-modal__stripe-slot" aria-hidden="true">
+              <span>Stripe payment placeholder</span>
+            </div>
+          </PlaceholderModal>
         </>
       ) : (
         <div className="landing-auth">

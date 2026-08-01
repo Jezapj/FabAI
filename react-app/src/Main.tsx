@@ -165,11 +165,11 @@ function WeatherWidget({
   }, []);
 
   const wrap: React.CSSProperties = {
-    background: 'rgba(0,0,0,0.72)',
+    background: 'rgba(0,0,0,0)',
     borderRadius: 14,
     padding: '8px 14px',
     margin: 0,
-    border: '1px solid rgba(255,255,255,0.08)',
+    border: '0px solid rgba(255,255,255,0.08)',
     color: 'white',
     width: '100%',
     boxSizing: 'border-box',

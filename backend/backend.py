@@ -139,7 +139,11 @@ _db_initialized = False
 @app.route("/health")
 def health():
     """Fast healthcheck for Railway (no DB required)."""
-    return jsonify({"ok": True, "service": "fabai-api"}), 200
+    return jsonify({
+        "ok": True,
+        "service": "fabai-api",
+        "port": os.getenv("PORT"),
+    }), 200
 
 @app.route("/")
 def hello():

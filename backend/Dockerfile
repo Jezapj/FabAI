@@ -17,9 +17,10 @@ RUN mkdir -p /backend/.torch && python -c "from torchvision.models import resnet
 
 COPY . .
 
-ENV PORT=5000
-EXPOSE 5000
+# Railway injects PORT at runtime (usually 8080). Do NOT set PORT=5000 here — it can
+# desync public routing from the port gunicorn binds (502 while internal health passes).
+EXPOSE 8080
 
-# Lazy model load in backend.py — worker boots before PyTorch loads.
-# Railway injects PORT (often 8080).
-CMD sh -c "gunicorn --bind 0.0.0.0:${PORT:-8080} --workers 1 --threads 2 --timeout 180 --access-logfile - --error-logfile - backend:app"
+RUN sed -i 's/\r$//' /backend/start.sh && chmod +x /backend/start.sh
+
+CMD ["/backend/start.sh"]

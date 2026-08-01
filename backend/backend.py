@@ -11,7 +11,6 @@ from werkzeug.utils import secure_filename
 import json
 from PIL import Image as PILImage
 
-from predictor import ClothingClassifier
 from pathlib import Path
 from google.oauth2 import id_token
 from google.auth.transport import requests as grequests
@@ -36,8 +35,10 @@ _model = None
 _model_lock = threading.Lock()
 
 
-def get_model() -> ClothingClassifier:
+def get_model():
     """Load PyTorch classifier on first use so gunicorn can boot on low-RAM instances."""
+    from predictor import ClothingClassifier
+
     global _model
     if _model is None:
         with _model_lock:
@@ -103,6 +104,7 @@ def apply_cors_fallback(response):
 
 
 @app.route("/api/<path:_any>", methods=["OPTIONS"])
+@app.route("/health", methods=["OPTIONS"])
 @app.route("/", methods=["OPTIONS"])
 def cors_preflight(_any=None):
     return ("", 204)
@@ -741,12 +743,6 @@ def ensure_db_ready():
     if request.path in ('/health', '/') and request.method == 'GET':
         return None
     init_db()
-
-
-try:
-    init_db()
-except Exception as e:
-    print(f"init_db at import: {e}")
 
 
 if __name__ == "__main__":

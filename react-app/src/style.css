@@ -1520,8 +1520,8 @@ dialog{
 }
 @media (max-width: 768px) {
   .nav__brand {
-    margin-left: -15px;
-    margin-right: -15px;
+    margin-left: 5px;
+    margin-right: 5px;
   }
 }
 .nav__logo {
@@ -1921,7 +1921,7 @@ body:has(.app-shell:not(.app-shell--dashboard)) {
   .app-shell--dashboard .nav__logo {
     height: 44px;
     width: 56px;
-    margin: 0 -8px;
+
   }
   .nav__logo {
     height: 56px;

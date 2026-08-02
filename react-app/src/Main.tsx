@@ -54,6 +54,13 @@ const OUTFIT_PART_LABEL: Record<(typeof OUTFIT_ORDER)[number], string> = {
 type SwipeView = 0 | 1 | 2; // Wardrobe | Landing | Add
 const SWIPE_THRESHOLD_PX = 56;
 const VIEW_LABELS = ['Wardrobe', 'Home', 'Add'] as const;
+
+function isPageSwipeExempt(target: EventTarget | null): boolean {
+  if (!(target instanceof Element)) return false;
+  return !!target.closest(
+    '.swipe-exempt, .outfit-carousel, .wardrobe-view__filters, .wardrobe-view__body, .add-view__actions, .swipe-chrome, button, a, input, select, textarea, label, [role="button"]'
+  );
+}
 // ── Loading overlay (section-scoped) ─────────────────────────────────────────
 interface LoadingOverlayProps {
   loading: boolean;
@@ -159,7 +166,11 @@ function WeatherWidget({ onDaySelect }: WeatherWidgetProps) {
     </div>
   );
   return (
-    <div className="weather-widget" style={wrap}>
+    <div
+      className="weather-widget swipe-exempt"
+      style={wrap}
+      onPointerDown={e => e.stopPropagation()}
+    >
       <p style={{ margin: '0 0 8px', fontSize: 12, color: '#bbb', fontWeight: 500 }}>
         📍 {city} · Weekly Forecast
       </p>
@@ -631,6 +642,7 @@ export function Login({ user, setUser }: { user: any, setUser: any }) {
   const pageStartY = useRef(0);
   const pageLocked = useRef<'h' | 'v' | null>(null);
   const pagePointerId = useRef<number | null>(null);
+  const pageCapturedRef = useRef(false);
   const shellWidthRef = useRef(1);
   const wakeBackend = React.useCallback(async () => {
     if (import.meta.env.PROD && !API_BASE) {
@@ -820,23 +832,33 @@ export function Login({ user, setUser }: { user: any, setUser: any }) {
   };
   const onPagePointerDown = (e: React.PointerEvent) => {
     if (e.button !== 0 && e.pointerType === 'mouse') return;
+    if (isPageSwipeExempt(e.target)) return;
     pagePointerId.current = e.pointerId;
-    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
     pageStartX.current = e.clientX;
     pageStartY.current = e.clientY;
     pageLocked.current = null;
+    pageCapturedRef.current = false;
     shellWidthRef.current = (e.currentTarget as HTMLElement).clientWidth || 1;
     setPageDragging(true);
   };
   const onPagePointerMove = (e: React.PointerEvent) => {
     if (pagePointerId.current !== e.pointerId || !pageDragging) return;
+    const shell = e.currentTarget as HTMLElement;
     const dx = e.clientX - pageStartX.current;
     const dy = e.clientY - pageStartY.current;
     if (!pageLocked.current) {
       if (Math.abs(dx) < 10 && Math.abs(dy) < 10) return;
       pageLocked.current = Math.abs(dx) >= Math.abs(dy) ? 'h' : 'v';
+      if (pageLocked.current === 'v') {
+        pagePointerId.current = null;
+        setPageDragging(false);
+        pageLocked.current = null;
+        return;
+      }
+      shell.setPointerCapture(e.pointerId);
+      pageCapturedRef.current = true;
     }
-    if (pageLocked.current === 'v') return;
+    if (pageLocked.current !== 'h') return;
     e.preventDefault();
     const atLeft = viewIndex === 0 && dx > 0;
     const atRight = viewIndex === 2 && dx < 0;
@@ -844,6 +866,11 @@ export function Login({ user, setUser }: { user: any, setUser: any }) {
   };
   const onPagePointerUp = (e: React.PointerEvent) => {
     if (pagePointerId.current !== e.pointerId) return;
+    const shell = e.currentTarget as HTMLElement;
+    if (pageCapturedRef.current && shell.hasPointerCapture(e.pointerId)) {
+      shell.releasePointerCapture(e.pointerId);
+    }
+    pageCapturedRef.current = false;
     pagePointerId.current = null;
     setPageDragging(false);
     if (pageLocked.current === 'h') commitPageSwipe(e.clientX - pageStartX.current);

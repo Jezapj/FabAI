@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { GoogleLogin, googleLogout } from '@react-oauth/google';
 import { jwtDecode } from 'jwt-decode';
 import { apiPath, parseApiJson, probeApi, API_BASE } from './config';
+import StaggeredMenu from './StaggeredMenu';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 interface OutfitItem { id: number; label: string; value: number; category: string; color?: string; }
@@ -98,7 +99,7 @@ function tempToTarget(maxTemp: number): number {
 
 
 
-// ── Weather Widget (forecast only — prefs live in landing left column) ────────
+// ── Weather Widget (forecast only — prefs live in staggered menu) ─────────────
 interface WeatherWidgetProps {
   onDaySelect?: (day: WeatherDay, label: string) => void;
 }
@@ -215,7 +216,7 @@ function WeatherWidget({ onDaySelect }: WeatherWidgetProps) {
   );
 }
 
-// ── Landing left-column: style / colour / stats ───────────────────────────────
+// ── Day prefs controls (style / colour — shown in staggered menu) ─────────────
 interface DayControlsProps {
   formality: Formality;
   colorPreset: string;
@@ -963,50 +964,13 @@ export function Login({ user, setUser }: { user: any, setUser: any }) {
               {/* ── Middle: Landing ── */}
               <section className="swipe-pane swipe-pane--landing" aria-label="Home">
                 <div className="landing-home">
-                  <aside className="landing-home__left">
-                    <DayControls
-                      formality={formality}
-                      colorPreset={colorPreset}
-                      onFormalityChange={handleFormalityChange}
-                      onColorPresetChange={handleColorPresetChange}
-                    />
-                    <DayStats
-                      selectedDay={selectedDay}
-                      maxTemp={selectedMaxTemp}
-                      weatherCode={weatherCode}
-                      formality={formality}
-                      colorPreset={colorPreset}
-                      outfitTarget={outfitTarget}
-                    />
-                    <div
-                      className="landing-home__actions"
-                      onPointerDown={e => e.stopPropagation()}
-                    >
-                      <button
-                        type="button"
-                        className="b1-compact"
-                        onClick={() => setSettingsOpen(true)}
-                      >
-                        Settings
-                      </button>
-                      <button
-                        type="button"
-                        className="b1-compact b1-compact--pro"
-                        onClick={() => setUpgradeOpen(true)}
-                      >
-                        Upgrade to Pro
-                      </button>
-                    </div>
-                  </aside>
-                  <div className="landing-home__right">
-                    <WeatherWidget onDaySelect={handleDaySelect} />
-                    <OutfitCarousel
-                      outfits={outfits}
-                      selectedDay={selectedDay}
-                      formality={formality}
-                      loading={outfitsLoading}
-                    />
-                  </div>
+                  <WeatherWidget onDaySelect={handleDaySelect} />
+                  <OutfitCarousel
+                    outfits={outfits}
+                    selectedDay={selectedDay}
+                    formality={formality}
+                    loading={outfitsLoading}
+                  />
                 </div>
               </section>
 
@@ -1086,6 +1050,55 @@ export function Login({ user, setUser }: { user: any, setUser: any }) {
           </div>
 
           <input id="fileInput" type="file" accept="image/*" onChange={handleFileChange} style={{ display: 'none' }} />
+
+          <StaggeredMenu
+            position="left"
+            isFixed
+            hideLogo
+            displaySocials={false}
+            displayItemNumbering={false}
+            colors={['#B497CF', '#5227FF']}
+            accentColor="#7207a3"
+            menuButtonColor="#fff"
+            openMenuButtonColor="#111"
+            changeMenuColorOnOpen
+            logoUrl="/CirculationsLogoNoBg.png"
+            closeOnClickAway
+          >
+            <div className="prefs-menu">
+              <h2 className="prefs-menu__heading sm-panel-itemLabel">Preferences</h2>
+              <DayControls
+                formality={formality}
+                colorPreset={colorPreset}
+                onFormalityChange={handleFormalityChange}
+                onColorPresetChange={handleColorPresetChange}
+              />
+              <DayStats
+                selectedDay={selectedDay}
+                maxTemp={selectedMaxTemp}
+                weatherCode={weatherCode}
+                formality={formality}
+                colorPreset={colorPreset}
+                outfitTarget={outfitTarget}
+              />
+              <div className="prefs-menu__actions">
+                <button
+                  type="button"
+                  className="prefs-menu__btn"
+                  onClick={() => setSettingsOpen(true)}
+                >
+                  Settings
+                </button>
+                <button
+                  type="button"
+                  className="prefs-menu__btn prefs-menu__btn--pro"
+                  onClick={() => setUpgradeOpen(true)}
+                >
+                  Upgrade to Pro
+                </button>
+              </div>
+            </div>
+          </StaggeredMenu>
 
           <PlaceholderModal
             open={settingsOpen}

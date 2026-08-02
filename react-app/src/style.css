@@ -81,6 +81,7 @@ img {
   display: flex;
   justify-content: center;
   align-items: center;
+  position: relative;
 }
 
 .app-shell:not(.app-shell--dashboard) .nav {
@@ -373,35 +374,15 @@ button:hover{
   gap: 0;
 }
 
-/* ── Landing home: two-column (left controls, right weather+outfit) ─────────── */
+/* ── Landing home: stacked weather + outfit (prefs live in staggered menu) ─── */
 .landing-home {
   display: flex;
   flex: 1;
   min-height: 0;
   height: 100%;
   width: 100%;
-  gap: clamp(10px, 2vw, 20px);
-  overflow: hidden;
-}
-
-.landing-home__left {
-  flex: 0 1 38%;
-  max-width: 380px;
-  min-width: 0;
-  display: flex;
   flex-direction: column;
-  gap: 8px;
-  min-height: 0;
-  overflow: hidden;
-}
-
-.landing-home__right {
-  flex: 1 1 62%;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  min-height: 0;
+  gap: clamp(10px, 2vw, 16px);
   overflow: hidden;
   background: rgba(0, 0, 0, 0.4);
   border-radius: 14px;
@@ -410,8 +391,25 @@ button:hover{
   box-sizing: border-box;
 }
 
-.landing-home__left .day-prefs--column {
+.landing-home .weather-widget {
+  flex-shrink: 0;
+}
+
+.landing-home .outfit-carousel-wrap,
+.landing-home .loading-overlay-host.outfit-carousel-wrap {
   flex: 1 1 auto;
+  min-height: 0;
+}
+
+.landing-home__left {
+  display: none;
+}
+
+.landing-home__right {
+  display: contents;
+}
+
+.day-prefs--column {
   display: flex;
   flex-direction: column !important;
   align-items: stretch !important;
@@ -422,34 +420,32 @@ button:hover{
   min-height: 0;
 }
 
-.landing-home__left .day-prefs__group {
-  flex: 1 1 0;
+.day-prefs--column .day-prefs__group {
   display: flex;
   flex-direction: column;
   justify-content: center;
   gap: 10px;
   min-width: 0;
-  min-height: 0;
 }
 
-.landing-home__left .day-prefs__toggle {
+.day-prefs--column .day-prefs__toggle {
   flex-direction: column;
   gap: 8px;
 }
 
-.landing-home__left .day-prefs__btn {
+.day-prefs--column .day-prefs__btn {
   width: 100% !important;
   height: 42px !important;
   min-height: 42px !important;
   font-size: 14px !important;
 }
 
-.landing-home__left .day-prefs__select {
+.day-prefs--column .day-prefs__select {
   height: 42px !important;
   font-size: 13px !important;
 }
 
-.landing-home__left .day-stats {
+.day-stats {
   flex-shrink: 0;
   margin: 0;
   text-align: left;
@@ -467,6 +463,114 @@ button:hover{
 
 .landing-home__actions .b1-compact {
   width: 100% !important;
+}
+
+/* Preferences panel inside StaggeredMenu */
+.prefs-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  height: 100%;
+  min-height: 0;
+}
+
+.prefs-menu__heading {
+  margin: 0;
+  font-size: clamp(1.75rem, 5vw, 2.75rem);
+  font-weight: 700;
+  letter-spacing: -1px;
+  text-transform: uppercase;
+  color: #111 !important;
+  line-height: 1;
+  -webkit-text-fill-color: #111 !important;
+  -webkit-text-stroke: 0 !important;
+  text-shadow: none !important;
+}
+
+.prefs-menu .day-prefs--column {
+  gap: 1.25rem;
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
+}
+
+.prefs-menu .day-prefs__label {
+  color: #444;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.prefs-menu .day-prefs__btn {
+  background: #f3f0f8 !important;
+  color: #222 !important;
+  border: 1px solid rgba(82, 39, 255, 0.2) !important;
+}
+
+.prefs-menu .day-prefs__btn:hover {
+  background: #ebe4f7 !important;
+  color: #111 !important;
+}
+
+.prefs-menu .day-prefs__btn--active {
+  background: linear-gradient(135deg, rgba(114, 7, 163, 0.95), rgba(82, 39, 255, 0.9)) !important;
+  color: #fff !important;
+  border-color: transparent !important;
+}
+
+.prefs-menu .day-prefs__select {
+  background: #fff !important;
+  color: #111 !important;
+  border: 1px solid rgba(0, 0, 0, 0.15) !important;
+}
+
+.prefs-menu .day-prefs__select option {
+  background-color: #fff;
+  color: #111;
+}
+
+.prefs-menu .day-stats {
+  color: #555;
+  font-size: 0.9rem;
+}
+
+.prefs-menu .day-stats strong {
+  color: #111 !important;
+}
+
+.prefs-menu__actions {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  padding-top: 0.5rem;
+}
+
+.prefs-menu__btn {
+  width: 100%;
+  min-height: 44px;
+  border-radius: 10px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  background: #111;
+  color: #fff;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s ease, transform 0.15s ease;
+}
+
+.prefs-menu__btn:hover {
+  opacity: 0.88;
+}
+
+.prefs-menu__btn:active {
+  transform: scale(0.98);
+}
+
+.prefs-menu__btn--pro {
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.95), rgba(96, 165, 250, 0.9));
+  border: 1px solid rgba(114, 7, 163, 0.25);
 }
 
 .b1-compact--pro {
@@ -1372,32 +1476,30 @@ dialog{
   gap: 8px;
 }
 
-.app-shell--dashboard .landing-home__left .day-prefs {
-  flex-direction: column;
-  align-items: stretch;
-  margin-top: 0;
-  padding-top: 0;
-}
-
 .app-shell--dashboard .day-prefs__group {
   flex: 1;
   min-width: 0;
 }
 
-.app-shell--dashboard .landing-home__left .day-prefs__btn {
-  height: 42px !important;
-  min-height: 42px !important;
-  font-size: 14px !important;
-}
-
-.app-shell--dashboard .landing-home__left .day-prefs__select {
-  height: 42px !important;
-  font-size: 13px !important;
-}
-
 .app-shell--dashboard .weather-day--target-label {
   margin: 6px 0 0;
   font-size: 11px;
+}
+
+/* StaggeredMenu sits above the navbar chrome so the left toggle is usable */
+.app-shell--dashboard .staggered-menu-wrapper.fixed-wrapper {
+  z-index: 60;
+}
+
+.app-shell--dashboard .staggered-menu-wrapper.fixed-wrapper .staggered-menu-header {
+  /* Align toggle with dashboard navbar height without shifting brand/logo */
+  padding: 0.65rem 0.85rem;
+  min-height: 56px;
+}
+
+.app-shell--dashboard .staggered-menu-wrapper .sm-toggle {
+  font-size: 0.95rem;
+  letter-spacing: 0.02em;
 }
 
 .app-shell--dashboard .nav {
@@ -2208,51 +2310,39 @@ body:has(.app-shell:not(.app-shell--dashboard)) {
     gap: 8px;
   }
 
-  .landing-home__left {
-    flex: 0 1 36%;
-    max-width: none;
-    gap: 6px;
-  }
-
-  .landing-home__right {
-    flex: 1 1 64%;
-    gap: 6px;
-  }
-
-  .landing-home__left .day-prefs--column {
+  .prefs-menu .day-prefs--column {
     gap: 12px;
   }
 
-  .landing-home__left .day-prefs__toggle {
+  .prefs-menu .day-prefs__toggle {
     flex-direction: column;
     gap: 6px;
   }
 
-  .landing-home__left .day-prefs__btn {
+  .prefs-menu .day-prefs__btn {
     height: 36px !important;
     min-height: 36px !important;
     font-size: 12px !important;
     padding: 0 8px !important;
   }
 
-  .landing-home__left .day-prefs__select {
+  .prefs-menu .day-prefs__select {
     height: 36px !important;
     font-size: 12px !important;
   }
 
-  .landing-home__left .day-stats {
+  .prefs-menu .day-stats {
     font-size: 10px;
   }
 
-  .landing-home__actions {
+  .prefs-menu__actions {
     gap: 6px;
     padding-top: 4px;
   }
 
-  .landing-home__actions .b1-compact {
-    height: 34px !important;
-    min-height: 34px !important;
-    font-size: 12px !important;
+  .prefs-menu__btn {
+    min-height: 34px;
+    font-size: 12px;
   }
 
   .app-shell--dashboard .weather-day {

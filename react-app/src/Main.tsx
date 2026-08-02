@@ -895,7 +895,7 @@ export function Login({ user, setUser }: { user: any, setUser: any }) {
               <section className="swipe-pane swipe-pane--add" aria-label="Add Items">
                 <div className="add-view">
                   <div className="add-view__header">
-                    <h2>Add item</h2>
+                    <h2>Add Item</h2>
                     <p className={`backend-status backend-status--${backendStatus}`}>
                       {statusLabel}
                       {backendStatus === 'error' && (

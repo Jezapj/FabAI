@@ -1,3 +1,4 @@
+
 html, body {
   background-color: #0a0a12;
   background-image:
@@ -23,7 +24,6 @@ html, body {
 html::-webkit-scrollbar, body::-webkit-scrollbar {
   display: none;
 }
-
 * {
   scrollbar-width: none;
   -ms-overflow-style: none;
@@ -34,34 +34,12 @@ html::-webkit-scrollbar, body::-webkit-scrollbar {
 h1 {
   color: white;
 }
-
 /* Outline-only headings — stroke sits outside the glyph */
 h2 {
-  color: transparent;
-  -webkit-text-fill-color: transparent;
-  -webkit-text-stroke: 0;
-  /* Outside outline via shadow ring (text-stroke draws inward) */
-  text-shadow:
-    -1px -1px 0 #fff,
-     0   -1px 0 #fff,
-     1px -1px 0 #fff,
-    -1px  0   0 #fff,
-     1px  0   0 #fff,
-    -1px  1px 0 #fff,
-     0    1px 0 #fff,
-     1px  1px 0 #fff,
-    -2px -1px 0 #fff,
-    -2px  0   0 #fff,
-    -2px  1px 0 #fff,
-     2px -1px 0 #fff,
-     2px  0   0 #fff,
-     2px  1px 0 #fff,
-    -1px -2px 0 #fff,
-     0   -2px 0 #fff,
-     1px -2px 0 #fff,
-    -1px  2px 0 #fff,
-     0    2px 0 #fff,
-     1px  2px 0 #fff;
+  font-size: 1.75rem !important;
+    color: black;
+    paint-order: stroke fill;
+    -webkit-text-stroke: 0.1em white;
 }
 img {
   max-width: 100%;
@@ -69,7 +47,6 @@ img {
 }
 .main{
   display: inline-block;
-
 }
 .nav {
   padding: 0.2% 0 0.75% 0%;
@@ -83,7 +60,6 @@ img {
   align-items: center;
   position: relative;
 }
-
 .app-shell:not(.app-shell--dashboard) .nav {
   background-color: rgba(0, 0, 0, 0);
 }
@@ -129,9 +105,7 @@ img {
   height: 15vh;
   transition-delay: 1s;
   max-width: 100%;
-
 }
-
 .cardSub:hover {
   height: 30vh;
   transition: 0.5s;
@@ -141,7 +115,6 @@ img {
   max-width: 80%;
   flex-direction: row;
   
-
 }
 .subText{
   
@@ -149,7 +122,6 @@ img {
 .subText:hover{
   
 }
-
 .subImg{
   height: 100%;
   width: 100%;
@@ -163,7 +135,6 @@ img {
 .subImg:hover{
   
 }
-
 .cardFeature {
   color: white;
   background-color: rgba(0,0,0, 0.85);
@@ -189,12 +160,10 @@ img {
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.9);
     text-decoration: dotted;
 }
-
 .cardFeature > h2 {
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.9);
     text-decoration: dotted;
 }
-
 .cardFeature > h3 {
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.9);
     text-decoration: dotted;
@@ -216,7 +185,6 @@ button{
   width: 45%;
   color: black;
 }
-
 .button{
   align-content: center;
   display: flex;
@@ -224,14 +192,12 @@ button{
   
   
 }
-
 .b1 {
   background-color: rgba(0,0,0, 0.85);
   display: flex;
   justify-content: center;
   padding-bottom: 50vh;
 }
-
 .b2 {
   display: flex;
   flex-direction: column;
@@ -248,7 +214,6 @@ button{
   margin: 10px 30px;
   height: 30px;
   padding: 10px 30px;
-
   
 }
 .b1  button {
@@ -261,7 +226,6 @@ button{
   width: 40vw;
   padding: 10px 30px;
   transition: 0.5s;
-
   
 }
 .b1  button:hover {
@@ -277,7 +241,6 @@ button{
 button:hover{
   background-color: rgba(220,220,220, 0.85);
 }
-
 #root{
   padding: 0;
   margin: 0;
@@ -285,7 +248,6 @@ button:hover{
   display: flex;
   flex-direction: column;
 }
-
 /* ── Loading overlay ────────────────────────────────────────────────────────── */
 .loading-overlay-host {
   position: relative;
@@ -295,7 +257,6 @@ button:hover{
   flex: 1;
   overflow: hidden;
 }
-
 .loading-overlay {
   position: absolute;
   inset: 0;
@@ -309,7 +270,6 @@ button:hover{
   border-radius: inherit;
   pointer-events: none;
 }
-
 .loading-overlay__spinner {
   width: 36px;
   height: 36px;
@@ -318,7 +278,6 @@ button:hover{
   border-radius: 50%;
   animation: loading-spin 0.75s linear infinite;
 }
-
 .loading-overlay__text {
   margin: 0;
   color: #fff;
@@ -326,11 +285,9 @@ button:hover{
   font-weight: 600;
   letter-spacing: 0.04em;
 }
-
 @keyframes loading-spin {
   to { transform: rotate(360deg); }
 }
-
 /* ── Swipeable three-view shell ─────────────────────────────────────────────── */
 .swipe-shell {
   position: relative;
@@ -342,7 +299,6 @@ button:hover{
   display: flex;
   flex-direction: column;
 }
-
 .swipe-track {
   display: flex;
   flex: 1;
@@ -352,11 +308,9 @@ button:hover{
   transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1);
   will-change: transform;
 }
-
 .swipe-track--dragging {
   transition: none;
 }
-
 .swipe-pane {
   flex: 0 0 100%;
   width: 100%;
@@ -369,11 +323,9 @@ button:hover{
   flex-direction: column;
   min-height: 0;
 }
-
 .swipe-pane--landing {
   gap: 0;
 }
-
 /* ── Landing home: stacked weather + outfit (prefs live in staggered menu) ─── */
 .landing-home {
   display: flex;
@@ -384,31 +336,26 @@ button:hover{
   flex-direction: column;
   gap: clamp(10px, 2vw, 16px);
   overflow: hidden;
-  background: rgba(0, 0, 0, 0.4);
+  background: rgba(0, 0, 0, 0);
   border-radius: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 0px solid rgba(255, 255, 255, 0.08);
   padding: 10px 12px;
   box-sizing: border-box;
 }
-
 .landing-home .weather-widget {
   flex-shrink: 0;
 }
-
 .landing-home .outfit-carousel-wrap,
 .landing-home .loading-overlay-host.outfit-carousel-wrap {
   flex: 1 1 auto;
   min-height: 0;
 }
-
 .landing-home__left {
   display: none;
 }
-
 .landing-home__right {
   display: contents;
 }
-
 .day-prefs--column {
   display: flex;
   flex-direction: column !important;
@@ -419,7 +366,6 @@ button:hover{
   gap: 18px;
   min-height: 0;
 }
-
 .day-prefs--column .day-prefs__group {
   display: flex;
   flex-direction: column;
@@ -427,31 +373,26 @@ button:hover{
   gap: 10px;
   min-width: 0;
 }
-
 .day-prefs--column .day-prefs__toggle {
   flex-direction: column;
   gap: 8px;
 }
-
 .day-prefs--column .day-prefs__btn {
   width: 100% !important;
   height: 42px !important;
   min-height: 42px !important;
   font-size: 14px !important;
 }
-
 .day-prefs--column .day-prefs__select {
   height: 42px !important;
   font-size: 13px !important;
 }
-
 .day-stats {
   flex-shrink: 0;
   margin: 0;
   text-align: left;
   line-height: 1.4;
 }
-
 .landing-home__actions {
   margin-top: auto;
   display: flex;
@@ -460,11 +401,9 @@ button:hover{
   flex-shrink: 0;
   padding-top: 8px;
 }
-
 .landing-home__actions .b1-compact {
   width: 100% !important;
 }
-
 /* Preferences panel inside StaggeredMenu */
 .prefs-menu {
   display: flex;
@@ -473,7 +412,6 @@ button:hover{
   height: 100%;
   min-height: 0;
 }
-
 .prefs-menu__heading {
   margin: 0;
   font-size: clamp(1.75rem, 5vw, 2.75rem);
@@ -486,14 +424,12 @@ button:hover{
   -webkit-text-stroke: 0 !important;
   text-shadow: none !important;
 }
-
 .prefs-menu .day-prefs--column {
   gap: 1.25rem;
   margin-top: 0;
   padding-top: 0;
   border-top: none;
 }
-
 .prefs-menu .day-prefs__label {
   color: #444;
   font-size: 0.85rem;
@@ -501,44 +437,36 @@ button:hover{
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
-
 .prefs-menu .day-prefs__btn {
   background: #f3f0f8 !important;
   color: #222 !important;
   border: 1px solid rgba(82, 39, 255, 0.2) !important;
 }
-
 .prefs-menu .day-prefs__btn:hover {
   background: #ebe4f7 !important;
   color: #111 !important;
 }
-
 .prefs-menu .day-prefs__btn--active {
   background: linear-gradient(135deg, rgba(114, 7, 163, 0.95), rgba(82, 39, 255, 0.9)) !important;
   color: #fff !important;
   border-color: transparent !important;
 }
-
 .prefs-menu .day-prefs__select {
   background: #fff !important;
   color: #111 !important;
   border: 1px solid rgba(0, 0, 0, 0.15) !important;
 }
-
 .prefs-menu .day-prefs__select option {
   background-color: #fff;
   color: #111;
 }
-
 .prefs-menu .day-stats {
   color: #555;
   font-size: 0.9rem;
 }
-
 .prefs-menu .day-stats strong {
   color: #111 !important;
 }
-
 .prefs-menu__actions {
   margin-top: auto;
   display: flex;
@@ -546,7 +474,6 @@ button:hover{
   gap: 0.65rem;
   padding-top: 0.5rem;
 }
-
 .prefs-menu__btn {
   width: 100%;
   min-height: 44px;
@@ -558,31 +485,26 @@ button:hover{
   font-weight: 600;
   cursor: pointer;
   transition: opacity 0.2s ease, transform 0.15s ease;
+  margin: 0;
 }
-
 .prefs-menu__btn:hover {
   opacity: 0.88;
 }
-
 .prefs-menu__btn:active {
   transform: scale(0.98);
 }
-
 .prefs-menu__btn--pro {
   background: linear-gradient(135deg, rgba(168, 85, 247, 0.95), rgba(96, 165, 250, 0.9));
   border: 1px solid rgba(114, 7, 163, 0.25);
 }
-
 .b1-compact--pro {
   background: linear-gradient(135deg, rgba(168, 85, 247, 0.95), rgba(96, 165, 250, 0.9)) !important;
   color: #fff !important;
   border: 1px solid rgba(255, 255, 255, 0.2) !important;
 }
-
 .b1-compact--pro:hover {
   filter: brightness(1.08);
 }
-
 /* Placeholder app modals */
 .app-modal {
   border: none;
@@ -592,11 +514,9 @@ button:hover{
   color: #fff;
   max-width: min(440px, calc(100vw - 32px));
 }
-
 .app-modal::backdrop {
   background: rgba(0, 0, 0, 0.65);
 }
-
 .app-modal__content {
   background: rgba(12, 8, 20, 0.96);
   border: 1px solid rgba(255, 255, 255, 0.12);
@@ -604,7 +524,6 @@ button:hover{
   padding: 20px 22px;
   box-shadow: 0 16px 48px rgba(0, 0, 0, 0.45);
 }
-
 .app-modal__header {
   display: flex;
   align-items: center;
@@ -612,12 +531,10 @@ button:hover{
   gap: 12px;
   margin-bottom: 14px;
 }
-
 .app-modal__header h2 {
   margin: 0;
   font-size: 1.25rem;
 }
-
 .app-modal__close {
   margin: 0 !important;
   width: 32px !important;
@@ -630,17 +547,14 @@ button:hover{
   font-size: 20px !important;
   line-height: 1 !important;
 }
-
 .app-modal__body {
   color: rgba(255, 255, 255, 0.75);
   font-size: 14px;
   line-height: 1.5;
 }
-
 .app-modal__placeholder {
   margin: 0 0 14px;
 }
-
 .app-modal__stripe-slot {
   display: flex;
   align-items: center;
@@ -652,7 +566,6 @@ button:hover{
   font-size: 13px;
   background: rgba(255, 255, 255, 0.03);
 }
-
 .swipe-chrome {
   position: absolute;
   left: 0;
@@ -667,13 +580,11 @@ button:hover{
   pointer-events: none;
   background: linear-gradient(to top, rgba(0, 0, 0, 0.55), transparent);
 }
-
 .swipe-dots {
   display: flex;
   gap: 8px;
   pointer-events: auto;
 }
-
 .swipe-dot {
   width: 8px !important;
   height: 8px !important;
@@ -685,12 +596,10 @@ button:hover{
   border: none !important;
   cursor: pointer;
 }
-
 .swipe-dot--active {
   background: #fff !important;
   transform: scale(1.15);
 }
-
 .swipe-logout {
   pointer-events: auto;
   margin: 0 !important;
@@ -705,12 +614,10 @@ button:hover{
   font-weight: 600 !important;
   border: 1px solid rgba(255, 255, 255, 0.15) !important;
 }
-
 .swipe-logout:hover {
   background: rgba(255, 255, 255, 0.2) !important;
   color: #fff !important;
 }
-
 /* ── Wardrobe full view ─────────────────────────────────────────────────────── */
 .wardrobe-view {
   display: flex;
@@ -725,20 +632,17 @@ button:hover{
   overflow: hidden;
   color: #fff;
 }
-
 .wardrobe-view__header {
   flex-shrink: 0;
   text-align: center;
   padding-bottom: 8px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
-
 .wardrobe-view__header h2 {
   margin: 0;
   font-size: clamp(1rem, 2.5vw, 1.35rem);
   letter-spacing: 0.5px;
 }
-
 .wardrobe-view__filters {
   display: flex;
   gap: 6px;
@@ -747,14 +651,12 @@ button:hover{
   padding: 8px 0;
   flex-shrink: 0;
 }
-
 .wardrobe-view__body {
   flex: 1;
   min-height: 0;
   overflow-x: hidden !important;
   overflow-y: auto !important;
 }
-
 .wardrobe-view__empty {
   margin: 0;
   height: 100%;
@@ -766,7 +668,6 @@ button:hover{
   font-size: 14px;
   padding: 16px;
 }
-
 .wardrobe-view .inv-grid {
   height: auto;
   overflow: visible;
@@ -774,31 +675,25 @@ button:hover{
   grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
   gap: 14px;
 }
-
 @media (min-width: 769px) {
   .wardrobe-view .inv-grid {
     grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
     gap: 16px;
   }
-
   .wardrobe-view .inv-item__img-wrap {
     height: 180px;
   }
 }
-
 .wardrobe-view .inv-item__img-wrap {
   height: 150px;
 }
-
 .wardrobe-view .inv-item__info {
   padding: 8px 10px 10px;
 }
-
 .wardrobe-view .inv-item__label-input {
   font-size: 13px;
   margin-bottom: 4px;
 }
-
 .inv-item__meta {
   display: flex;
   justify-content: space-between;
@@ -806,7 +701,6 @@ button:hover{
   margin-top: 2px;
   gap: 4px;
 }
-
 /* ── Outfit carousel ────────────────────────────────────────────────────────── */
 .outfit-carousel-wrap {
   flex: 1;
@@ -819,7 +713,6 @@ button:hover{
   display: flex;
   flex-direction: column;
 }
-
 .outfit-carousel-header {
   display: flex;
   align-items: baseline;
@@ -828,19 +721,16 @@ button:hover{
   flex-shrink: 0;
   margin-bottom: 6px;
 }
-
 .outfit-carousel-header h3 {
   margin: 0;
   color: #fff;
   font-size: clamp(0.9rem, 2vw, 1.05rem);
 }
-
 .outfit-carousel-count {
   color: #888;
   font-size: 12px;
   flex-shrink: 0;
 }
-
 .outfit-carousel {
   flex: 1;
   min-height: 0;
@@ -849,11 +739,9 @@ button:hover{
   cursor: grab;
   user-select: none;
 }
-
 .outfit-carousel:active {
   cursor: grabbing;
 }
-
 .outfit-carousel__track {
   display: flex;
   height: 100%;
@@ -861,11 +749,9 @@ button:hover{
   transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
   will-change: transform;
 }
-
 .outfit-carousel__track--dragging {
   transition: none;
 }
-
 .outfit-carousel__slide {
   flex: 0 0 100%;
   width: 100%;
@@ -875,7 +761,6 @@ button:hover{
   padding: 0 4px;
   overflow: hidden;
 }
-
 .outfit-stack {
   height: 100%;
   display: flex;
@@ -883,7 +768,6 @@ button:hover{
   gap: 6px;
   justify-content: center;
 }
-
 .outfit-stack__row {
   flex: 1;
   min-height: 0;
@@ -896,7 +780,6 @@ button:hover{
   padding: 4px 10px;
   overflow: hidden;
 }
-
 .outfit-stack__row img {
   height: 100%;
   width: auto;
@@ -907,14 +790,12 @@ button:hover{
   border-radius: 6px;
   flex-shrink: 0;
 }
-
 .outfit-stack__meta {
   min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 2px;
 }
-
 .outfit-stack__part {
   font-size: 10px;
   text-transform: uppercase;
@@ -922,7 +803,6 @@ button:hover{
   color: #999;
   font-weight: 700;
 }
-
 .outfit-stack__label {
   font-size: clamp(12px, 2vw, 14px);
   color: #eee;
@@ -930,7 +810,6 @@ button:hover{
   overflow: hidden;
   text-overflow: ellipsis;
 }
-
 .no-outfits {
   flex: 1;
   display: flex;
@@ -942,13 +821,11 @@ button:hover{
   color: #aaa;
   min-height: 0;
 }
-
 .no-outfits__hint {
   font-size: 13px;
   color: #888;
   margin: 8px 0 0;
 }
-
 /* ── Add / classify view ────────────────────────────────────────────────────── */
 .add-view {
   display: flex;
@@ -964,21 +841,17 @@ button:hover{
   color: #fff;
   gap: 10px;
 }
-
 .add-view__header {
   flex-shrink: 0;
   text-align: center;
 }
-
 .add-view__header h2 {
   margin: 0 0 4px;
   font-size: clamp(1rem, 2.5vw, 1.35rem);
 }
-
 .add-view__header .backend-status {
   margin: 0;
 }
-
 .add-view__stage {
   flex: 1;
   min-height: 0;
@@ -987,7 +860,6 @@ button:hover{
   border: 1px solid rgba(255, 255, 255, 0.06);
   overflow: hidden;
 }
-
 .add-view__result,
 .add-view__placeholder {
   height: 100%;
@@ -1000,14 +872,12 @@ button:hover{
   gap: 10px;
   box-sizing: border-box;
 }
-
 .add-view__placeholder p {
   margin: 0;
   color: #777;
   font-size: 14px;
   max-width: 280px;
 }
-
 .add-view__img {
   max-height: min(42vh, 280px);
   max-width: 100%;
@@ -1015,33 +885,27 @@ button:hover{
   object-fit: contain;
   border-radius: 10px;
 }
-
 .add-view__prediction {
   margin: 0;
   font-size: 14px;
   color: #ddd;
 }
-
 .add-view__actions {
   display: flex;
   gap: 8px;
   flex-shrink: 0;
 }
-
 .add-view__actions .b1-compact {
   flex: 1;
 }
-
 .b1-compact--ghost {
   background: rgba(255, 255, 255, 0.12) !important;
   color: #eee !important;
   border: 1px solid rgba(255, 255, 255, 0.15) !important;
 }
-
 .b1-compact--ghost:hover {
   background: rgba(255, 255, 255, 0.2) !important;
 }
-
 /* ── Legacy dashboard bits (unused by swipe shell) ── */
 .dashboard-layout {
   display: flex;
@@ -1052,7 +916,6 @@ button:hover{
   min-height: 0;
   margin-bottom: 0;
 }
-
 .dashboard-sidebar {
   flex: 1 1 42%;
   min-width: 280px;
@@ -1064,7 +927,6 @@ button:hover{
   min-height: 0;
   overflow: hidden;
 }
-
 .dashboard-controls {
   display: flex;
   flex-direction: column;
@@ -1073,7 +935,6 @@ button:hover{
   margin-top: auto;
   padding-top: 8px;
 }
-
 .dashboard-main {
   flex: 1 1 58%;
   min-width: 0;
@@ -1086,21 +947,18 @@ button:hover{
   flex-direction: column;
   min-height: 0;
 }
-
 .outfits-container {
   flex: 1;
   display: flex;
   flex-direction: column;
   min-height: 0;
 }
-
 .outfits-container h3 {
   margin: 0 0 20px;
   color: #fff;
   font-size: 18px;
   flex-shrink: 0;
 }
-
 .outfits-list {
   display: flex;
   flex-direction: column;
@@ -1108,7 +966,6 @@ button:hover{
   flex: 1;
   justify-content: center;
 }
-
 .prediction-box {
   background: rgba(0, 0, 0, 0.72);
   border-radius: 14px;
@@ -1118,26 +975,21 @@ button:hover{
   color: white;
   margin-top: 0px;
 }
-
 .backend-status {
   margin: 0 0 10px;
   font-size: 12px;
   letter-spacing: 0.02em;
   color: rgba(255, 255, 255, 0.7);
 }
-
 .backend-status--starting {
   color: #fbbf24;
 }
-
 .backend-status--ready {
   color: #86efac;
 }
-
 .backend-status--error {
   color: #fca5a5;
 }
-
 .backend-status__retry {
   background: transparent;
   border: 1px solid rgba(252, 165, 165, 0.6);
@@ -1147,20 +999,17 @@ button:hover{
   font-size: 11px;
   cursor: pointer;
 }
-
 .b1-compact:disabled {
   opacity: 0.45 !important;
   cursor: not-allowed !important;
   transform: none !important;
 }
-
 .last-uploaded-img {
   max-height: 120px;
   object-fit: contain;
   margin-bottom: 10px;
   border-radius: 8px;
 }
-
 .b1-compact {
   width: 100% !important;
   margin: 0 !important;
@@ -1172,19 +1021,16 @@ button:hover{
   border-radius: 10px !important;
   transition: transform 0.2s, background 0.2s !important;
 }
-
 .b1-compact:hover {
   background: #e2e8f0 !important;
   transform: scale(1.02);
 }
-
 .outfit-card {
   background: rgba(255, 255, 255, 0.05);
   border-radius: 12px;
   padding: 15px;
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
-
 .outfit-card h4 {
   margin: 0 0 10px;
   color: #aaa;
@@ -1192,7 +1038,6 @@ button:hover{
   text-transform: uppercase;
   letter-spacing: 1px;
 }
-
 .outfit-grid-compact {
   display: flex;
   gap: 15px;
@@ -1201,7 +1046,6 @@ button:hover{
   justify-content: center;
   flex-wrap: wrap;
 }
-
 .outfit-item-compact {
   flex: 0 0 90px;
   display: flex;
@@ -1209,7 +1053,6 @@ button:hover{
   align-items: center;
   text-align: center;
 }
-
 .outfit-item-compact img {
   width: 100%;
   height: 80px;
@@ -1220,7 +1063,6 @@ button:hover{
   margin-bottom: 5px;
   display: block;
 }
-
 .outfit-item-label-compact {
   font-size: 11px;
   color: #eee;
@@ -1229,7 +1071,6 @@ button:hover{
   overflow: hidden;
   text-overflow: ellipsis;
 }
-
 .no-outfits {
   flex: 1;
   display: flex;
@@ -1241,7 +1082,6 @@ button:hover{
   color: #aaa;
   min-height: 0;
 }
-
 .inv-item__cat-select {
   border: none;
   border-radius: 6px;
@@ -1251,7 +1091,6 @@ button:hover{
   cursor: pointer;
   outline: none;
 }
-
 .inv-item__delete {
   background: none !important;
   border: none !important;
@@ -1263,11 +1102,9 @@ button:hover{
   margin: 0 !important;
   font-size: 14px !important;
 }
-
 .inv-item__delete:hover {
   transform: scale(1.2);
 }
-
 
 .modal-content {
   width: 90%;
@@ -1282,7 +1119,6 @@ button:hover{
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
-
 .modal-header {
   display: flex;
   justify-content: center;
@@ -1290,60 +1126,50 @@ button:hover{
   padding-bottom: 20px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
-
 .modal-header h2 {
   font-size: 28px;
   margin: 0;
   letter-spacing: 1px;
 }
-
 .modal-body {
   display: flex;
   flex-direction: column;
   padding: 20px 0;
 }
-
 .uploaded-image-section {
   text-align: center;
   margin-bottom: 30px;
 }
-
 .uploaded-image-section .imageStyle {
   max-width: 100%;
   max-height: 350px;
   border-radius: 10px;
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
 }
-
 .prediction-result {
   margin-top: 15px;
   color: #4CAF50;
   font-size: 20px;
 }
-
 .outfit-section {
   width: 100%;
   margin-top: 20px;
 }
-
 .outfit-section hr {
   border: none;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
   margin: 20px 0;
 }
-
 .outfit-section h2 {
   text-align: center;
   margin-bottom: 20px;
 }
-
 .outfit-grid {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
   gap: 20px;
 }
-
 .outfit-item {
   background: rgba(255, 255, 255, 0.05);
   padding: 15px;
@@ -1353,12 +1179,10 @@ button:hover{
   transition: transform 0.3s ease;
   border: 1px solid rgba(255, 255, 255, 0.05);
 }
-
 .outfit-item:hover {
   transform: translateY(-5px);
   background: rgba(255, 255, 255, 0.1);
 }
-
 .outfit-item img {
   width: 100%;
   height: 140px;
@@ -1367,12 +1191,10 @@ button:hover{
   margin-bottom: 10px;
   background: rgba(0, 0, 0, 0.2);
 }
-
 .outfit-item-info {
   display: flex;
   flex-direction: column;
 }
-
 .outfit-item-category {
   font-size: 10px;
   color: #aaa;
@@ -1380,13 +1202,11 @@ button:hover{
   letter-spacing: 1px;
   margin-bottom: 4px;
 }
-
 .outfit-item-label {
   font-size: 14px;
   color: #fff;
   font-weight: 500;
 }
-
 .modal-footer {
   display: flex;
   justify-content: center;
@@ -1395,7 +1215,6 @@ button:hover{
   padding-top: 20px;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
-
 .modal-close-button,
 .modal-action-button {
   padding: 12px 24px;
@@ -1408,23 +1227,19 @@ button:hover{
   height: auto;
   margin: 0;
 }
-
 .modal-close-button {
   background-color: #f44336 !important;
   color: white !important;
   border: none !important;
 }
-
 .modal-close-button:hover {
   background-color: #d32f2f !important;
 }
-
 .modal-action-button {
   background-color: #3a0063 !important;
   color: white !important;
   border: none !important;
 }
-
 .modal-action-button:hover {
   background-color: #51008a !important;
   transform: scale(1.05) !important;
@@ -1435,91 +1250,73 @@ dialog{
     background: rgba(0, 0, 0, 0);
     text-align: center;
 }
-
 /* ── Weather Widget ─────────────────────────────────────────────────────────── */
 .app-shell--dashboard .weather-widget {
   flex-shrink: 0;
 }
-
 .app-shell--dashboard .weather-strip {
   gap: 4px;
   overflow-x: auto;
   padding-bottom: 2px;
 }
-
 .app-shell--dashboard .weather-day {
   flex: 1 1 0;
   min-width: 0;
   padding: 6px 4px;
 }
-
 .app-shell--dashboard .weather-day__icon {
   font-size: 18px;
   margin: 2px 0;
 }
-
 .app-shell--dashboard .weather-day__desc {
   display: none;
 }
-
 .app-shell--dashboard .weather-day__max {
   font-size: 13px;
 }
-
 .app-shell--dashboard .weather-day__min {
   font-size: 10px;
 }
-
 .app-shell--dashboard .day-prefs {
   margin-top: 8px;
   padding-top: 8px;
   gap: 8px;
 }
-
 .app-shell--dashboard .day-prefs__group {
   flex: 1;
   min-width: 0;
 }
-
 .app-shell--dashboard .weather-day--target-label {
   margin: 6px 0 0;
   font-size: 11px;
 }
-
 /* StaggeredMenu sits above the navbar chrome so the left toggle is usable */
 .app-shell--dashboard .staggered-menu-wrapper.fixed-wrapper {
   z-index: 60;
 }
-
 .app-shell--dashboard .staggered-menu-wrapper.fixed-wrapper .staggered-menu-header {
   /* Align toggle with dashboard navbar height without shifting brand/logo */
   padding: 0.65rem 0.85rem;
   min-height: 56px;
 }
-
 .app-shell--dashboard .staggered-menu-wrapper .sm-toggle {
   font-size: 0.95rem;
   letter-spacing: 0.02em;
 }
-
 .app-shell--dashboard .nav {
   padding: 0;
   flex-shrink: 0;
 }
-
 .app-shell--dashboard .nav__logo {
   height: 56px;
   width: 72px;
 }
-
 .app-shell--dashboard .nav__brand {
   font-size: clamp(1rem, 3vw, 1.5rem);
 }
-
 .app-shell--dashboard .app-footer {
   display: none;
 }
-
 .weather-strip {
   display: flex;
   gap: 7px;
@@ -1534,7 +1331,6 @@ dialog{
   background-color: rgba(255, 255, 255, 0.15);
   border-radius: 4px;
 }
-
 .weather-day {
   flex-shrink: 0;
   min-width: 82px;
@@ -1574,7 +1370,6 @@ dialog{
 }
 .weather-day__max   { font-size: 16px; font-weight: 700; color: #fff; }
 .weather-day__min   { font-size: 11px; color: #555; margin-top: 2px; }
-
 /* ── Inventory Modal ────────────────────────────────────────────────────────── */
 .inv-grid {
   display: grid;
@@ -1582,7 +1377,6 @@ dialog{
   gap: 12px;
   width: 100%;
 }
-
 .inv-item {
   background: rgba(255, 255, 255, 0.04);
   border-radius: 10px;
@@ -1631,7 +1425,6 @@ dialog{
   color: #ddd;
   font-weight: 500;
 }
-
 /* Inventory filter chips - override global button sizing */
 .inv-filter {
   border-radius: 20px !important;
@@ -1657,7 +1450,6 @@ dialog{
   border-color: rgba(160, 90, 255, 0.5) !important;
   font-weight: 700 !important;
 }
-
 /* ── App shell ─────────────────────────────────────────────────────────────── */
 .app-shell {
   display: flex;
@@ -1667,14 +1459,12 @@ dialog{
   width: 100%;
   background-color: rgba(0, 0, 0, 0.87);
 }
-
 .app-shell--dashboard {
   height: 100vh;
   min-height: 100vh;
   background-color: rgba(0, 0, 0, 0.85);
   overflow: hidden;
 }
-
 .app-content {
   flex: 1;
   display: flex;
@@ -1683,12 +1473,10 @@ dialog{
   width: 100%;
   overflow: hidden;
 }
-
 .app-footer {
   flex-shrink: 0;
   background-color: rgba(0, 0, 0, 0)!important;
 }
-
 .welcome-toast {
   position: fixed;
   inset: 0;
@@ -1701,11 +1489,9 @@ dialog{
   opacity: 1;
   transition: opacity 0.5s ease;
 }
-
 .welcome-toast--fading {
   opacity: 0;
 }
-
 .welcome-toast__content {
   background: rgba(0, 0, 0, 0.92);
   border: 1px solid rgba(255, 255, 255, 0.12);
@@ -1715,33 +1501,29 @@ dialog{
   color: white;
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
 }
-
 .welcome-toast__content h2 {
   margin: 0 0 8px;
   font-size: 1.5rem;
 }
-
 .welcome-toast__content p {
   margin: 0;
   color: #bbb;
   font-size: 1rem;
 }
 
+
 .nav__brand {
-  margin: 0;
+  margin: 0 0;
   font-size: clamp(1.25rem, 4vw, 2rem);
   margin-left: 10px;
   margin-right: 10px;
-
 }
 @media (max-width: 768px) {
   .nav__brand {
-    margin-left: -15px;
-    margin-right: -15px;
-
+    margin-left: 2px;
+    margin-right: 2px;
   }
 }
-
 .nav__logo {
   height: 80px;
   width: 100px;
@@ -1749,7 +1531,6 @@ dialog{
   cursor: pointer;
   object-fit: contain;
 }
-
 .weather-day--target-label {
   margin: 12px 0 0;
   font-size: 12px;
@@ -1757,7 +1538,6 @@ dialog{
   line-height: 1.5;
   text-align: center;
 }
-
 .day-prefs {
   display: flex;
   flex-direction: column;
@@ -1766,13 +1546,11 @@ dialog{
   padding-top: 14px;
   border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
-
 .day-prefs__group {
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
-
 .day-prefs__label {
   font-size: 11px;
   font-weight: 600;
@@ -1780,12 +1558,10 @@ dialog{
   letter-spacing: 0.5px;
   color: #999;
 }
-
 .day-prefs__toggle {
   display: flex;
   gap: 8px;
 }
-
 .day-prefs__btn {
   flex: 1;
   margin: 0 !important;
@@ -1801,18 +1577,15 @@ dialog{
   border: 1px solid rgba(255, 255, 255, 0.1) !important;
   transition: background 0.2s, color 0.2s, border-color 0.2s !important;
 }
-
 .day-prefs__btn:hover {
   background: rgba(255, 255, 255, 0.14) !important;
   color: #fff !important;
 }
-
 .day-prefs__btn--active {
   background: rgba(110, 40, 180, 0.85) !important;
   color: #fff !important;
   border-color: rgba(160, 90, 255, 0.5) !important;
 }
-
 .day-prefs__select {
   width: 100%;
   margin: 0 !important;
@@ -1827,21 +1600,17 @@ dialog{
   outline: none;
   appearance: auto;
 }
-
 .day-prefs__select option {
   background-color: #1a1a1a;
   color: #eee;
 }
-
 .day-prefs__select:focus {
   border-color: rgba(160, 90, 255, 0.6) !important;
 }
-
 .outfit-item-color {
   color: #aaa;
   font-size: 10px;
 }
-
 /* ── Landing / login screen (pre-auth only) ─────────────────────────────────── */
 .app-shell:not(.app-shell--dashboard) {
   min-height: 100vh;
@@ -1849,14 +1618,12 @@ dialog{
   display: flex;
   flex-direction: column;
 }
-
 html:has(.app-shell:not(.app-shell--dashboard)),
 body:has(.app-shell:not(.app-shell--dashboard)) {
   overflow-y: auto;
   height: auto;
   min-height: 100vh;
 }
-
 .landing {
   width: 100%;
   max-width: 1080px;
@@ -1864,12 +1631,10 @@ body:has(.app-shell:not(.app-shell--dashboard)) {
   padding: 0px 100px 8px;
   box-sizing: border-box;
 }
-
 .landing-hero {
   text-align: center;
   margin-bottom: 36px;
 }
-
 .landing-hero__eyebrow {
   margin: 0 0 8px;
   font-size: 10px;
@@ -1878,7 +1643,6 @@ body:has(.app-shell:not(.app-shell--dashboard)) {
   text-transform: uppercase;
   color: rgba(200, 170, 255, 0.85);
 }
-
 .landing-hero__title {
   margin: 0 0 10px;
   font-size: clamp(2rem, 5vw, 3.5rem);
@@ -1887,14 +1651,12 @@ body:has(.app-shell:not(.app-shell--dashboard)) {
   color: #fff;
   letter-spacing: -0.02em;
 }
-
 .landing-hero__title span {
   background: linear-gradient(90deg, #c084fc, #60a5fa);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
 }
-
 .landing-hero__subtitle {
   margin: 0 auto;
   max-width: 560px;
@@ -1902,14 +1664,12 @@ body:has(.app-shell:not(.app-shell--dashboard)) {
   line-height: 1.6;
   color: rgba(255, 255, 255, 0.72);
 }
-
 .landing-features {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 16px;
   margin-bottom: 8px;
 }
-
 .landing-feature {
   position: relative;
   overflow: hidden;
@@ -1933,7 +1693,6 @@ body:has(.app-shell:not(.app-shell--dashboard)) {
     background 0.28s ease,
     align-items 0.28s ease;
 }
-
 .landing-feature__glow {
   position: absolute;
   inset: 0;
@@ -1942,7 +1701,6 @@ body:has(.app-shell:not(.app-shell--dashboard)) {
   transition: opacity 0.28s ease;
   pointer-events: none;
 }
-
 .landing-feature__icon {
   display: block;
   font-size: 1.75rem;
@@ -1950,7 +1708,6 @@ body:has(.app-shell:not(.app-shell--dashboard)) {
   align-self: flex-start;
   transition: transform 0.3s ease, align-self 0.3s ease;
 }
-
 .landing-feature__title {
   margin: 0 0 8px;
   font-size: 1rem;
@@ -1958,7 +1715,6 @@ body:has(.app-shell:not(.app-shell--dashboard)) {
   color: #fff;
   width: 100%;
 }
-
 .landing-feature__desc {
   margin: 0;
   font-size: 0.875rem;
@@ -1967,7 +1723,6 @@ body:has(.app-shell:not(.app-shell--dashboard)) {
   width: 100%;
   transition: color 0.28s ease;
 }
-
 .landing-feature__detail {
   position: absolute;
   inset: 0;
@@ -1987,7 +1742,6 @@ body:has(.app-shell:not(.app-shell--dashboard)) {
   pointer-events: none;
   transition: opacity 0.28s ease;
 }
-
 .landing-feature__preview {
   position: absolute;
   left: 0;
@@ -2001,14 +1755,12 @@ body:has(.app-shell:not(.app-shell--dashboard)) {
   pointer-events: none;
   transition: opacity 0.28s ease;
 }
-
 .landing-feature__preview img {
   height: 56px;
   width: auto;
   object-fit: contain;
   filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.4));
 }
-
 .landing-feature:hover,
 .landing-feature:focus-visible,
 .landing-feature--active {
@@ -2019,32 +1771,27 @@ body:has(.app-shell:not(.app-shell--dashboard)) {
   background: rgba(0, 0, 0, 0.52);
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(168, 85, 247, 0.15);
 }
-
 .landing-feature:hover .landing-feature__glow,
 .landing-feature:focus-visible .landing-feature__glow,
 .landing-feature--active .landing-feature__glow {
   opacity: 1;
 }
-
 .landing-feature:hover .landing-feature__icon,
 .landing-feature:focus-visible .landing-feature__icon,
 .landing-feature--active .landing-feature__icon {
   align-self: center;
   transform: scale(1.12);
 }
-
 .landing-feature:hover .landing-feature__detail,
 .landing-feature:focus-visible .landing-feature__detail,
 .landing-feature--active .landing-feature__detail {
   opacity: 1;
 }
-
 .landing-feature:hover .landing-feature__preview,
 .landing-feature:focus-visible .landing-feature__preview,
 .landing-feature--active .landing-feature__preview {
   opacity: 1;
 }
-
 .landing-shell {
   display: flex;
   justify-content: center;
@@ -2053,12 +1800,10 @@ body:has(.app-shell:not(.app-shell--dashboard)) {
   box-sizing: border-box;
   background: transparent;
 }
-
 .landing-auth {
   width: 100%;
   max-width: 420px;
 }
-
 .landing-auth__card {
   padding: 15px 15px 15px;
   border-radius: 18px;
@@ -2071,59 +1816,48 @@ body:has(.app-shell:not(.app-shell--dashboard)) {
   transition: border-color 0.28s ease, box-shadow 0.28s ease, transform 0.28s ease;
   margin: 0 -300px 0 -300px;
 }
-
 .landing-auth__card:hover {
   border-color: rgba(168, 85, 247, 0.4);
   box-shadow: 0 24px 56px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(168, 85, 247, 0.12);
   transform: translateY(-2px);
 }
-
 .landing-auth__title {
   margin: 0 0 8px;
   font-size: 1.25rem;
   font-weight: 600;
 }
-
 .landing-auth__subtitle {
   margin: 0 0 8px;
   font-size: 0.9rem;
   line-height: 1.5;
   color: rgba(255, 255, 255, 0.62);
 }
-
 .landing-auth__button {
   display: flex;
   justify-content: center;
 }
-
 .landing-auth__button > div {
   transition: transform 0.2s ease;
 }
-
 .landing-auth__card:hover .landing-auth__button > div {
   transform: scale(1.03);
 }
-
 @media (max-width: 900px) {
   .landing-features {
     grid-template-columns: repeat(3, 1fr);
     max-width: none;
   }
 }
-
 @media (max-width: 768px) {
   .landing {
     padding: 24px 16px 4px;
   }
-
   .landing-hero {
     margin-bottom: 28px;
   }
-
   .landing-shell {
     padding: 4px 16px 32px;
   }
-
   .landing-feature:active {
     transform: translateY(-3px) scale(0.99);
   }
@@ -2131,7 +1865,6 @@ body:has(.app-shell:not(.app-shell--dashboard)) {
     justify-self: center;
     width: 84vw;
   }
-
   /* Mobile: hide supporting blurb; hover/tap still shows detail like desktop */
   .landing-feature__desc {
     display: none;
@@ -2148,7 +1881,6 @@ body:has(.app-shell:not(.app-shell--dashboard)) {
   align-self: center;
 }
 
-
 /* ── Mobile & tablet responsive ──────────────────────────────────────────────── */
 @media (max-width: 768px) {
   html, body {
@@ -2158,80 +1890,66 @@ body:has(.app-shell:not(.app-shell--dashboard)) {
     min-height: 100vh;
     -webkit-overflow-scrolling: touch;
   }
-
   html:has(.app-shell--dashboard),
   body:has(.app-shell--dashboard) {
     overflow: hidden;
     height: 100%;
     max-height: 100dvh;
   }
-
   #root {
     height: auto;
     min-height: 100vh;
   }
-
   #root:has(.app-shell--dashboard) {
     height: 100%;
     max-height: 100dvh;
     overflow: hidden;
   }
-
   .app-shell--dashboard {
     height: 100dvh;
     max-height: 100dvh;
     min-height: 0;
     overflow: hidden;
   }
-
   .nav {
     padding: 8px 12px 8px 6px;
     gap: 10px;
   }
-
   .app-shell--dashboard .nav {
     padding: 2px 8px 0;
   }
-
   .app-shell--dashboard .nav__logo {
     height: 44px;
     width: 56px;
     margin: 0 -8px;
   }
-
   .nav__logo {
     height: 56px;
     width: 72px;
     margin: 0 -12px;
   }
-
   .cardFeature {
     height: auto;
     min-height: 28vh;
     padding: 24px 16px;
     font-size: 1.1rem;
   }
-
   .cardFeature > h1 {
     font-size: clamp(1.5rem, 6vw, 2rem);
     margin: 0 0 8px;
   }
-
   .cardFeature > h2 {
     font-size: clamp(1rem, 4vw, 1.25rem);
     margin: 0;
   }
-
   .cardMain {
     margin: 0;
     padding: 12px 16px;
   }
-
   .cardMain h2,
   .cardMain h3 {
     font-size: clamp(1rem, 4vw, 1.25rem);
   }
-
   .cardSub {
     height: auto;
     min-height: auto;
@@ -2240,27 +1958,22 @@ body:has(.app-shell:not(.app-shell--dashboard)) {
     margin-bottom: 12px;
     cursor: pointer;
   }
-
   .cardSub:hover {
     height: auto;
     max-width: 100%;
     padding-left: 12px;
     flex-direction: column;
   }
-
   .cardSub--expanded {
     min-height: auto;
   }
-
   .cardSub .subText h1 {
     font-size: clamp(1.25rem, 5vw, 1.75rem);
   }
-
   .cardSub .subText h3 {
     font-size: clamp(0.875rem, 3.5vw, 1rem);
     margin: 8px 0 0;
   }
-
   .cardSub .subImg {
     display: flex !important;
     justify-content: center;
@@ -2269,7 +1982,6 @@ body:has(.app-shell:not(.app-shell--dashboard)) {
     margin-top: 12px;
     min-height: 80px;
   }
-
   .cardSub .subImg img {
     max-height: 72px;
     width: auto;
@@ -2277,7 +1989,6 @@ body:has(.app-shell:not(.app-shell--dashboard)) {
     opacity: 1 !important;
     display: block !important;
   }
-
   .b1 {
     padding-bottom: 24px;
     display: flex;
@@ -2285,14 +1996,12 @@ body:has(.app-shell:not(.app-shell--dashboard)) {
     align-items: center;
     width: 100%;
   }
-
   .b1 button {
     width: min(85vw, 320px);
     height: auto;
     min-height: 44px;
     margin: 8px 16px;
   }
-
   .b2 {
     display: flex;
     flex-direction: column;
@@ -2301,91 +2010,72 @@ body:has(.app-shell:not(.app-shell--dashboard)) {
     width: 100%;
     overflow: hidden;
   }
-
   .swipe-pane {
     padding: 6px 10px 42px;
   }
-
   .landing-home {
     gap: 8px;
   }
-
   .prefs-menu .day-prefs--column {
     gap: 12px;
   }
-
   .prefs-menu .day-prefs__toggle {
     flex-direction: column;
     gap: 6px;
   }
-
   .prefs-menu .day-prefs__btn {
     height: 36px !important;
     min-height: 36px !important;
     font-size: 12px !important;
     padding: 0 8px !important;
   }
-
   .prefs-menu .day-prefs__select {
     height: 36px !important;
     font-size: 12px !important;
   }
-
   .prefs-menu .day-stats {
     font-size: 10px;
   }
-
   .prefs-menu__actions {
     gap: 6px;
     padding-top: 4px;
   }
-
   .prefs-menu__btn {
     min-height: 34px;
     font-size: 12px;
   }
-
   .app-shell--dashboard .weather-day {
     flex: 0 0 auto;
     min-width: 48px;
   }
-
   .wardrobe-view,
   .add-view {
     padding: 10px;
   }
-
   .wardrobe-view .inv-grid {
     grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
     gap: 12px;
   }
-
   .wardrobe-view .inv-item__img-wrap {
     height: 140px;
   }
-
   .outfit-stack__row {
     gap: 8px;
     padding: 3px 8px;
   }
-
   .add-view__img {
     max-height: min(36vh, 220px);
   }
-
   .outfit-item-compact {
     flex: 0 0 76px;
   }
-
   .outfit-item-compact img {
     height: 68px;
   }
-
   .weather-day--target-label {
     font-size: 11px;
     padding: 0 4px;
   }
-
   dialog {
     width: 100%;
     height: 100%;
@@ -2394,7 +2084,6 @@ body:has(.app-shell:not(.app-shell--dashboard)) {
     padding: 0;
     margin: 0;
   }
-
   .modal-content {
     width: 100%;
     max-width: 100%;
@@ -2406,21 +2095,17 @@ body:has(.app-shell:not(.app-shell--dashboard)) {
     padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
     box-sizing: border-box;
   }
-
   .modal-header h2 {
     font-size: 1.25rem;
     text-align: center;
   }
-
   .inv-grid {
     grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
     gap: 10px;
   }
-
   .inv-item__img-wrap {
     height: 100px;
   }
-
   .modal-footer {
     position: sticky;
     bottom: 0;
@@ -2428,13 +2113,11 @@ body:has(.app-shell:not(.app-shell--dashboard)) {
     margin: 0 -16px -16px;
     padding: 16px;
   }
-
   .modal-close-button {
     width: 100%;
     min-height: 44px;
   }
 }
-
 
 @media (max-width: 480px) {
   .nav__logo {
@@ -2442,26 +2125,21 @@ body:has(.app-shell:not(.app-shell--dashboard)) {
     width: 60px;
     margin: 0 -8px;
   }
-
   .app-shell--dashboard .nav__logo {
     height: 40px;
     width: 50px;
   }
-
   .cardFeature {
     min-height: 24vh;
     padding: 20px 12px;
   }
-
   .swipe-pane {
     padding: 4px 8px 40px;
   }
-
   .inv-filter {
     padding: 4px 10px !important;
     font-size: 11px !important;
   }
-
   .wardrobe-view .inv-grid {
     grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
   }

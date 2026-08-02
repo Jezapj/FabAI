@@ -1,18 +1,16 @@
+
 import React, { useEffect, useState, useRef } from "react";
 import { GoogleLogin, googleLogout } from '@react-oauth/google';
 import { jwtDecode } from 'jwt-decode';
 import { apiPath, parseApiJson, probeApi, API_BASE } from './config';
 import StaggeredMenu from './StaggeredMenu';
-
 // ── Types ────────────────────────────────────────────────────────────────────
 interface OutfitItem { id: number; label: string; value: number; category: string; color?: string; }
 interface Outfit     { [key: string]: OutfitItem | null; }
 interface WeatherDay { date: string; maxTemp: number; minTemp: number; weatherCode: number; }
 interface InvItem    { id: number; label: string; value: number; category: string; color?: string; }
 interface DayPrefs   { formality: 'casual' | 'formal'; colorPreset: string; }
-
 type Formality = DayPrefs['formality'];
-
 // ── WMO weather-code table ───────────────────────────────────────────────────
 const WMO: Record<number, [string, string]> = {
   0:  ['☀️',  'Clear sky'],       1:  ['🌤️', 'Mainly clear'],
@@ -28,30 +26,24 @@ const WMO: Record<number, [string, string]> = {
   96: ['⛈️', 'Storm + hail'],    99: ['⛈️', 'Storm + hail'],
 };
 const wmo = (code: number): [string, string] => WMO[code] ?? ['🌡️', 'Unknown'];
-
 const RAIN_CODES = new Set([51, 53, 55, 61, 63, 65, 80, 81, 82, 95, 96, 99]);
-
 const COLOR_PRESETS: { id: string; label: string }[] = [
   { id: 'any',          label: 'Any colours' },
   { id: 'accent_black', label: 'Single accent + black' },
   { id: 'earth_sky',    label: 'Light brown + light blue' },
   { id: 'neutrals',     label: 'Neutrals only' },
 ];
-
 function isRainy(code: number): boolean {
   return RAIN_CODES.has(code);
 }
-
 function defaultDayPrefs(): DayPrefs {
   return { formality: 'casual', colorPreset: 'any' };
 }
-
 function dayLabel(dateStr: string, i: number): string {
   if (i === 0) return 'Today';
   if (i === 1) return 'Tmrw';
   return new Date(dateStr + 'T12:00:00').toLocaleDateString('en-AU', { weekday: 'short' });
 }
-
 const OUTFIT_ORDER = ['hat', 'top', 'bot', 'shoe'] as const;
 const OUTFIT_PART_LABEL: Record<(typeof OUTFIT_ORDER)[number], string> = {
   hat: 'Hat',
@@ -59,12 +51,9 @@ const OUTFIT_PART_LABEL: Record<(typeof OUTFIT_ORDER)[number], string> = {
   bot: 'Bottom',
   shoe: 'Shoes',
 };
-
 type SwipeView = 0 | 1 | 2; // Wardrobe | Landing | Add
-
 const SWIPE_THRESHOLD_PX = 56;
 const VIEW_LABELS = ['Wardrobe', 'Home', 'Add'] as const;
-
 // ── Loading overlay (section-scoped) ─────────────────────────────────────────
 interface LoadingOverlayProps {
   loading: boolean;
@@ -72,7 +61,6 @@ interface LoadingOverlayProps {
   className?: string;
   children: React.ReactNode;
 }
-
 function LoadingOverlay({ loading, message = 'Loading...', className, children }: LoadingOverlayProps) {
   return (
     <div className={`loading-overlay-host${className ? ` ${className}` : ''}`}>
@@ -86,7 +74,6 @@ function LoadingOverlay({ loading, message = 'Loading...', className, children }
     </div>
   );
 }
-
 // ── Temperature → warmth target conversion ───────────────────────────────────
 // Maps °C to 0-100 where 0 = very hot (light clothes), 100 = very cold (heavy)
 // Calibrated for range -10 °C (100) → 45 °C (0)
@@ -98,18 +85,15 @@ function tempToTarget(maxTemp: number): number {
 }
 
 
-
 // ── Weather Widget (forecast only — prefs live in staggered menu) ─────────────
 interface WeatherWidgetProps {
   onDaySelect?: (day: WeatherDay, label: string) => void;
 }
-
 function WeatherWidget({ onDaySelect }: WeatherWidgetProps) {
   const [forecast, setForecast] = useState<WeatherDay[]>([]);
   const [city, setCity]         = useState('');
   const [status, setStatus]     = useState<'loading' | 'ok' | 'error'>('loading');
   const [selectedIdx, setSelectedIdx] = useState(0);
-
   useEffect(() => {
     async function load(lat: number, lon: number) {
       try {
@@ -133,7 +117,6 @@ function WeatherWidget({ onDaySelect }: WeatherWidgetProps) {
         setStatus('error');
       }
     }
-
     if (!navigator.geolocation) {
       load(-37.8136, 144.9631);
       setCity('Melbourne');
@@ -154,7 +137,6 @@ function WeatherWidget({ onDaySelect }: WeatherWidgetProps) {
       { timeout: 5000 }
     );
   }, []);
-
   const wrap: React.CSSProperties = {
     background: 'rgba(0,0,0,0)',
     borderRadius: 14,
@@ -166,7 +148,6 @@ function WeatherWidget({ onDaySelect }: WeatherWidgetProps) {
     boxSizing: 'border-box',
     flexShrink: 0,
   };
-
   if (status === 'loading') return (
     <div className="weather-widget" style={wrap}>
       <p style={{ textAlign: 'center', color: '#aaa', margin: 0, fontSize: 13 }}>Loading forecast…</p>
@@ -177,7 +158,6 @@ function WeatherWidget({ onDaySelect }: WeatherWidgetProps) {
       <p style={{ textAlign: 'center', color: '#666', margin: 0, fontSize: 13 }}>Weather unavailable</p>
     </div>
   );
-
   return (
     <div className="weather-widget" style={wrap}>
       <p style={{ margin: '0 0 8px', fontSize: 12, color: '#bbb', fontWeight: 500 }}>
@@ -215,7 +195,6 @@ function WeatherWidget({ onDaySelect }: WeatherWidgetProps) {
     </div>
   );
 }
-
 // ── Day prefs controls (style / colour — shown in staggered menu) ─────────────
 interface DayControlsProps {
   formality: Formality;
@@ -223,7 +202,6 @@ interface DayControlsProps {
   onFormalityChange: (value: Formality) => void;
   onColorPresetChange: (value: string) => void;
 }
-
 function DayControls({
   formality,
   colorPreset,
@@ -267,7 +245,6 @@ function DayControls({
     </div>
   );
 }
-
 interface DayStatsProps {
   selectedDay: string;
   maxTemp: number | null;
@@ -276,7 +253,6 @@ interface DayStatsProps {
   colorPreset: string;
   outfitTarget: number;
 }
-
 function DayStats({
   selectedDay,
   maxTemp,
@@ -296,7 +272,6 @@ function DayStats({
     </p>
   );
 }
-
 // ── Placeholder modals (Settings / Upgrade) ───────────────────────────────────
 function PlaceholderModal({
   open,
@@ -310,14 +285,12 @@ function PlaceholderModal({
   children: React.ReactNode;
 }) {
   const ref = useRef<HTMLDialogElement | null>(null);
-
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
     if (open && !el.open) el.showModal();
     if (!open && el.open) el.close();
   }, [open]);
-
   return (
     <dialog
       ref={ref}
@@ -339,28 +312,23 @@ function PlaceholderModal({
     </dialog>
   );
 }
-
 // ── Inventory / Wardrobe ──────────────────────────────────────────────────────
 // UI categories: Hat · Top · Bottom · Shoes · Other (maps to backend categories)
 const FILTER_CATS = ['All', 'Hat', 'Top', 'Bottom', 'Shoes', 'Other'] as const;
 const EDIT_CATS = ['Hat', 'Top', 'Bottom', 'Shoes', 'Other'] as const;
 type UiCategory = (typeof EDIT_CATS)[number];
-
 const HAT_BACKEND = new Set(['Optional', 'Head', 'Hat']);
 const MAIN_BACKEND = new Set(['Top', 'Bottom', 'Shoes']);
-
 function toUiCategory(cat: string): UiCategory {
   if (HAT_BACKEND.has(cat)) return 'Hat';
   if (MAIN_BACKEND.has(cat)) return cat as UiCategory;
   return 'Other';
 }
-
 function toApiCategory(ui: UiCategory): string {
   if (ui === 'Hat') return 'Optional';
   if (ui === 'Other') return 'One piece';
   return ui;
 }
-
 const CAT_COLORS: Record<string, string> = {
   Hat:     'rgba(255,120,120,.25)',
   Top:     'rgba(80,150,255,.25)',
@@ -368,14 +336,11 @@ const CAT_COLORS: Record<string, string> = {
   Shoes:   'rgba(255,180,60,.25)',
   Other:   'rgba(180,100,255,.25)',
 };
-
 interface InvContentProps { user: any; refreshKey: number; }
-
 function InventoryContent({ user, refreshKey }: InvContentProps) {
   const [items,   setItems]   = useState<InvItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter,  setFilter]  = useState<string>('All');
-
   useEffect(() => {
     if (!user?.sub) { setLoading(false); return; }
     setLoading(true);
@@ -384,17 +349,14 @@ function InventoryContent({ user, refreshKey }: InvContentProps) {
       .then(d  => { setItems(Array.isArray(d) ? d : []); setLoading(false); })
       .catch(() => setLoading(false));
   }, [user, refreshKey]);
-
   const shown = filter === 'All'
     ? items
     : items.filter(x => toUiCategory(x.category) === filter);
-
   return (
     <div className="wardrobe-view">
       <div className="wardrobe-view__header">
         <h2>My Wardrobe{!loading ? ` · ${items.length}` : ''}</h2>
       </div>
-
       <div className="wardrobe-view__filters" onPointerDown={e => e.stopPropagation()}>
         {FILTER_CATS.map(c => (
           <button
@@ -407,7 +369,6 @@ function InventoryContent({ user, refreshKey }: InvContentProps) {
           </button>
         ))}
       </div>
-
       <LoadingOverlay loading={loading} message="Loading..." className="wardrobe-view__body">
         {loading ? (
           <div className="wardrobe-view__empty" aria-hidden="true" />
@@ -490,7 +451,6 @@ function InventoryContent({ user, refreshKey }: InvContentProps) {
     </div>
   );
 }
-
 // ── Outfit carousel (gesture-isolated from page swipe) ───────────────────────
 interface OutfitCarouselProps {
   outfits: Outfit[];
@@ -498,7 +458,6 @@ interface OutfitCarouselProps {
   formality: Formality;
   loading: boolean;
 }
-
 function OutfitCarousel({ outfits, selectedDay, formality, loading }: OutfitCarouselProps) {
   const [index, setIndex] = useState(0);
   const [dragX, setDragX] = useState(0);
@@ -507,18 +466,15 @@ function OutfitCarousel({ outfits, selectedDay, formality, loading }: OutfitCaro
   const startY = useRef(0);
   const locked = useRef<'h' | 'v' | null>(null);
   const pointerId = useRef<number | null>(null);
-
   useEffect(() => {
     setIndex(0);
     setDragX(0);
   }, [outfits]);
-
   useEffect(() => {
     if (index >= outfits.length && outfits.length > 0) {
       setIndex(outfits.length - 1);
     }
   }, [index, outfits.length]);
-
   const commitSwipe = (dx: number) => {
     if (Math.abs(dx) < SWIPE_THRESHOLD_PX) {
       setDragX(0);
@@ -528,7 +484,6 @@ function OutfitCarousel({ outfits, selectedDay, formality, loading }: OutfitCaro
     else if (dx > 0 && index > 0) setIndex(i => i - 1);
     setDragX(0);
   };
-
   const onPointerDown = (e: React.PointerEvent) => {
     e.stopPropagation();
     pointerId.current = e.pointerId;
@@ -538,7 +493,6 @@ function OutfitCarousel({ outfits, selectedDay, formality, loading }: OutfitCaro
     locked.current = null;
     setDragging(true);
   };
-
   const onPointerMove = (e: React.PointerEvent) => {
     e.stopPropagation();
     if (pointerId.current !== e.pointerId || !dragging) return;
@@ -554,7 +508,6 @@ function OutfitCarousel({ outfits, selectedDay, formality, loading }: OutfitCaro
     const atEnd = index >= outfits.length - 1 && dx < 0;
     setDragX(atStart || atEnd ? dx * 0.25 : dx);
   };
-
   const onPointerUp = (e: React.PointerEvent) => {
     e.stopPropagation();
     if (pointerId.current !== e.pointerId) return;
@@ -564,12 +517,10 @@ function OutfitCarousel({ outfits, selectedDay, formality, loading }: OutfitCaro
     else setDragX(0);
     locked.current = null;
   };
-
   const orderedItems = (outfit: Outfit) =>
     OUTFIT_ORDER
       .map(part => ({ part, item: outfit[part] ?? null }))
       .filter((row): row is { part: (typeof OUTFIT_ORDER)[number]; item: OutfitItem } => row.item != null);
-
   return (
     <LoadingOverlay loading={loading} message="Thinking..." className="outfit-carousel-wrap">
       <div className="outfit-carousel-header">
@@ -581,7 +532,6 @@ function OutfitCarousel({ outfits, selectedDay, formality, loading }: OutfitCaro
           <span className="outfit-carousel-count">{index + 1} / {outfits.length}</span>
         )}
       </div>
-
       {!loading && outfits.length === 0 ? (
         <div className="no-outfits">
           <p>Not enough items to suggest an outfit for this weather.</p>
@@ -628,11 +578,9 @@ function OutfitCarousel({ outfits, selectedDay, formality, loading }: OutfitCaro
     </LoadingOverlay>
   );
 }
-
 // ── Welcome toast on login ────────────────────────────────────────────────────
 function WelcomeToast({ name, onDone }: { name: string; onDone: () => void }) {
   const [fading, setFading] = React.useState(false);
-
   useEffect(() => {
     const fadeTimer = window.setTimeout(() => setFading(true), 1500);
     const hideTimer = window.setTimeout(onDone, 2000);
@@ -641,17 +589,16 @@ function WelcomeToast({ name, onDone }: { name: string; onDone: () => void }) {
       window.clearTimeout(hideTimer);
     };
   }, [onDone]);
-
+  
   return (
     <div className={`welcome-toast${fading ? ' welcome-toast--fading' : ''}`} role="status" aria-live="polite">
       <div className="welcome-toast__content">
-        <h2>Welcome, {name}</h2>
+        <h1>Welcome, {name}</h1>
         <p>Your personal wardrobe assistant</p>
       </div>
     </div>
   );
 }
-
 // ── Login / Dashboard ─────────────────────────────────────────────────────────
 export function Login({ user, setUser }: { user: any, setUser: any }) {
   const [classid,    setClassid]    = React.useState<any>('');
@@ -678,7 +625,6 @@ export function Login({ user, setUser }: { user: any, setUser: any }) {
   const [pageDragging, setPageDragging] = React.useState(false);
   const [settingsOpen, setSettingsOpen] = React.useState(false);
   const [upgradeOpen, setUpgradeOpen] = React.useState(false);
-
   const outfitRequestRef = useRef(0);
   const wakeAbortRef = useRef<AbortController | null>(null);
   const pageStartX = useRef(0);
@@ -686,18 +632,15 @@ export function Login({ user, setUser }: { user: any, setUser: any }) {
   const pageLocked = useRef<'h' | 'v' | null>(null);
   const pagePointerId = useRef<number | null>(null);
   const shellWidthRef = useRef(1);
-
   const wakeBackend = React.useCallback(async () => {
     if (import.meta.env.PROD && !API_BASE) {
       setBackendStatus('error');
       return false;
     }
-
     wakeAbortRef.current?.abort();
     const ac = new AbortController();
     wakeAbortRef.current = ac;
     setBackendStatus('starting');
-
     const deadline = Date.now() + 90_000;
     while (Date.now() < deadline) {
       if (ac.signal.aborted) return false;
@@ -714,9 +657,7 @@ export function Login({ user, setUser }: { user: any, setUser: any }) {
     setBackendStatus('error');
     return false;
   }, []);
-
   useEffect(() => { setClassid(user ? 'b2' : '') }, [user]);
-
   useEffect(() => {
     if (!user) {
       setShowWelcome(false);
@@ -730,13 +671,11 @@ export function Login({ user, setUser }: { user: any, setUser: any }) {
     wakeBackend();
     return () => wakeAbortRef.current?.abort();
   }, [user, wakeBackend]);
-
   useEffect(() => {
     if (!user?.sub || backendStatus !== 'ready') {
       setOutfitsLoading(false);
       return;
     }
-
     const requestId = ++outfitRequestRef.current;
     setOutfitsLoading(true);
     const timer = window.setTimeout(() => {
@@ -747,7 +686,6 @@ export function Login({ user, setUser }: { user: any, setUser: any }) {
         formality,
         color_preset: colorPreset,
       });
-
       fetch(apiPath(`/api/outfit?${params}`))
         .then(r => {
           if (!r.ok) throw new Error(`Outfit request failed (${r.status})`);
@@ -767,17 +705,14 @@ export function Login({ user, setUser }: { user: any, setUser: any }) {
           }
         });
     }, 300);
-
     return () => window.clearTimeout(timer);
   }, [user, outfitTarget, weatherCode, formality, colorPreset, outfitRefresh, backendStatus]);
-
   const updateDayPrefs = (date: string, patch: Partial<DayPrefs>) => {
     setDayPrefs(prev => ({
       ...prev,
       [date]: { ...(prev[date] ?? defaultDayPrefs()), ...patch },
     }));
   };
-
   const handleDaySelect = (day: WeatherDay, label: string) => {
     const prefs = dayPrefs[day.date] ?? defaultDayPrefs();
     setOutfitTarget(tempToTarget(day.maxTemp));
@@ -788,17 +723,14 @@ export function Login({ user, setUser }: { user: any, setUser: any }) {
     setFormality(prefs.formality);
     setColorPreset(prefs.colorPreset);
   };
-
   const handleFormalityChange = (value: Formality) => {
     setFormality(value);
     if (selectedDate) updateDayPrefs(selectedDate, { formality: value });
   };
-
   const handleColorPresetChange = (value: string) => {
     setColorPreset(value);
     if (selectedDate) updateDayPrefs(selectedDate, { colorPreset: value });
   };
-
   const runClassification = async (id: number) => {
     setPrediction('Classifying…');
     try {
@@ -827,20 +759,16 @@ export function Login({ user, setUser }: { user: any, setUser: any }) {
       wakeBackend();
     }
   };
-
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     e.target.value = '';
     if (!file) return;
     if (backendStatus !== 'ready' || busy) return;
-
     setBusy(true);
     setPrediction('Uploading...');
-
     const formData = new FormData();
     formData.append('image', file);
     formData.append('user_info', JSON.stringify(user));
-
     fetch(apiPath('/api/uploadnx'), { method: 'POST', body: formData })
       .then(async (r) => {
         const d = await parseApiJson(r);
@@ -872,7 +800,6 @@ export function Login({ user, setUser }: { user: any, setUser: any }) {
       })
       .finally(() => setBusy(false));
   };
-
   const canUpload = backendStatus === 'ready' && !busy;
   const statusLabel =
     backendStatus === 'ready'
@@ -882,7 +809,6 @@ export function Login({ user, setUser }: { user: any, setUser: any }) {
             ? 'Set VITE_API_URL on web service & redeploy'
             : 'Backend offline — tap retry')
         : 'Starting backend…';
-
   const commitPageSwipe = (dx: number) => {
     if (Math.abs(dx) < SWIPE_THRESHOLD_PX) {
       setPageDragX(0);
@@ -892,7 +818,6 @@ export function Login({ user, setUser }: { user: any, setUser: any }) {
     else if (dx > 0 && viewIndex > 0) setViewIndex(v => (v - 1) as SwipeView);
     setPageDragX(0);
   };
-
   const onPagePointerDown = (e: React.PointerEvent) => {
     if (e.button !== 0 && e.pointerType === 'mouse') return;
     pagePointerId.current = e.pointerId;
@@ -903,7 +828,6 @@ export function Login({ user, setUser }: { user: any, setUser: any }) {
     shellWidthRef.current = (e.currentTarget as HTMLElement).clientWidth || 1;
     setPageDragging(true);
   };
-
   const onPagePointerMove = (e: React.PointerEvent) => {
     if (pagePointerId.current !== e.pointerId || !pageDragging) return;
     const dx = e.clientX - pageStartX.current;
@@ -918,7 +842,6 @@ export function Login({ user, setUser }: { user: any, setUser: any }) {
     const atRight = viewIndex === 2 && dx < 0;
     setPageDragX(atLeft || atRight ? dx * 0.2 : dx);
   };
-
   const onPagePointerUp = (e: React.PointerEvent) => {
     if (pagePointerId.current !== e.pointerId) return;
     pagePointerId.current = null;
@@ -927,16 +850,13 @@ export function Login({ user, setUser }: { user: any, setUser: any }) {
     else setPageDragX(0);
     pageLocked.current = null;
   };
-
   const logout = () => {
     googleLogout();
     setUser(null);
     setClassid('');
   };
-
   const trackPct = -viewIndex * 100;
   const dragPct = (pageDragX / shellWidthRef.current) * 100;
-
   return (
     <div className={classid}>
       {user ? (
@@ -944,7 +864,6 @@ export function Login({ user, setUser }: { user: any, setUser: any }) {
           {showWelcome && (
             <WelcomeToast name={user.name} onDone={() => setShowWelcome(false)} />
           )}
-
           <div
             className="swipe-shell"
             onPointerDown={onPagePointerDown}
@@ -960,7 +879,6 @@ export function Login({ user, setUser }: { user: any, setUser: any }) {
               <section className="swipe-pane swipe-pane--wardrobe" aria-label="Wardrobe">
                 <InventoryContent user={user} refreshKey={inventoryRefresh} />
               </section>
-
               {/* ── Middle: Landing ── */}
               <section className="swipe-pane swipe-pane--landing" aria-label="Home">
                 <div className="landing-home">
@@ -973,7 +891,6 @@ export function Login({ user, setUser }: { user: any, setUser: any }) {
                   />
                 </div>
               </section>
-
               {/* ── Right: Add / AI Classification ── */}
               <section className="swipe-pane swipe-pane--add" aria-label="Add items">
                 <div className="add-view">
@@ -991,7 +908,6 @@ export function Login({ user, setUser }: { user: any, setUser: any }) {
                       )}
                     </p>
                   </div>
-
                   <LoadingOverlay loading={busy} message="Thinking..." className="add-view__stage">
                     {imageUrl ? (
                       <div className="add-view__result">
@@ -1010,7 +926,6 @@ export function Login({ user, setUser }: { user: any, setUser: any }) {
                       </div>
                     )}
                   </LoadingOverlay>
-
                   <div className="add-view__actions" onPointerDown={e => e.stopPropagation()}>
                     <button
                       type="button"
@@ -1025,7 +940,6 @@ export function Login({ user, setUser }: { user: any, setUser: any }) {
                 </div>
               </section>
             </div>
-
             <nav
               className="swipe-chrome"
               aria-label="Views"
@@ -1048,9 +962,7 @@ export function Login({ user, setUser }: { user: any, setUser: any }) {
               </button>
             </nav>
           </div>
-
           <input id="fileInput" type="file" accept="image/*" onChange={handleFileChange} style={{ display: 'none' }} />
-
           <StaggeredMenu
             position="left"
             isFixed
@@ -1099,7 +1011,6 @@ export function Login({ user, setUser }: { user: any, setUser: any }) {
               </div>
             </div>
           </StaggeredMenu>
-
           <PlaceholderModal
             open={settingsOpen}
             title="Settings"
@@ -1109,7 +1020,6 @@ export function Login({ user, setUser }: { user: any, setUser: any }) {
               Settings will live here — account, preferences, and notifications coming soon.
             </p>
           </PlaceholderModal>
-
           <PlaceholderModal
             open={upgradeOpen}
             title="Upgrade to Pro"
@@ -1126,13 +1036,13 @@ export function Login({ user, setUser }: { user: any, setUser: any }) {
       ) : (
         <div className="landing-auth">
           <div className="landing-auth__card">
-            <h2 className="landing-auth__title">Sign in to continue</h2>
+            <h1 className="landing-auth__title">Sign in to Continue</h1>
             <p className="landing-auth__subtitle">Connect your Google account to start building your smart wardrobe.</p>
-            {import.meta.env.PROD && (
+            {/* {import.meta.env.PROD && (
               <p className="landing-auth__origin" style={{ fontSize: '12px', color: 'rgba(255,255,255,0.55)', marginBottom: 8 }}>
                 Site origin for Google OAuth: <code>{window.location.origin}</code>
               </p>
-            )}
+            )} */}
             {authError && (
               <p className="landing-auth__error" style={{ fontSize: '13px', color: '#fca5a5', marginBottom: 8 }}>
                 {authError}
@@ -1164,7 +1074,6 @@ export function Login({ user, setUser }: { user: any, setUser: any }) {
     </div>
   );
 }
-
 const LANDING_FEATURES: {
   id: string;
   icon: string;
@@ -1196,14 +1105,11 @@ const LANDING_FEATURES: {
     detail: 'Set a colour preset per day so every suggested outfit works together harmoniously.',
   },
 ];
-
 export function Main() {
   const [activeFeature, setActiveFeature] = React.useState<string | null>(null);
-
   const toggleFeature = (id: string) => {
     setActiveFeature(prev => (prev === id ? null : id));
   };
-
   return (
     <div className="landing">
       <section className="landing-hero">
@@ -1216,7 +1122,6 @@ export function Main() {
           FabAI reads the forecast, understands your closet, and suggests outfits that fit the weather and your style.
         </p>
       </section>
-
       <section className="landing-features" aria-label="Features">
         {LANDING_FEATURES.map(feature => {
           const active = activeFeature === feature.id;
@@ -1255,7 +1160,6 @@ export function Main() {
     </div>
   );
 }
-
 export function Card(props: any) {
   const bg = props.bg === true ? { "backgroundImage": `url("${props.img}")` } : { "backgroundImage": "", "backgroundColor": "rgba(0, 0, 0, 0)" };
   const cardFeature = (
@@ -1275,7 +1179,6 @@ export function Card(props: any) {
   const [contents,     setContents]     = React.useState({ "display": "none", "opacity": "0", "transition": "2s", "transitionDelay": "4.5s" });
   const [subContents1, setSubContents1] = React.useState({ "display": "block", "transition": "2s", "opacity": "0" });
   const [subContents2, setSubContents2] = React.useState({ "display": "block", "opacity": "0", "transition": "2s", "transitionDelay": "0s" });
-
   React.useEffect(() => {
     const isMobile = window.matchMedia('(max-width: 768px)').matches;
     if (isMobile) {
@@ -1285,7 +1188,6 @@ export function Card(props: any) {
       setSubContents2({ "display": "block", "opacity": "1", "transition": "2s", "transitionDelay": "0s" });
     }
   }, []);
-
   const cardSub = (
     <div className={`cardSub${expanded ? ' cardSub--expanded' : ''}`}
       onClick={() => {
@@ -1337,12 +1239,10 @@ export function Card(props: any) {
   if (props.type === 'Feature') return cardFeature;
   return props.type === 'Main' ? cardMain : cardSub;
 }
-
 const navClickHandler = () => {
   window.location.assign('/');
   return 0;
 };
-
 export function Navbar() {
   return (
     <div className='nav'>

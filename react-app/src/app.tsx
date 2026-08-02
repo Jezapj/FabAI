@@ -1,6 +1,7 @@
 import React from "react";
-import { useEffect, useState } from 'react';
-import { Main, Navbar, Login } from './Main'
+import { useState } from 'react';
+import { Main, Navbar, Login } from './Main';
+import { InstallPrompt } from './InstallPrompt';
 
 function App() {
   const [user, setUser] = useState<any>(null);
@@ -14,6 +15,7 @@ function App() {
         <Login user={user} setUser={setUser} />
       </div>
       <div className="app-footer" style={footer}></div>
+      <InstallPrompt />
     </div>
   );
 }

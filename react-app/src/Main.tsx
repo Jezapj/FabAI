@@ -92,7 +92,7 @@ function tempToTarget(maxTemp: number): number {
 }
 
 
-// ── Weather Widget (forecast only — prefs live in staggered menu) ─────────────
+// ── Weather Widget (forecast only - prefs live in staggered menu) ─────────────
 interface WeatherWidgetProps {
   onDaySelect?: (day: WeatherDay, label: string) => void;
 }
@@ -206,7 +206,7 @@ function WeatherWidget({ onDaySelect }: WeatherWidgetProps) {
     </div>
   );
 }
-// ── Day prefs controls (style / colour — shown in staggered menu) ─────────────
+// ── Day prefs controls (style / colour - shown in staggered menu) ─────────────
 interface DayControlsProps {
   formality: Formality;
   colorPreset: string;
@@ -546,7 +546,7 @@ function OutfitCarousel({ outfits, selectedDay, formality, loading }: OutfitCaro
       {!loading && outfits.length === 0 ? (
         <div className="no-outfits">
           <p>Not enough items to suggest an outfit for this weather.</p>
-          <p className="no-outfits__hint">Add more Tops, Bottoms, and Shoes — swipe left to upload.</p>
+          <p className="no-outfits__hint">Add more Tops, Bottoms, and Shoes - swipe left to upload.</p>
         </div>
       ) : (
         <div
@@ -819,7 +819,7 @@ export function Login({ user, setUser }: { user: any, setUser: any }) {
       : backendStatus === 'error'
         ? (import.meta.env.PROD && !API_BASE
             ? 'Set VITE_API_URL on web service & redeploy'
-            : 'Backend offline — tap retry')
+            : 'Backend offline - tap retry')
         : 'Starting backend…';
   const commitPageSwipe = (dx: number) => {
     if (Math.abs(dx) < SWIPE_THRESHOLD_PX) {
@@ -1044,7 +1044,7 @@ export function Login({ user, setUser }: { user: any, setUser: any }) {
             onClose={() => setSettingsOpen(false)}
           >
             <p className="app-modal__placeholder">
-              Settings will live here — account, preferences, and notifications coming soon.
+              Settings will live here - account, preferences, and notifications coming soon.
             </p>
           </PlaceholderModal>
           <PlaceholderModal

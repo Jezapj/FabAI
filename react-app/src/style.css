@@ -2155,3 +2155,134 @@ body:has(.app-shell:not(.app-shell--dashboard)) {
     grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
   }
 }
+
+/* ── PWA install prompt ─────────────────────────────────────────────────────── */
+.install-prompt {
+  position: fixed;
+  inset: auto 16px 16px 16px;
+  z-index: 200;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.install-prompt__card {
+  pointer-events: auto;
+  width: min(440px, 100%);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 16px 18px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(8, 4, 18, 0.96);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.45);
+  color: #fff;
+}
+
+.install-prompt__icon {
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.06);
+  padding: 4px;
+  box-sizing: border-box;
+}
+
+.install-prompt__body {
+  flex: 1;
+  min-width: 0;
+}
+
+.install-prompt__title {
+  margin: 0 0 6px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #fff;
+  -webkit-text-fill-color: #fff;
+  -webkit-text-stroke: 0;
+  text-shadow: none;
+  letter-spacing: 0.02em;
+}
+
+.install-prompt__text {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.install-prompt__text strong {
+  color: #e2e8f0;
+  font-weight: 600;
+}
+
+.install-prompt__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  width: 100%;
+  justify-content: flex-end;
+}
+
+.install-prompt__btn {
+  margin: 0 !important;
+  width: auto !important;
+  min-height: 38px !important;
+  height: auto !important;
+  padding: 0 16px !important;
+  border-radius: 10px !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  cursor: pointer;
+  border: none;
+}
+
+.install-prompt__btn--primary {
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.95), rgba(96, 165, 250, 0.9)) !important;
+  color: #fff !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+}
+
+.install-prompt__btn--primary:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+
+.install-prompt__btn--primary:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.install-prompt__btn--ghost {
+  background: rgba(255, 255, 255, 0.1) !important;
+  color: #eee !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+}
+
+.install-prompt__btn--ghost:hover {
+  background: rgba(255, 255, 255, 0.18) !important;
+}
+
+@media (max-width: 480px) {
+  .install-prompt {
+    inset: auto 10px 10px 10px;
+  }
+
+  .install-prompt__card {
+    padding: 14px;
+    gap: 12px;
+  }
+
+  .install-prompt__actions {
+    justify-content: stretch;
+  }
+
+  .install-prompt__btn {
+    flex: 1;
+    min-width: 0;
+  }
+}

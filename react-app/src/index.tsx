@@ -3,6 +3,9 @@ import { createRoot } from "react-dom/client";
 import App from "./app";
 import './style.css';
 import { GoogleOAuthProvider } from '@react-oauth/google';
+import { registerServiceWorker } from './registerServiceWorker';
+
+registerServiceWorker();
 
 const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID?.trim() ?? '';
 

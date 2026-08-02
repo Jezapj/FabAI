@@ -54,17 +54,20 @@
   object-fit: contain;
 }
 .sm-toggle {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
-  background: transparent;
-  border: none;
   cursor: pointer;
   color: #e9e9ef;
+  background: 0 0;
+  border: none;
+  align-items: center;
+  gap: .3rem;
   font-weight: 500;
   line-height: 1;
+  display: inline-flex;
+  position: absolute;
   overflow: visible;
+  margin: 0px -0px;
+  top: 10px;
+  left: 8px;
 }
 .sm-toggle:hover {
   background: transparent;
@@ -318,7 +321,7 @@
 }
 @media (max-width: 640px) {
   .staggered-menu-panel {
-    width: 100%;
+    width: 80%;
     left: 0;
     right: 0;
   }

@@ -1520,8 +1520,8 @@ dialog{
 }
 @media (max-width: 768px) {
   .nav__brand {
-    margin-left: 2px;
-    margin-right: 2px;
+    margin-left: -15px;
+    margin-right: -15px;
   }
 }
 .nav__logo {

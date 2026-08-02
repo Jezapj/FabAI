@@ -892,7 +892,7 @@ export function Login({ user, setUser }: { user: any, setUser: any }) {
                 </div>
               </section>
               {/* ── Right: Add / AI Classification ── */}
-              <section className="swipe-pane swipe-pane--add" aria-label="Add items">
+              <section className="swipe-pane swipe-pane--add" aria-label="Add Items">
                 <div className="add-view">
                   <div className="add-view__header">
                     <h2>Add item</h2>

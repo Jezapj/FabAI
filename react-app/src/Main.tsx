@@ -3,6 +3,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { GoogleLogin, googleLogout } from '@react-oauth/google';
 import { jwtDecode } from 'jwt-decode';
 import { apiPath, parseApiJson, probeApi, API_BASE } from './config';
+import { createGuestUser } from './session';
 import StaggeredMenu from './StaggeredMenu';
 // ── Types ────────────────────────────────────────────────────────────────────
 interface OutfitItem { id: number; label: string; value: number; category: string; color?: string; }
@@ -877,10 +878,16 @@ export function Login({ user, setUser }: { user: any, setUser: any }) {
     else setPageDragX(0);
     pageLocked.current = null;
   };
+  const isGuest = !!user?.guest;
   const logout = () => {
-    googleLogout();
+    if (!isGuest) googleLogout();
     setUser(null);
     setClassid('');
+  };
+  const continueAsGuest = () => {
+    setAuthError('');
+    setUser(createGuestUser());
+    setShowWelcome(true);
   };
   const trackPct = -viewIndex * 100;
   const dragPct = (pageDragX / shellWidthRef.current) * 100;
@@ -985,7 +992,7 @@ export function Login({ user, setUser }: { user: any, setUser: any }) {
                 ))}
               </div>
               <button type="button" className="swipe-logout" onClick={logout}>
-                Logout
+                {isGuest ? 'Exit guest' : 'Logout'}
               </button>
             </nav>
           </div>
@@ -1095,6 +1102,18 @@ export function Login({ user, setUser }: { user: any, setUser: any }) {
                 }}
               />
             </div>
+            <div className="landing-auth__divider"><span>or</span></div>
+            <button
+              type="button"
+              className="landing-auth__guest"
+              onClick={continueAsGuest}
+            >
+              Continue as guest
+            </button>
+            <p className="landing-auth__guest-note">
+              Try FabAI without an account. Your guest wardrobe stays on this device and isn't
+              linked to a Google account.
+            </p>
           </div>
         </div>
       )}

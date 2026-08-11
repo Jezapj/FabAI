@@ -1,4 +1,4 @@
-const CACHE_NAME = 'fabai-static-v1';
+const CACHE_NAME = 'fabai-static-v2';
 
 const PRECACHE_URLS = [
   '/',
@@ -6,6 +6,10 @@ const PRECACHE_URLS = [
   '/manifest.webmanifest',
   '/CirculationsLogoNoBg.png',
   '/CirculationsLogoNoBgFav.png',
+  '/icon-192.png',
+  '/icon-512.png',
+  '/icon-maskable-512.png',
+  '/apple-touch-icon.png',
 ];
 
 self.addEventListener('install', (event) => {

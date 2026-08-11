@@ -101,7 +101,7 @@ export function InstallPrompt() {
     <div className="install-prompt" role="dialog" aria-labelledby="install-prompt-title" aria-live="polite">
       <div className="install-prompt__card">
         <img
-          src="/CirculationsLogoNoBgFav.png"
+          src="/icon-192.png"
           alt=""
           className="install-prompt__icon"
           width={48}

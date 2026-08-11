@@ -15,6 +15,13 @@ RAIN_UNFRIENDLY_LABELS = frozenset({"Shorts", "Skirt", "T-Shirt", "Polo"})
 
 DARK_COLORS = frozenset({'black', 'navy', 'grey', 'brown'})
 
+# Colour sampling: use the middle 50% of the frame so photo backgrounds don't
+# dominate, ignore near-white pixels (RGB sum >= 720, i.e. avg channel >= 240),
+# and keep the unfiltered sample when the garment itself is near-white.
+CENTER_CROP_RATIO = 0.5
+WHITE_PIXEL_SUM = 720
+MIN_SAMPLE_FRACTION = 0.15
+
 
 def get_image_intensity(img: Image.Image) -> float:
     """Compute normalized average pixel intensity, scaled roughly to [-5, 5]."""
@@ -61,15 +68,30 @@ def _rgb_to_bucket(r: int, g: int, b: int) -> str:
     return 'other'
 
 
+def _center_crop(img: Image.Image, ratio: float = CENTER_CROP_RATIO) -> Image.Image:
+    """Crop to the middle `ratio` of the frame, where the garment normally sits."""
+    width, height = img.size
+    crop_w = max(1, int(width * ratio))
+    crop_h = max(1, int(height * ratio))
+    left = (width - crop_w) // 2
+    top = (height - crop_h) // 2
+    return img.crop((left, top, left + crop_w, top + crop_h))
+
+
 def get_dominant_color(img: Image.Image) -> str:
-    """Map the dominant garment colour to a named bucket."""
+    """Map the dominant garment colour to a named bucket.
+
+    Only the centre of the image is sampled: photo backgrounds (usually a white
+    wall or product backdrop) otherwise outvote the garment itself.
+    """
     try:
-        rgb = img.convert('RGB').resize((64, 64))
+        rgb = _center_crop(img.convert('RGB')).resize((64, 64))
         pixels = np.array(rgb).reshape(-1, 3)
 
-        # Ignore near-white background pixels common in product photos
-        mask = np.sum(pixels, axis=1) < 720
-        sampled = pixels[mask] if mask.any() else pixels
+        # Drop near-white leftovers, but only when enough garment pixels remain —
+        # otherwise a genuinely white item would be filtered away entirely.
+        mask = np.sum(pixels, axis=1) < WHITE_PIXEL_SUM
+        sampled = pixels[mask] if mask.mean() >= MIN_SAMPLE_FRACTION else pixels
 
         buckets = [_rgb_to_bucket(int(r), int(g), int(b)) for r, g, b in sampled]
         return max(set(buckets), key=buckets.count)

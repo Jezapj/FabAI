@@ -238,10 +238,11 @@ def upload_file_nx():
         user_id = user_info.get('sub')
         email = user_info.get('email')
         name = user_info.get('name')
+        provider = 'guest' if user_info.get('guest') else 'google'
 
         user = User.query.filter_by(oauth_id=user_id).first()
         if not user:
-            user = User(oauth_provider='google', oauth_id=user_id, email=email, name=name)
+            user = User(oauth_provider=provider, oauth_id=user_id, email=email, name=name)
             db.session.add(user)
             db.session.commit()
 

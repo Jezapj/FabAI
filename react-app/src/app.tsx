@@ -1,10 +1,16 @@
 import React from "react";
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Main, Navbar, Login } from './Main';
 import { InstallPrompt } from './InstallPrompt';
+import { loadSession, saveSession, clearSession, SessionUser } from './session';
 
 function App() {
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<SessionUser | null>(() => loadSession());
+
+  useEffect(() => {
+    if (user) saveSession(user);
+    else clearSession();
+  }, [user]);
 
   const footer = { height: "40px" };
   return (

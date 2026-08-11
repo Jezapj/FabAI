@@ -1110,10 +1110,10 @@ export function Login({ user, setUser }: { user: any, setUser: any }) {
             >
               Continue as guest
             </button>
-            <p className="landing-auth__guest-note">
+            {/* <p className="landing-auth__guest-note">
               Try FabAI without an account. Your guest wardrobe stays on this device and isn't
               linked to a Google account.
-            </p>
+            </p> */}
           </div>
         </div>
       )}

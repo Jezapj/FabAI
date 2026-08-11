@@ -20,7 +20,7 @@ function App() {
       <div className={user ? 'app-content' : 'landing-shell'}>
         <Login user={user} setUser={setUser} />
       </div>
-      <div className="app-footer" style={footer}></div>
+      {/* <div className="app-footer" style={footer}></div> */}
       <InstallPrompt />
     </div>
   );

@@ -1647,7 +1647,7 @@ body:has(.app-shell:not(.app-shell--dashboard)) {
   margin-bottom: 36px;
 }
 .landing-hero__eyebrow {
-  margin: 0 0 8px;
+  margin: -15px 0 8px;
   font-size: 10px;
   font-weight: 600;
   letter-spacing: 0.14em;

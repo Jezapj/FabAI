@@ -618,6 +618,7 @@ export function Login({ user, setUser }: { user: any, setUser: any }) {
   const [outfits,    setOutfits]    = React.useState<Outfit[]>([]);
   const [outfitsLoading, setOutfitsLoading] = React.useState(false);
   const [imageUrl,   setImageUrl]   = React.useState('');
+  const [batchItems, setBatchItems] = React.useState<{ id: number; label: string; url: string }[]>([]);
   const [outfitTarget, setOutfitTarget] = React.useState(50);
   const [selectedDay,  setSelectedDay]  = React.useState('Today');
   const [selectedDate, setSelectedDate] = React.useState('');
@@ -744,74 +745,103 @@ export function Login({ user, setUser }: { user: any, setUser: any }) {
     setColorPreset(value);
     if (selectedDate) updateDayPrefs(selectedDate, { colorPreset: value });
   };
-  const runClassification = async (id: number) => {
-    setPrediction('Classifying…');
-    try {
-      // Same-origin /api → static rewrite (avoids cross-origin CORS when the API returns 502).
-      const r = await fetch(apiPath(`/api/classify_image/${id}`), {
-        method: 'POST',
-      });
-      const d = await parseApiJson(r);
-      const body = d as Record<string, unknown>;
-      if (!r.ok) {
-        if (r.status === 502 || r.status === 503) {
-          setBackendStatus('starting');
-          wakeBackend();
-        }
-        throw new Error(
-          typeof body.error === 'string' ? body.error : `Classification failed (${r.status})`
-        );
+  const runClassification = async (id: number): Promise<string> => {
+    const r = await fetch(apiPath(`/api/classify_image/${id}`), {
+      method: 'POST',
+    });
+    const d = await parseApiJson(r);
+    const body = d as Record<string, unknown>;
+    if (!r.ok) {
+      if (r.status === 502 || r.status === 503) {
+        setBackendStatus('starting');
+        wakeBackend();
       }
-      setPrediction(String(body.prediction ?? body.label ?? ''));
-      setOutfitRefresh(x => x + 1);
-      setInventoryRefresh(x => x + 1);
-    } catch (err) {
-      console.error(err);
-      setPrediction(err instanceof Error ? err.message : 'Classification failed');
-      setBackendStatus('starting');
-      wakeBackend();
+      throw new Error(
+        typeof body.error === 'string' ? body.error : `Classification failed (${r.status})`
+      );
     }
+    return String(body.prediction ?? body.label ?? 'Unclassified');
   };
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    e.target.value = '';
-    if (!file) return;
-    if (backendStatus !== 'ready' || busy) return;
-    setBusy(true);
-    setPrediction('Uploading...');
+  const uploadOneFile = async (file: File): Promise<{ id: number; url: string; label: string }> => {
     const formData = new FormData();
     formData.append('image', file);
     formData.append('user_info', JSON.stringify(user));
-    fetch(apiPath('/api/uploadnx'), { method: 'POST', body: formData })
-      .then(async (r) => {
-        const d = await parseApiJson(r);
-        if (!r.ok) {
-          if (r.status === 502 || r.status === 503) {
-            setBackendStatus('starting');
-            wakeBackend();
+    const r = await fetch(apiPath('/api/uploadnx'), { method: 'POST', body: formData });
+    const d = await parseApiJson(r);
+    if (!r.ok) {
+      if (r.status === 502 || r.status === 503) {
+        setBackendStatus('starting');
+        wakeBackend();
+      }
+      const errBody = d as Record<string, unknown>;
+      throw new Error(
+        typeof errBody.error === 'string' ? errBody.error : `Upload failed (${r.status})`
+      );
+    }
+    const body = d as Record<string, unknown>;
+    const uploadedId =
+      typeof body.image_id === 'number' ? body.image_id : Number(body.image_id);
+    if (!uploadedId || Number.isNaN(uploadedId)) {
+      throw new Error('Upload succeeded but no image_id returned');
+    }
+    const url = apiPath(`/api/image/${uploadedId}`);
+    const label = await runClassification(uploadedId);
+    return { id: uploadedId, url, label };
+  };
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files ?? []).filter(f => f.type.startsWith('image/'));
+    e.target.value = '';
+    if (files.length === 0) return;
+    if (backendStatus !== 'ready' || busy) return;
+    const total = files.length;
+    setBusy(true);
+    setBatchItems([]);
+    setPrediction(total === 1 ? 'Uploading…' : `Uploading 1 of ${total}…`);
+
+    (async () => {
+      const added: { id: number; label: string; url: string }[] = [];
+      const failures: string[] = [];
+      try {
+        for (let i = 0; i < files.length; i++) {
+          const n = i + 1;
+          setPrediction(total === 1 ? 'Uploading…' : `Uploading ${n} of ${total}…`);
+          try {
+            const result = await uploadOneFile(files[i]);
+            added.push(result);
+            setImageUrl(result.url);
+            setBatchItems([...added]);
+            setPrediction(
+              total === 1
+                ? result.label
+                : `${result.label} · ${n} of ${total}`
+            );
+            setOutfitRefresh(x => x + 1);
+            setInventoryRefresh(x => x + 1);
+          } catch (err) {
+            console.error(err);
+            failures.push(files[i].name || `image ${n}`);
           }
-          const errBody = d as Record<string, unknown>;
+        }
+        if (added.length === 0) {
           throw new Error(
-            typeof errBody.error === 'string' ? errBody.error : `Upload failed (${r.status})`
+            failures.length
+              ? `Could not add ${failures.length === 1 ? failures[0] : `${failures.length} images`}`
+              : 'Upload failed'
           );
         }
-        const body = d as Record<string, unknown>;
-        const uploadedId =
-          typeof body.image_id === 'number' ? body.image_id : Number(body.image_id);
-        if (!uploadedId || Number.isNaN(uploadedId)) {
-          throw new Error('Upload succeeded but no image_id returned');
+        if (total > 1) {
+          const failNote = failures.length
+            ? ` · ${failures.length} failed`
+            : '';
+          setPrediction(`Added ${added.length} of ${total}${failNote}`);
         }
-        setImageUrl(apiPath(`/api/image/${uploadedId}`));
-        setPrediction('Saved to wardrobe. Starting AI…');
-        setOutfitRefresh(x => x + 1);
-        setInventoryRefresh(x => x + 1);
-        await runClassification(uploadedId);
-      })
-      .catch((err) => {
+      } catch (err) {
         console.error(err);
         setPrediction(err instanceof Error ? err.message : 'Upload failed');
-      })
-      .finally(() => setBusy(false));
+      } finally {
+        setBusy(false);
+      }
+    })();
   };
   const canUpload = backendStatus === 'ready' && !busy;
   const statusLabel =
@@ -929,7 +959,7 @@ export function Login({ user, setUser }: { user: any, setUser: any }) {
               <section className="swipe-pane swipe-pane--add" aria-label="Add Items">
                 <div className="add-view">
                   <div className="add-view__header">
-                    <h2>Add Item</h2>
+                    <h2>Add Items</h2>
                     <p className={`backend-status backend-status--${backendStatus}`}>
                       {statusLabel}
                       {backendStatus === 'error' && (
@@ -942,19 +972,41 @@ export function Login({ user, setUser }: { user: any, setUser: any }) {
                       )}
                     </p>
                   </div>
-                  <LoadingOverlay loading={busy} message="Thinking..." className="add-view__stage">
+                  <LoadingOverlay loading={busy} message={prediction || 'Thinking...'} className="add-view__stage">
                     {imageUrl ? (
                       <div className="add-view__result">
                         <img src={imageUrl} alt="Uploaded clothing" className="add-view__img" />
                         <p className="add-view__prediction">
                           AI Classifier: <strong>{prediction || 'Processing...'}</strong>
                         </p>
+                        {batchItems.length > 1 && (
+                          <div
+                            className="add-view__thumbs"
+                            aria-label="Recently added items"
+                            onPointerDown={e => e.stopPropagation()}
+                          >
+                            {batchItems.map(item => (
+                              <button
+                                key={item.id}
+                                type="button"
+                                className={`add-view__thumb${item.url === imageUrl ? ' add-view__thumb--active' : ''}`}
+                                title={item.label}
+                                onClick={() => {
+                                  setImageUrl(item.url);
+                                  setPrediction(item.label);
+                                }}
+                              >
+                                <img src={item.url} alt={item.label} />
+                              </button>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     ) : (
                       <div className="add-view__placeholder">
                         <p>
                           {canUpload
-                            ? 'Upload a clothing photo for AI classification'
+                            ? 'Upload one or more clothing photos for AI classification'
                             : 'Waiting for backend before uploads are enabled'}
                         </p>
                       </div>
@@ -965,10 +1017,10 @@ export function Login({ user, setUser }: { user: any, setUser: any }) {
                       type="button"
                       className="b1-compact"
                       disabled={!canUpload}
-                      title={!canUpload ? statusLabel : 'Add clothing image'}
+                      title={!canUpload ? statusLabel : 'Add clothing images'}
                       onClick={() => document.getElementById('fileInput')?.click()}
                     >
-                      Add Image
+                      Add Images
                     </button>
                   </div>
                 </div>
@@ -996,7 +1048,7 @@ export function Login({ user, setUser }: { user: any, setUser: any }) {
               </button>
             </nav>
           </div>
-          <input id="fileInput" type="file" accept="image/*" onChange={handleFileChange} style={{ display: 'none' }} />
+          <input id="fileInput" type="file" accept="image/*" multiple onChange={handleFileChange} style={{ display: 'none' }} />
           <StaggeredMenu
             position="left"
             isFixed

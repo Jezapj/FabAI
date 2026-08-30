@@ -338,10 +338,9 @@ button:hover{
   overflow: hidden;
   background: rgba(0, 0, 0, 0);
   border-radius: 4px;
-  border: 2px solid rgba(255, 255, 255, 0.08);
+  border: 0px solid rgba(255, 255, 255, 0.08);
   padding: 10px 12px;
   box-sizing: border-box;
-  backdrop-filter: blur(12px);
   margin-top: 2px;
 }
 .landing-home .weather-widget {
@@ -628,11 +627,12 @@ button:hover{
   min-height: 0;
   height: 100%;
   background: rgba(0, 0, 0, 0);
-  border-radius: 14px;
-  border: 0px solid rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+  border: 2px solid rgba(255, 255, 255, 0.08);
   padding: 12px 14px;
   overflow: hidden;
   color: #fff;
+  backdrop-filter: blur(12px);
 }
 .wardrobe-view__header {
   flex-shrink: 0;

@@ -37,9 +37,9 @@ h1 {
 /* Outline-only headings — stroke sits outside the glyph */
 h2 {
   font-size: 1.75rem !important;
-    color: black;
+    /* color: black;
     paint-order: stroke fill;
-    -webkit-text-stroke: 0.1em white;
+    -webkit-text-stroke: 0.1em white; */
 }
 img {
   max-width: 100%;
@@ -337,10 +337,12 @@ button:hover{
   gap: clamp(10px, 2vw, 16px);
   overflow: hidden;
   background: rgba(0, 0, 0, 0);
-  border-radius: 14px;
-  border: 0px solid rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+  border: 2px solid rgba(255, 255, 255, 0.08);
   padding: 10px 12px;
   box-sizing: border-box;
+  backdrop-filter: blur(12px);
+  margin-top: 2px;
 }
 .landing-home .weather-widget {
   flex-shrink: 0;
@@ -779,6 +781,7 @@ button:hover{
   border-radius: 10px;
   padding: 4px 10px;
   overflow: hidden;
+  backdrop-filter: blur(12px);
 }
 .outfit-stack__row img {
   height: 100%;
@@ -834,12 +837,13 @@ button:hover{
   min-height: 0;
   height: 100%;
   background: rgba(0, 0, 0, 0);
-  border-radius: 14px;
-  border: 0px solid rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+  border: 2px solid rgba(255, 255, 255, 0.10);
   padding: 12px 14px;
   overflow: hidden;
   color: #fff;
   gap: 10px;
+  backdrop-filter: blur(12px);
 }
 .add-view__header {
   flex-shrink: 0;
@@ -1300,6 +1304,7 @@ dialog{
   min-width: 0;
   padding: 6px 4px;
   cursor: pointer;
+  backdrop-filter: blur(12px);
 }
 .app-shell--dashboard .weather-day__icon {
   font-size: 18px;
@@ -1419,6 +1424,7 @@ dialog{
   width: 100%;
 }
 .inv-item {
+  backdrop-filter: blur(12px);
   background: rgba(255, 255, 255, 0.04);
   border-radius: 10px;
   border: 1px solid rgba(255, 255, 255, 0.07);
@@ -2001,7 +2007,8 @@ body:has(.app-shell:not(.app-shell--dashboard)) {
     gap: 10px;
   }
   .app-shell--dashboard .nav {
-    padding: 2px 8px 0;
+    padding: 5px 0px 0;
+    padding-top: 3px;
   }
   .app-shell--dashboard .nav__logo {
     height: 44px;
@@ -2132,10 +2139,12 @@ body:has(.app-shell:not(.app-shell--dashboard)) {
   .app-shell--dashboard .weather-day {
     flex: 0 0 auto;
     min-width: 48px;
+    backdrop-filter: blur(12px);
   }
   .wardrobe-view,
   .add-view {
     padding: 10px;
+    backdrop-filter: blur(12px);
   }
   .wardrobe-view .inv-grid {
     grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
@@ -2147,6 +2156,7 @@ body:has(.app-shell:not(.app-shell--dashboard)) {
   .outfit-stack__row {
     gap: 8px;
     padding: 3px 8px;
+    backdrop-filter: blur(12px);
   }
   .add-view__img {
     max-height: min(36vh, 220px);

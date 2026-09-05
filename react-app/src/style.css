@@ -1344,6 +1344,7 @@ dialog{
 .app-shell--dashboard .staggered-menu-wrapper .sm-toggle {
   font-size: 0.95rem;
   letter-spacing: 0.02em;
+  color: rgb(126 80 173) !important;
 }
 .app-shell--dashboard .nav {
   padding: 0;
@@ -2008,7 +2009,7 @@ body:has(.app-shell:not(.app-shell--dashboard)) {
   }
   .app-shell--dashboard .nav {
     padding: 5px 0px 0;
-    padding-top: 3px;
+    padding-top: 9px;
   }
   .app-shell--dashboard .nav__logo {
     height: 44px;
